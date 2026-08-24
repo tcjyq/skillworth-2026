@@ -96,6 +96,8 @@ Bronze 仅封装来源字段，原则上不修改内容。除 provenance 公共�
 
 Phase 2 Silver Parquet 还包含以下物理字段：
 
+薪资字段分为两套不可混用的语义：`salary_raw` 与 `salary_currency` / `salary_native_*` 保留来源原文和原生币种证据；`salary_min_monthly`、`salary_max_monthly`、`salary_mid_monthly`、`salary_annualized` 是 CNY 分析基准字段。只有输入本身为人民币或具备经审计、可追溯的 CNY 换算证据且 parser 成功时，后者才允许非空；当前没有通用 FX 转换。外币即使存在原生数值，CNY 分析字段也必须为 null。
+
 | 字段 | 类型 | 必填 | 含义 |
 | --- | --- | ---: | --- |
 | `role_taxonomy_version` | string | 是 | 角色映射配置版本。 |
@@ -104,9 +106,9 @@ Phase 2 Silver Parquet 还包含以下物理字段：
 | `experience_min_years` / `experience_max_years` | number | 否 | 可可靠解析的经验上下界。 |
 | `experience_parse_status` | enum | 是 | 经验标准化状态。 |
 | `salary_raw` | string | 否 | 原始薪资文本，任何解析结果都不能覆盖它。 |
-| `salary_min_monthly` / `salary_max_monthly` | number | 否 | 人民币月薪等价值上下限。 |
-| `salary_mid_monthly` | number | 否 | 月薪等价值区间中点。 |
-| `salary_annualized` | number | 否 | 按已知薪数或方法论换算的标准年化等价值。 |
+| `salary_min_monthly` / `salary_max_monthly` | number | 否 | CNY 分析基准的月薪上下限；外币无经审计换算时为 null。 |
+| `salary_mid_monthly` | number | 否 | CNY 分析基准的月薪区间中点；不是原生币种中点。 |
+| `salary_annualized` | number | 否 | CNY 分析基准按已知薪数或方法论换算的年化值；不等于实际总包。 |
 | `salary_months` | integer | 否 | 明确薪数；普通月薪未知时为空，年薪/日薪换算基数为 12。 |
 | `salary_parse_status` | enum | 是 | 薪资解析状态。 |
 | `published_at_raw` / `published_at` | string/date | 否 | 原始日期文本和标准化日期。 |
@@ -174,13 +176,13 @@ Analysis Views：`role_summary`、`city_summary`、`source_summary`、`skill_dem
 | --- | --- | ---: | --- |
 | `canonical_job_id` | string | 是 | 关联 Gold 规范岗位。 |
 | `salary_raw` | string | 否 | 原始薪资文本。 |
-| `currency_code` | string | 否 | 原始或识别出的 ISO 币种。 |
+| `currency_code` | string | 否 | 原始或识别出的 ISO 币种；不表示已换算到 CNY。 |
 | `salary_period_raw` | string | 否 | 月、年、日等来源周期。 |
 | `salary_months` | number | 否 | 明确薪数或年薪/日薪换算基数；普通月薪未声明时为空。 |
-| `salary_min_monthly` | decimal | 否 | 解析后的人民币月薪等价值下限。 |
-| `salary_max_monthly` | decimal | 否 | 解析后的人民币月薪等价值上限。 |
-| `salary_mid_monthly` | decimal | 否 | 分析使用的月薪等价值中点。 |
-| `salary_annualized` | decimal | 否 | 标准年化等价值，不等于实际总包。 |
+| `salary_min_monthly` | decimal | 否 | CNY 分析基准月薪下限；非 CNY 且无经审计换算时为 null。 |
+| `salary_max_monthly` | decimal | 否 | CNY 分析基准月薪上限；非 CNY 且无经审计换算时为 null。 |
+| `salary_mid_monthly` | decimal | 否 | 分析使用的 CNY 月薪中点；不得填入外币原生数值。 |
+| `salary_annualized` | decimal | 否 | CNY 分析基准年化值，不等于实际总包。 |
 | `salary_parse_status` | enum | 是 | 解析/缺失/排除状态。 |
 | `salary_quality_flags` | array[string] | 是 | 币种、周期、不确定性或异常标记。 |
 
@@ -473,8 +475,8 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 | description_source_silver_job_id | string | 否 | Canonical description 的来源 Silver ID。 |
 | job_title_raw | string | 是 | 按标题融合规则选出的原始标题。 |
 | job_description_raw | string | 是 | 信息量最高的组内 JD。 |
-| salary_observations | list&lt;struct&gt; | 否 | 每个组成员的 source、raw_salary、normalized_salary、observed_at。 |
-| canonical_salary | float | 是 | 无冲突时的跨来源兼容月薪中点；冲突或无有效薪资时为 null。 |
+| salary_observations | list&lt;struct&gt; | 否 | 每个组成员的 source、raw_salary、normalized_salary、currency、native_min_monthly、observed_at。 |
+| canonical_salary | float | 是 | 兼容 CNY 分析值的跨来源月薪中点；无可比 CNY 值或发生冲突时为 null。 |
 | salary_source_count | integer | 否 | 提供有效标准化薪资的不同来源数。 |
 | salary_conflict_flag | boolean | 否 | 跨来源相对跨度是否超过配置阈值。 |
 | first_posted_at | date string | 是 | 最早可靠发布日期。 |
@@ -486,15 +488,15 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 
 | 字段 | 类型 | 空值 | 说明 |
 | --- | --- | --- | --- |
-| salary_currency | string | 是 | 来源声明币种，如 `HKD`；不等于分析基准币种。 |
-| salary_native_min_monthly | float | 是 | 来源结构化月薪下限，保持原生币种。 |
-| salary_native_min_hourly | float | 是 | 来源结构化时薪下限，保持原生币种。 |
-| salary_native_min_daily | float | 是 | 来源结构化日薪下限，保持原生币种。 |
+| salary_currency | string | 是 | 来源声明币种，如 `HKD`；只解释 `salary_native_*`，不表示已换算到 CNY。 |
+| salary_native_min_monthly | float | 是 | 来源结构化月薪下限，保持 `salary_currency` 原生币种；不得进入 CNY 聚合。 |
+| salary_native_min_hourly | float | 是 | 来源结构化时薪下限，保持 `salary_currency` 原生币种；不得与月薪或其他币种直接比较。 |
+| salary_native_min_daily | float | 是 | 来源结构化日薪下限，保持 `salary_currency` 原生币种；不得与月薪或其他币种直接比较。 |
 | market_scope | enum | 否 | `target`、`possible`、`non_target`；规则审计范围，不是 Role Gold Label。 |
 | market_scope_method | string | 否 | 当前为 `configured_title_rules`。 |
 | market_scope_version | string | 否 | `target_market.v1.yml` 的版本。 |
 
-`salary_observations` struct 扩展为 `source`、`raw_salary`、`normalized_salary`、`currency`、`native_min_monthly`、`observed_at`。外币原生数值仅用于覆盖率与冲突审计，不进入 `canonical_salary`。
+`salary_observations.normalized_salary` 专指可进入 CNY 分析的 `salary_mid_monthly`，不是“任意币种已统一月频”的通用字段；非 CNY 且无经审计换算时必须为 null。`currency` 与 `native_min_monthly` 保留原生证据，外币原生数值只用于同币种覆盖率/质量审计，不进入 `canonical_salary`，也不参与跨币种冲突比较。
 
 兼容字段 `published_at` 等于 `first_posted_at`，`salary_mid_monthly` 等于无冲突的 `canonical_salary`；发生冲突时二者均为空，防止下游薪资分析误用强制融合值。
 

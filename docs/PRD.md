@@ -16,13 +16,13 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 | 用户 | 典型问题 | 产品价值 |
 | --- | --- | --- |
 | 在校学生与应届生 | 想进入数据、开发、AI 或产品岗位，不知道该优先补齐什么技能。 | 基于目标岗位给出技能缺口、边际机会增益与学习顺序。 |
-| 初入职场的技术从业者 | 想转向相邻岗位，但不清楚迁移成本。 | 对比角色技能簇、市场趋势和学习投入。 |
+| 初入职场的技术从业者 | 想转向相邻岗位，但不清楚迁移成本。 | 对比角色技能簇、学习投入，以及证据门禁满足时的薪资关联或多期趋势。 |
 | 职业辅导或教学人员 | 需要理解不同岗位的真实技能需求。 | 提供可追溯的市场统计和方法说明。 |
 
 ## 3. 成功标准
 
 - 用户可选择目标岗位、城市/时间等市场筛选，并输入已有技能与学习时间预算。
-- 系统从实际导入的 Gold 数据计算技能需求、趋势、岗位覆盖和推荐结果；Demo 同样走真实计算链路。
+- 系统从实际导入的 Gold Data Layer 计算技能需求、岗位覆盖和推荐结果；Salary / Trend 仅在各自证据门禁满足时计算，否则显式返回 `unavailable`。Demo 同样走真实计算链路。
 - 每一项市场结论可展示来源、样本量、数据时间范围、处理版本和置信度。
 - 用户可查看推荐技能的边际岗位覆盖增益、学习成本、市场价值和计算依据。
 - 所有核心分析函数都有自动化测试，且不需要访问未授权招聘平台即可运行。
@@ -35,9 +35,9 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 2. Data Provenance：数据来源、授权状态与处理版本追踪。
 3. 跨平台岗位去重与来源保留。
 4. 岗位标题、城市、经验、学历、公司和发布时间标准化。
-5. 薪资解析、币种/周期归一与可用性标记。
+5. 薪资原文与原生币种保留、周期归一、可比人民币证据门禁与可用性标记；没有经审计汇率时不转换外币。
 6. 技能词典、别名归一和可审计的技能抽取。
-7. Skill Demand、Platform-balanced Demand、Adjusted Salary Association、Skill Trend。
+7. Skill Demand、Platform-balanced Demand，以及证据门禁满足时的 Adjusted Salary Association / Skill Trend；证据不足时输出 `unavailable`。
 8. Skill Co-occurrence Network 与技能簇。
 9. Personal Skill Coverage、Marginal Skill Coverage Gain、Learning Cost、Market Value Score 与 Personal Skill ROI。
 10. Learning Time Optimizer。
@@ -47,16 +47,16 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 ### 4.2 非目标
 
 - 不做招聘投递、简历代投、候选人筛选或企业 ATS。
-- 不宣称技能造成薪资变化或保证求职成功；薪资仅进行控制变量后的关联分析。
+- 不宣称技能造成薪资变化或保证求职成功；只有可比人民币薪资证据达到门禁时才进行控制变量后的关联分析，否则 Salary 保持 `unavailable`。
 - 不通过自动化手段绕过招聘网站的验证码、登录、反爬、限流或访问控制。
 - 不把通用 LLM 对原始岗位文本的结论当作统计事实。
 - 第一版不承诺覆盖全部中国城市、岗位类型或招聘平台，也不承诺实时全量市场。
 
 ## 5. 产品体验与页面边界
 
-公开一级体验固定为：
+当前正式公开入口（**Current**）为：
 
-1. `/`：SkillWorth 2026，按 Hero → Frontier → Skill Market Board → Market Themes → Methodology / Data Scope 叙事回答“2026，学什么技术最值？”；
+1. `/`：当前正式 V1 首页 SkillWorth 2026，按 Hero → Frontier → Skill Market Board → Market Themes → Methodology / Data Scope 叙事回答“2026，学什么技术最值？”；
 2. `/methodology`：完整方法、证据边界和限制；
 3. Data Scope：作为首页锚点展示 snapshot、窗口、样本量、来源角色与不可用信号。
 
@@ -64,7 +64,7 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 
 当前公开默认口径为 `market_scope=china_open_tech_sample`、`source_role=china_supplementary`、`recency_window=180d`。界面采用 Cinematic Data Intelligence 视觉语言，但视觉不得替代解释；任意数字、图表点位或推荐文本必须能追溯到 API 与方法论。
 
-Production Homepage Candidate 当前位于 `/lab/visual-v2`；它已统一 Public Surface 与面向学生的方法表达，但尚未替换正式 `/`，也不应称为 final homepage。提升决定与最终产品截图属于人工发布决策。
+候选入口（**Candidate**）为 `/lab/visual-v2`。它已统一 Public Surface 与面向学生的方法表达，但不是当前正式首页、尚未替换 `/`，也不应称为 final homepage。是否提升以及提升后的最终产品截图属于人工发布决策。
 
 ## 6. 约束与工程原则
 
@@ -100,8 +100,8 @@ Production Homepage Candidate 当前位于 `/lab/visual-v2`；它已统一 Publi
 - [x] **Phase 3 — Skill Taxonomy & Extraction**：实现 120+ 版本化技能、学习成本字段、规则优先抽取、短词消歧、人工标注 Benchmark、Parquet 输出和 CLI；LLM 默认关闭。
 - [x] **Phase 4 — 跨平台去重与 Gold 数据集**：实现三级保守匹配、complete-link 分组、`canonical_jobs`、`job_source_map`、质量报告和 CLI。
 - [x] **Phase 5 — DuckDB Analytics Warehouse**：实现核心事实/维度表、Analysis Views、数据测试、Query Benchmark 和可重建 CLI。
-- [x] **Phase 6 — 基础劳动力市场指标**：发布 Skill Demand、Platform-balanced Demand、技能薪资分布、角色/城市/经验切片和来源构成分析；Skill Trend 与 Data Confidence 仍在后续阶段实现。
-- [x] **Phase 7 — Advanced Analytics**：实现覆盖率趋势与透明分类、Adjusted Salary Association、样本门槛、HC3 模型诊断、PMI/Jaccard 技能网络和社区划分。
+- [x] **Phase 6 — 基础劳动力市场指标**：实现 Skill Demand、Platform-balanced Demand、证据条件化的技能薪资分布、角色/城市/经验切片和来源构成分析；证据不足的输出保持 `unavailable`。
+- [x] **Phase 7 — Advanced Analytics**：实现 Skill Trend 与 Adjusted Salary Association 的计算框架、证据门禁、样本门槛、HC3 模型诊断，以及 PMI/Jaccard 技能网络和社区划分；当前 Freehire 单快照的 Trend / Salary 均不可用。
 - [x] **Phase 8 — Data Confidence Engine**：实现样本量、来源多样性、数据时效性、薪资覆盖率和跨来源一致性的透明评分、等级、分量与 warning。
 - [x] **Phase 10A — 市场价值与敏感性分析**：实现配置化 Market Value、Personal ROI、学习时长估算/覆盖、排名稳定性和敏感排名警告。
 - [x] **Phase 9 — Personal Skill Opportunity Engine**：实现用户技能输入、岗位 Skill Fit、阈值覆盖、候选技能边际增益、crossing jobs、筛选、置信度与集合化计算。
@@ -126,7 +126,7 @@ MVP 的目标不是“接入所有招聘平台”，而是让一份合规的 Dem
 - 仅启用 `manual_import` 与带 manifest 的本地 Demo 数据；第三方平台 Connector 保持 disabled。
 - 实现 source provenance、Bronze/Silver/Gold、岗位/薪资标准化、技能 taxonomy 与规则优先的技能抽取。
 - 实现确定性去重和保守的模糊匹配候选输出；保留 `job_source_map`。
-- 实现 Skill Demand、Platform-balanced Demand、Skill Trend、Data Confidence、个人 Skill Coverage 与 Marginal Skill Coverage Gain。
+- 实现 Skill Demand、Platform-balanced Demand、Data Confidence、个人 Skill Coverage 与 Marginal Skill Coverage Gain；Skill Trend 仅在多期独立快照证据达到门禁时可用，否则返回 `unavailable`。
 - 实现带 Learning Cost 的可解释贪心 Learning Time Optimizer，输出每一步重新计算后的增益。
 - 提供最小 FastAPI API 和功能优先的 Next.js 页面，用于展示真实计算结果与方法版本。
 - 覆盖核心管道/指标的 pytest，以及最小 API 和关键用户路径测试。
@@ -137,7 +137,7 @@ MVP 的目标不是“接入所有招聘平台”，而是让一份合规的 Dem
 
 - 在获得授权后启用独立 Connector，并记录来源权利、覆盖范围和增量策略。
 - 完善跨平台模糊去重、人工复核工作流与质量评估集。
-- 实现 Adjusted Salary Association、模型诊断、Skill Co-occurrence Network、Platform Sampling Bias Analysis 与 Market Value Score。
+- 在可比人民币薪资证据达到门禁时启用 Adjusted Salary Association 与模型诊断；实现 Skill Co-occurrence Network、Platform Sampling Bias Analysis 与 Market Value Score。
 - 扩展角色、城市、经验和学历切片；加入数据质量、来源健康度与方法论页面。
 - 增加 Vitest 图表/筛选器测试、Playwright 端到端测试与性能基线。
 
