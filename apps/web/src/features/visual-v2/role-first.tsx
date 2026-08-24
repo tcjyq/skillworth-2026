@@ -6,6 +6,7 @@ import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthResponse, RolesResponse } from "@/lib/api/types";
 import { roleLabel } from "./terminology";
 import { recencyLabel, sourceRoleLabel } from "./market-metadata";
+import { VisualLoading } from "./visual-loading";
 import styles from "./visual-v2.module.css";
 
 const PRIMARY_ROLES = [
@@ -59,7 +60,7 @@ export function RoleFirst() {
     {showMore && <label className={styles.moreRoleSelect}><span>全部岗位方向</span><select value={role} onChange={(event) => selectRole(event.target.value)}>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · {item.canonical_job_count} 岗位</option>)}</select></label>}
 
     <article className={styles.roleResult} aria-live="polite">
-      {isLoading && <p className={styles.roleLoading}>正在读取该方向的当前样本…</p>}
+      {isLoading && <VisualLoading label="正在读取该方向的当前样本…" variant="panel" />}
       {hasError && <div className={styles.roleLoading}><p>当前数据暂时无法读取</p><button type="button" onClick={() => { void result.mutate(); void global.mutate(); }}>重试</button></div>}
       {success && success.records.length === 0 && <p className={styles.roleLoading}>当前岗位方向下没有可展示的技能</p>}
       {success && success.records.length > 0 && <>

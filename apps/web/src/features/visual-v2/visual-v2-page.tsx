@@ -13,6 +13,7 @@ import { ExploreMode } from "./explore-mode";
 import { PublicNavigation } from "./public-navigation";
 import { RoleFirst } from "./role-first";
 import { CppMoment } from "./story-visuals";
+import { VisualLoading } from "./visual-loading";
 import { accessDateLabel, availabilityLabel, recencyLabel, sourceRoleLabel } from "./market-metadata";
 import styles from "./visual-v2.module.css";
 
@@ -34,9 +35,35 @@ export function VisualV2Page() {
   const availableFindings = findingError ? null : findings;
 
   useGSAP(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    gsap.fromTo("[data-cpp-ranks]", { scale: 0.88 }, { scale: 1, ease: "none", scrollTrigger: { trigger: "[data-cpp-moment]", start: "top bottom", end: "center center", scrub: 0.6 } });
+    const media = gsap.matchMedia();
+    media.add({ reduceMotion: "(prefers-reduced-motion: reduce)" }, (context) => {
+      const { reduceMotion } = context.conditions as { reduceMotion: boolean };
+      if (reduceMotion) return;
+
+      gsap.timeline({ defaults: { ease: "expo.out" } })
+        .fromTo("[data-motion-nav]", { clipPath: "inset(0 50% 100% 50%)" }, { clipPath: "inset(0 0% 0% 0%)", duration: 0.8 })
+        .fromTo("[data-motion-title] > span", { clipPath: "inset(100% 0 0 0)", yPercent: 24 }, { clipPath: "inset(0% 0 0 0)", yPercent: 0, duration: 0.9, stagger: 0.08 }, 0.12)
+        .fromTo("[data-motion-conclusion]", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.75 }, 0.34);
+
+    });
+    return () => media.revert();
   }, { scope: root });
+
+  useGSAP(() => {
+    const ranks = root.current?.querySelector("[data-cpp-ranks]");
+    const chapter = root.current?.querySelector("[data-cpp-moment]");
+    const copy = root.current?.querySelector("[data-cpp-copy]");
+    if (!ranks || !chapter || !copy) return;
+
+    const media = gsap.matchMedia();
+    media.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
+      const evidence = gsap.timeline({ scrollTrigger: { trigger: chapter, start: "top bottom", end: "bottom top", scrub: 0.7 } });
+      evidence.fromTo(ranks, { scale: 0.92, opacity: 0.72, filter: "brightness(.82)" }, { scale: 1, opacity: 1, filter: "brightness(1)", duration: 0.55 })
+        .to(ranks, { scale: 0.97, opacity: 0.7, filter: "brightness(.74)", duration: 0.45 });
+      ScrollTrigger.create({ trigger: chapter, start: "top top", end: "bottom bottom", pin: copy, pinSpacing: false });
+    });
+    return () => media.revert();
+  }, { scope: root, dependencies: [Boolean(availableFindings)], revertOnUpdate: true });
 
   const scope = frozenGlobal.data;
   const scopeSuccess = !frozenGlobal.error && scope && scope.job_count > 0 && scope.records.length > 0 ? scope : undefined;
@@ -51,9 +78,10 @@ export function VisualV2Page() {
 
     <main>
       <section id="top" className={styles.hero} aria-labelledby="hero-title">
+        <div className={styles.heroAtmosphere} aria-hidden="true"><span className={styles.heroAperture} /><span className={styles.heroHalo} /></div>
         <div className={styles.heroMeta}><span>面向中国大学生的技能学习决策参考</span><span>{scopeSuccess ? accessDateLabel(scopeSuccess.access_date) : frozenGlobal.error ? "当前数据暂时无法读取" : scopeEmpty ? "当前样本暂无可展示数据" : "正在读取当前市场样本……"}</span></div>
-        <h1 id="hero-title">2026，学什么技术最值？</h1>
-        <div className={styles.heroConclusion}>
+        <h1 id="hero-title" aria-label="2026，学什么技术最值？" data-motion-title><span>2026，</span><span>学什么技术最值？</span></h1>
+        <div className={styles.heroConclusion} data-motion-conclusion>
           {availableFindings ? <><strong>{availableFindings.frontier.map((record) => record.skill).join(" · ")}</strong><p>当前最稳健的学习性价比选择</p></> : findingError ? <><strong>当前数据暂时无法读取</strong><p>不会用手写排名替代失败的 API 结果</p></> : findingLoading ? <><strong>正在读取当前市场样本……</strong><p>结论将在证据完整后显示</p></> : <><strong>当前样本暂不支持冻结结论</strong><p>保留不可用状态，不制造推荐结果</p></>}
         </div>
         <div className={styles.authorityStrip}>
@@ -61,12 +89,13 @@ export function VisualV2Page() {
           <p><b>来源</b> {sourceRoleLabel(scopeSuccess.source_role)}<br /><span>{scopeSuccess.disclaimer}</span></p></> : <p role="status">{frozenGlobal.error ? "当前数据暂时无法读取" : scopeEmpty ? "当前筛选条件下没有可展示的技能" : "正在读取当前市场样本……"}</p>}
         </div>
         <div className={styles.heroActions}><a className={styles.primaryAction} href="#cpp"><span>看看为什么</span><ArrowDown size={20} /></a><a className={styles.secondaryAction} href="#roles">找适合我的方向</a></div>
+        <div className={styles.heroSignalRail} aria-hidden="true"><span>MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY · MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY ·</span><span>MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY · MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY ·</span></div>
       </section>
 
       <section id="findings" className={styles.story} aria-label="SkillWorth 研究结论">
         <article id="cpp" className={`${styles.heroMoment} ${styles.cppChapter}`} data-cpp-moment>
-          <div className={styles.momentCopy}><p>一个反直觉发现</p><h2>{availableFindings ? <>C++ 招聘需求排第 {availableFindings.cpp.demandRank}，<br />但学习性价比只排第 {availableFindings.cpp.skillworthRank}</> : findingError ? "当前数据暂时无法读取" : findingLoading ? "正在读取当前冻结发现……" : "当前样本暂不支持这项冻结发现"}</h2><p>同一项技能，招聘需求和学习性价比是两种不同排名。学习性价比（SkillWorth）会同时考虑市场支持和学习投入。</p>{findingError && <button type="button" onClick={retryFindings}>重试</button>}</div>
-          {availableFindings && scopeSuccess ? <div data-cpp-ranks><CppMoment findings={availableFindings} metadata={scopeSuccess} /></div> : <div className={styles.exploreState} role="status">{findingError ? "冻结发现所需证据暂时无法读取" : findingLoading ? "正在读取支持证据……" : "当前样本没有足够证据展示该发现"}</div>}
+          <div className={styles.momentCopy} data-cpp-copy><p>一个反直觉发现</p><h2>{availableFindings ? <>C++ 招聘需求排第 {availableFindings.cpp.demandRank}，<br />但学习性价比只排第 {availableFindings.cpp.skillworthRank}</> : findingError ? "当前数据暂时无法读取" : findingLoading ? "正在读取当前冻结发现……" : "当前样本暂不支持这项冻结发现"}</h2><p>同一项技能，招聘需求和学习性价比是两种不同排名。学习性价比（SkillWorth）会同时考虑市场支持和学习投入。</p>{findingError && <button type="button" onClick={retryFindings}>重试</button>}</div>
+          {availableFindings && scopeSuccess ? <div data-cpp-ranks><CppMoment findings={availableFindings} metadata={scopeSuccess} /></div> : findingLoading ? <VisualLoading label="正在读取支持证据……" variant="panel" /> : <div className={styles.exploreState} role="status">{findingError ? "冻结发现所需证据暂时无法读取" : "当前样本没有足够证据展示该发现"}</div>}
         </article>
       </section>
 

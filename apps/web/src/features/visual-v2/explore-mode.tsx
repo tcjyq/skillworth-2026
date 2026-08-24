@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthRecord, ChinaSkillWorthResponse, RolesResponse } from "@/lib/api/types";
 import { roleLabel } from "./terminology";
+import { VisualLoading } from "./visual-loading";
 import styles from "./visual-v2.module.css";
 
 const RECENCY = [
@@ -83,7 +84,7 @@ export function ExploreMode() {
     </div>
 
     {result.error && <div className={styles.exploreState}><p>当前数据暂时无法读取</p><button type="button" onClick={() => void result.mutate()}>重试</button></div>}
-    {!result.data && !result.error && <div className={styles.exploreState}>正在读取完整技能集合…</div>}
+    {!result.data && !result.error && <VisualLoading label="正在读取完整技能集合…" variant="explore" />}
     {success && success.records.length === 0 && <div className={styles.exploreState}>当前筛选条件下没有可展示的技能</div>}
     {success && success.records.length > 0 && <>
       <div className={styles.resultSummary} aria-live="polite">

@@ -35,7 +35,7 @@ export function PublicNavigation() {
   }, [onHomepage]);
 
   const homePath = onHomepage ? "#top" : "/lab/visual-v2#top";
-  return <header className={styles.publicHeader}>
+  return <header className={styles.publicHeader} data-motion-nav>
     <Link href={homePath} className={styles.publicBrand} aria-label="SkillWorth 2026 首页">SkillWorth <span>2026</span></Link>
     <nav aria-label="公开产品导航">
       {sections.map((item) => <Link key={item.id} href={onHomepage ? `#${item.id}` : `/lab/visual-v2#${item.id}`} aria-current={activeSection === item.id ? "location" : undefined}>{item.label}</Link>)}
