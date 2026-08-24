@@ -1,0 +1,94 @@
+version: "1.1.0"
+
+market_signal_weights:
+  demand_strength: 0.30
+  company_breadth: 0.20
+  role_breadth: 0.20
+  skill_synergy: 0.15
+  confidence: 0.15
+
+role_breadth:
+  minimum_role_support: 3
+  target_recognized_skill_jobs: 30
+  excluded_roles: [other]
+
+synergy:
+  centrality_weight: 0.40
+  edge_support_weight: 0.20
+  jaccard_weight: 0.20
+  positive_pmi_weight: 0.20
+  positive_pmi_reference: 2.0
+
+learning_efficiency:
+  half_value_hours: 160
+
+sensitivity:
+  sensitive_rank_range: 5
+  market_signal_weight_scenarios:
+    demand_heavy:
+      demand_strength: 0.50
+      company_breadth: 0.20
+      role_breadth: 0.10
+      skill_synergy: 0.10
+      confidence: 0.10
+    breadth_heavy:
+      demand_strength: 0.20
+      company_breadth: 0.30
+      role_breadth: 0.30
+      skill_synergy: 0.10
+      confidence: 0.10
+    synergy_heavy:
+      demand_strength: 0.20
+      company_breadth: 0.15
+      role_breadth: 0.15
+      skill_synergy: 0.40
+      confidence: 0.10
+  learning_half_value_scenarios: [100, 240]
+
+robustness:
+  weights:
+    sensitivity_rank_width: 0.30
+    sample_size: 0.20
+    company_breadth: 0.15
+    role_breadth: 0.10
+    confidence: 0.15
+    learning_hours_uncertainty: 0.10
+  rank_width_reference: 30
+  job_support_reference: 30
+  company_support_reference: 20
+  role_breadth_reference: 4
+  learning_uncertainty_reference_ratio: 2.0
+  robust_threshold: 70
+  moderate_threshold: 50
+
+candidate_gate:
+  # 当前快照分布：job_count 中位数 10.5，company_count 中位数 8.5，confidence P10 约 30.76。
+  minimum_job_support: 10
+  minimum_company_support: 8
+  minimum_confidence: 30
+  accepted_robustness_levels: [robust, moderate]
+
+recency_windows:
+  90d: {days: 90, minimum_jobs: 100}
+  180d: {days: 180, minimum_jobs: 100}
+  365d: {days: 365, minimum_jobs: 100}
+  all_active: {days: null, minimum_jobs: 100}
+homepage_minimum_all_active_share: 0.80
+
+# Theme 名称必须对应 taxonomy 中已经存在的 canonical skill；映射可重叠。
+market_themes:
+  AI:
+    [ai_ml_ai, ai_ml_machine_learning, ai_ml_sklearn, ai_ml_pytorch, ai_ml_tensorflow,
+     ai_ml_keras, ai_ml_xgboost, ai_ml_lightgbm, ai_ml_transformers,
+     ai_ml_huggingface, ai_ml_mlflow, ai_ml_rag, ai_ml_computer_vision]
+  Machine Learning:
+    [ai_ml_machine_learning, ai_ml_sklearn, ai_ml_pytorch, ai_ml_tensorflow,
+     ai_ml_keras, ai_ml_xgboost, ai_ml_lightgbm, ai_ml_mlflow]
+  Computer Vision: [ai_ml_computer_vision, ai_ml_opencv]
+  Data Warehousing:
+    [data_engineering_warehouse, data_engineering_spark, data_engineering_flink,
+     data_engineering_hadoop, data_engineering_hive, data_engineering_airflow,
+     data_engineering_dbt, data_engineering_trino, data_engineering_databricks,
+     data_engineering_snowflake]
+  Serverless: [cloud_serverless, cloud_lambda]
+  Optimization: [statistics_optimization]

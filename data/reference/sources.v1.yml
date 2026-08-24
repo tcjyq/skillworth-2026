@@ -1,0 +1,297 @@
+version: "1.0.0"
+freshness_days: 30
+
+sources:
+  - source_id: freehire
+    source_name: Freehire China Technical Jobs — August 2026
+    source_type: public_api_catalogue
+    analysis_role: supplementary_market
+    acquisition_method: documented_unauthenticated_public_read_api_snapshot
+    enabled: true
+    mode: public_api
+    connector: freehire_public_api
+    terms_url: https://freehire.me/docs/api
+    dataset_url: https://freehire.me/jobs
+    dataset_version: "freehire_china_tech_2026_08"
+    license_name: "MIT applies to Freehire software only; third-party job text excluded"
+    license_url: https://github.com/strelov1/freehire/blob/d7ab8697635528b47cea719a590eac485e1dfa2c/LICENSE
+    data_usage_status: no_explicit_block_found
+    notes: >-
+      Public documented read API snapshot for aggregate analysis. No login, cookie, session,
+      private endpoint or access-control bypass is used. Freehire's MIT software license does
+      not license third-party job text; SkillWorth does not redistribute the bulk JD corpus.
+      This source remains supplementary_market and does not represent the complete China market.
+    schema_mapping_version: "1.0.0"
+    column_mapping:
+      source_job_id: [source_job_id]
+      source_url: [source_url]
+      company_name: [company_name]
+      job_title: [job_title]
+      city: [city]
+      education: [education]
+      experience: [experience]
+      salary: [salary]
+      published_at: [published_at]
+      job_description: [job_description]
+
+  - source_id: nextgig_global_jobs_2026_06
+    source_name: NextGig Global Job Postings — June 2026
+    source_type: public_dataset
+    analysis_role: core_market_candidate
+    acquisition_method: huggingface_revision_pinned_public_download
+    enabled: true
+    mode: public_dataset
+    connector: nextgig_june_2026
+    terms_url: https://creativecommons.org/licenses/by/4.0/
+    dataset_url: https://huggingface.co/datasets/NextGig-Rocks/global-job-postings-multi-ats
+    dataset_version: "revision-fc9787e07b2a9b5f11a470c503c36e854abd6378-preflight-seed-202606-n5000"
+    download_url: https://huggingface.co/datasets/NextGig-Rocks/global-job-postings-multi-ats/resolve/fc9787e07b2a9b5f11a470c503c36e854abd6378/nextgig_jobs_2026-06.parquet
+    license_name: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    expected_sha256: 20d40c5e721e8459d156c7f9ae1b5b53829dbff154e5e6d89b53e13f8d3226d5
+    data_usage_status: reviewed
+    notes: >-
+      Attribution: NextGig-Rocks/global-job-postings-multi-ats by NextGig, licensed CC BY 4.0.
+      当前 hash 固定的是从上游 revision 以 seed=202606 无放回抽样并按原始 row index 排序得到的 5,000 行 Preflight Parquet，
+      不是全量文件 hash；完整派生链记录在 data/reference/nextgig_source_metadata.v1.json。
+      数据覆盖全球而非中国专属市场；country/city 为上游派生字段，job_description 为上游 LLM 摘要，
+      日期覆盖稀疏且缺少原始 application URL/source job id。通过 Gate 前不得升级为 core_market。
+    schema_mapping_version: "1.0.0"
+    column_mapping:
+      source_job_id: [source_job_id]
+      source_url: [source_url]
+      company_name: [company_name]
+      job_title: [job_title, title]
+      city: [city]
+      education: [education, education_level]
+      experience: [experience, experience_level]
+      salary: [salary]
+      published_at: [published_at, date_posted]
+      job_description: [job_description]
+
+  - source_id: qarera_skills_2026
+    source_name: Qarera Most In-demand Skills 2026
+    source_type: external_aggregate_benchmark
+    analysis_role: external_market_benchmark
+    acquisition_method: huggingface_revision_pinned_public_download
+    enabled: false
+    mode: external_benchmark
+    connector: external_benchmark
+    terms_url: https://creativecommons.org/licenses/by/4.0/
+    dataset_url: https://huggingface.co/datasets/yash2111/most-in-demand-skills-2026
+    dataset_version: "revision-e12a94a46a334188082d329a175e11bc580f6ba2"
+    download_url: https://huggingface.co/datasets/yash2111/most-in-demand-skills-2026/resolve/e12a94a46a334188082d329a175e11bc580f6ba2/skills-2026-overall.csv
+    license_name: CC BY 4.0
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    data_usage_status: reviewed
+    notes: >-
+      External benchmark only. The published aggregate summarizes 360,336 job postings collected from
+      2025-12-27 through 2026-06-16 and has DOI 10.5281/zenodo.21204423. It must never enter SkillWorth
+      job tables, pooled/platform-balanced demand denominators, salary models, or source-diversity counts.
+    schema_mapping_version: "1.0.0"
+    column_mapping: {}
+
+  - source_id: ncss_public_jobs
+    source_name: 国家大学生就业服务平台（NCSS）公开岗位
+    source_type: official_employment_platform
+    analysis_role: core_market_candidate
+    acquisition_method: authorized_manual_export
+    enabled: false
+    mode: manual_import
+    connector: ncss_public_export
+    terms_url: https://job.ncss.cn/student/connectUser.html
+    data_usage_status: permission_required
+    notes: >-
+      仅定义本地 CSV/JSONL 映射，不包含网络采集器。NCSS 用户协议限制信息用途并禁止未经许可的下载、复制和再使用；
+      在取得并记录适用于 SkillWorth 分析及展示场景的书面许可前，不得导入、运行 Preflight 或升级为 core_market。
+      上游 NIHILITY-cool/Spark-employment-platform 的 MIT License 只覆盖其代码，不覆盖 NCSS 岗位数据。
+    schema_mapping_version: "1.0.0"
+    column_mapping:
+      source_job_id: [source_job_id]
+      source_url: [source_url]
+      company_name: [company_name]
+      job_title: [job_name]
+      city: [city]
+      education: [education_text]
+      experience: [experience_text]
+      salary: [salary_text]
+      published_at: [publish_time]
+      job_description: [job_description]
+
+  - source_id: boss
+    source_name: BOSS直聘
+    source_type: recruitment_platform
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://www.zhipin.com/web/common/protocol/protocol-2019-01-28.html
+    notes: 仅允许导入用户合法取得的导出文件；不实现登录、验证码、反爬或限流绕过。
+    schema_mapping_version: "1.0.0"
+    column_mapping: &platform_mapping
+      source_job_id: [source_job_id, job_id, 职位ID, 职位编号]
+      source_url: [source_url, job_url, url, 职位链接]
+      company_name: [company_name, company, 公司名称, 公司]
+      job_title: [job_title, title, 职位名称, 职位]
+      city: [city, location, 城市, 工作地点]
+      education: [education, education_requirement, 学历, 学历要求]
+      experience: [experience, experience_requirement, 经验, 工作经验]
+      salary: [salary, salary_raw, 薪资, 薪资范围]
+      published_at: [published_at, publish_date, date, 发布日期]
+      job_description: [job_description, description, 职位描述, 岗位描述, JD]
+
+  - source_id: zhilian
+    source_name: 智联招聘
+    source_type: recruitment_platform
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://rd6.zhaopin.com/aboutus/legal/service
+    notes: 仅允许导入用户合法取得的导出文件；自动采集保持关闭。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: 51job
+    source_name: 前程无忧 51Job
+    source_type: recruitment_platform
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://we.51job.com/service
+    notes: 仅允许导入用户合法取得的导出文件；自动采集保持关闭。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: guopin
+    source_name: 国聘网
+    source_type: recruitment_platform
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://www.iguopin.com/
+    notes: 仅允许导入用户合法取得的导出文件；自动采集保持关闭。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: official_employment
+    source_name: 官方就业平台
+    source_type: official_employment_platform
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://example.invalid/replace-with-reviewed-source-terms
+    notes: 占位 Adapter；接入具体平台前必须替换条款链接并完成授权评审。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: enterprise_careers
+    source_name: 企业招聘官网
+    source_type: enterprise_careers
+    analysis_role: supplementary_market
+    acquisition_method: manual_export
+    enabled: false
+    mode: manual_import
+    connector: manual_export
+    terms_url: https://example.invalid/replace-with-reviewed-source-terms
+    notes: 占位 Adapter；每个企业官网必须单独评估条款、robots 和数据许可。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: public_dataset
+    source_name: Public Dataset
+    source_type: public_dataset
+    analysis_role: engineering_validation
+    acquisition_method: public_download
+    enabled: false
+    mode: public_dataset
+    connector: public_dataset
+    terms_url: https://example.invalid/replace-with-dataset-license
+    notes: 占位 Adapter；启用具体数据集前必须记录许可证和再分发限制。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: techsalerator_china_jobs_v1
+    source_name: Techsalerator — Job Posting Data in China v1
+    source_type: public_dataset
+    analysis_role: core_market
+    acquisition_method: kaggle_public_download
+    enabled: true
+    mode: public_dataset
+    connector: techsalerator_china_jobs_v1
+    terms_url: https://www.kaggle.com/datasets/techsalerator/job-posting-data-in-china
+    dataset_url: https://www.kaggle.com/datasets/techsalerator/job-posting-data-in-china
+    dataset_version: "1"
+    download_url: https://www.kaggle.com/api/v1/datasets/download/techsalerator/job-posting-data-in-china
+    license_name: Apache-2.0
+    license_url: https://www.apache.org/licenses/LICENSE-2.0
+    expected_sha256: ff64ceab6ff1538fc21451bc836ad2f45239c503fd5316a7fd01aaa12a93e9ff
+    notes: >-
+      Kaggle 元数据标注 Apache-2.0。公开文件共 9,919 行，但结构化国家字段仅 451 行为 China；
+      Connector 仅纳入这些行。公开版本无公司名称列，以企业官网域名作为 company_name 原始标识；
+      中国子集无薪资值，相关指标必须显示 unavailable。源 CSV 含少量非法 UTF-8 字节，按 utf8-lossy 读取并记录 warning。
+    schema_mapping_version: "1.0.0"
+    column_mapping:
+      source_job_id: [source_job_id]
+      source_url: [source_url]
+      company_name: [company_name]
+      job_title: [job_title]
+      city: [city]
+      education: [education]
+      experience: [experience]
+      salary: [salary]
+      published_at: [published_at]
+      job_description: [job_description]
+
+  - source_id: research_dataset
+    source_name: Research Dataset
+    source_type: research_dataset
+    analysis_role: historical_reference
+    acquisition_method: research_release
+    enabled: false
+    mode: research_dataset
+    connector: public_dataset
+    terms_url: https://example.invalid/replace-with-dataset-license
+    notes: 占位 Adapter；启用前必须记录研究许可、伦理边界和引用要求。
+    schema_mapping_version: "1.0.0"
+    column_mapping: *platform_mapping
+
+  - source_id: hk_csb_gov_vacancies
+    source_name: DATA.GOV.HK — Government Vacancies
+    source_type: official_employment_platform
+    analysis_role: engineering_validation
+    acquisition_method: official_public_json_download
+    enabled: true
+    mode: public_dataset
+    connector: hk_csb_gov_vacancies
+    terms_url: https://data.gov.hk/en/terms-and-conditions
+    dataset_url: https://data.gov.hk/en-data/dataset/hk-csb-csb-gov-vacancies
+    dataset_version: "snapshot-2026-07-29T10:10:00+08:00"
+    download_url: https://www.csb.gov.hk/datagovhk/gov-vacancies/gov-job-vacancies-en.json
+    license_name: DATA.GOV.HK Terms and Conditions of Use
+    license_url: https://data.gov.hk/en/terms-and-conditions
+    expected_sha256: c0ff0746c485f9133866a189e5d395f9c9e2458b5482f55257659e272925fbc5
+    notes: >-
+      香港特别行政区政府公务员事务局官方职位 JSON 快照；条款允许在署名和权属声明条件下复制、分发及商业或非商业使用。
+      本快照 70 条、内嵌时间戳 2026-07-29 10:10:00。来源以香港公营部门为主，不能代表内地技术招聘市场。
+      港币薪资保留原文、币种和结构化原生下限，不在缺少经审计汇率口径时混入人民币薪资分析。
+    schema_mapping_version: "1.0.0"
+    column_mapping:
+      source_job_id: [source_job_id]
+      source_url: [source_url]
+      company_name: [company_name]
+      job_title: [job_title]
+      city: [city]
+      education: [education]
+      experience: [experience]
+      salary: [salary]
+      published_at: [published_at]
+      job_description: [job_description]

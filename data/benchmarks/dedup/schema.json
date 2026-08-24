@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillWorth Dedup Gold Pair Set v2",
+  "type": "object",
+  "required": ["metadata", "pairs"],
+  "properties": {
+    "metadata": {"$ref": "../metadata.schema.json"},
+    "pairs": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+      "required": ["pair_id", "left_job_id", "right_job_id", "gold_duplicate", "difficulty", "source_pair", "reason", "split", "annotator", "annotation_notes", "annotated_at", "updated_at", "annotation_version", "ambiguous", "human_confirmed"],
+      "properties": {
+        "pair_id": {"type": "string"}, "left_job_id": {"type": "string"}, "right_job_id": {"type": "string"},
+        "gold_duplicate": {"type": "boolean"}, "difficulty": {"enum": ["easy", "medium", "hard"]},
+        "source_pair": {"type": "string"}, "reason": {"type": "string"}, "split": {"enum": ["development", "held_out_test"]},
+        "annotator": {"type": "string"}, "annotation_notes": {"type": "string"},
+        "annotated_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"},
+        "annotation_version": {"type": "integer", "minimum": 1}, "ambiguous": {"type": "boolean"}, "human_confirmed": {"const": true}
+      }
+    }}
+  }
+}

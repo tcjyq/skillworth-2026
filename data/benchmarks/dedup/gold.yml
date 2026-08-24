@@ -1,0 +1,9 @@
+metadata:
+  benchmark_version: "2.0.0"
+  created_at: "2026-08-10T00:00:00+08:00"
+  label_count: 0
+  split_seed: 42
+  taxonomy_version: "1.0.1"
+  dedup_version: "1.1.0"
+  role_taxonomy_version: "1.1.0"
+pairs: []

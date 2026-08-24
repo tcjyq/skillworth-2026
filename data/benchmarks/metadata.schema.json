@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["benchmark_version", "created_at", "label_count", "split_seed", "taxonomy_version", "dedup_version", "role_taxonomy_version"],
+  "properties": {
+    "benchmark_version": {"type": "string"}, "created_at": {"type": "string", "format": "date-time"},
+    "label_count": {"type": "integer", "minimum": 0}, "split_seed": {"type": "integer"},
+    "taxonomy_version": {"type": "string"}, "dedup_version": {"type": "string"}, "role_taxonomy_version": {"type": "string"}
+  }
+}

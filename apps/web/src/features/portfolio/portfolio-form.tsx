@@ -1,0 +1,13 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SkillPicker } from "@/components/forms/skill-picker";
+import type { Role, SkillDemand } from "@/lib/api/types";
+import { roleName } from "@/lib/format";
+
+export type PortfolioFields = { current_skills: string[]; target_role: string; city: string; experience: string; match_threshold: number };
+
+export function PortfolioForm({ value, onChange, skills, roles, loading, onSubmit }: { value: PortfolioFields; onChange: (value: PortfolioFields) => void; skills: SkillDemand[]; roles: Role[]; loading: boolean; onSubmit: () => void }) {
+  return <section className="terminal-panel p-4"><div className="mb-5"><p className="label-caps">PORTFOLIO INPUT</p><h2 className="mt-1 terminal-heading">建立你的技能组合</h2></div><div className="space-y-4"><label className="grid gap-1.5"><span className="text-[11px] text-[var(--text-secondary)]">我已掌握的技能</span><SkillPicker skills={skills} value={value.current_skills} onChange={(current_skills) => onChange({ ...value, current_skills })} /></label><label className="grid gap-1.5"><span className="text-[11px] text-[var(--text-secondary)]">目标岗位</span><select className="h-9 border border-[var(--border)] bg-transparent px-2 text-[12px] outline-none focus:border-[var(--accent)]" value={value.target_role} onChange={(e) => onChange({ ...value, target_role: e.target.value })}><option value="">请选择岗位</option>{roles.map((role) => <option key={role.role_id} value={role.role_id}>{roleName(role.role_id)}</option>)}</select></label><div className="grid grid-cols-2 gap-3"><label className="grid gap-1.5"><span className="text-[11px] text-[var(--text-secondary)]">城市代码（可选）</span><Input value={value.city} onChange={(e) => onChange({ ...value, city: e.target.value })} className="h-9 rounded-[3px]" /></label><label className="grid gap-1.5"><span className="text-[11px] text-[var(--text-secondary)]">经验档（可选）</span><Input value={value.experience} onChange={(e) => onChange({ ...value, experience: e.target.value })} className="h-9 rounded-[3px]" /></label></div><label className="grid gap-1.5"><span className="flex justify-between text-[11px] text-[var(--text-secondary)]"><span>技能匹配阈值</span><span className="mono text-[var(--accent)]">{Math.round(value.match_threshold * 100)}%</span></span><input type="range" min="0" max="1" step="0.05" value={value.match_threshold} onChange={(e) => onChange({ ...value, match_threshold: Number(e.target.value) })} className="accent-[#D8A54A]" /></label><Button type="button" onClick={onSubmit} disabled={!value.target_role || loading} className="h-9 w-full rounded-[3px] bg-[var(--accent)] text-[#090909] hover:bg-[#e4b75f]">{loading ? "正在计算…" : "分析下一项技能"}</Button></div></section>;
+}

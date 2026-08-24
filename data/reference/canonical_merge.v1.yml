@@ -1,0 +1,8 @@
+version: "1.0.0"
+salary:
+  conflict_relative_spread_threshold: 0.35
+  minimum_valid_monthly_salary: 1.0
+title:
+  parsed_role_bonus: 1.0
+description:
+  minimum_non_whitespace_characters: 1

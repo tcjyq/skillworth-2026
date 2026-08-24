@@ -1,0 +1,17 @@
+{
+  "version": "1.1.0",
+  "cities": [
+    {"code": "CN-BJ", "name": "北京", "aliases": ["北京", "北京市", "Beijing"]},
+    {"code": "CN-SH", "name": "上海", "aliases": ["上海", "上海市", "Shanghai"]},
+    {"code": "CN-GZ", "name": "广州", "aliases": ["广州", "广州市", "Guangzhou"]},
+    {"code": "CN-SZ", "name": "深圳", "aliases": ["深圳", "深圳市", "Shenzhen"]},
+    {"code": "CN-HZ", "name": "杭州", "aliases": ["杭州", "杭州市", "Hangzhou"]},
+    {"code": "CN-NJ", "name": "南京", "aliases": ["南京", "南京市", "Nanjing"]},
+    {"code": "CN-CD", "name": "成都", "aliases": ["成都", "成都市", "Chengdu"]},
+    {"code": "CN-WH", "name": "武汉", "aliases": ["武汉", "武汉市", "Wuhan"]},
+    {"code": "CN-XA", "name": "西安", "aliases": ["西安", "西安市", "Xi'an", "Xian"]},
+    {"code": "CN-SZ-SU", "name": "苏州", "aliases": ["苏州", "苏州市", "Suzhou"]},
+    {"code": "CN-HK", "name": "香港", "aliases": ["香港", "香港特别行政区", "Hong Kong", "Hong Kong SAR"]},
+    {"code": "REMOTE", "name": "远程", "aliases": ["远程", "全国远程", "remote"]}
+  ]
+}

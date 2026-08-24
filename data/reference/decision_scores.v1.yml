@@ -1,0 +1,67 @@
+version: "1.0.0"
+
+market_value:
+  weights:
+    demand: 0.25
+    adjusted_salary_association: 0.20
+    trend: 0.20
+    skill_synergy: 0.15
+    confidence: 0.20
+  salary_association_min_pct: -20
+  salary_association_max_pct: 20
+  trend_slope_min: -0.02
+  trend_slope_max: 0.02
+  missing_component_policy: "exclude_and_reweight"
+
+personal_roi:
+  weights:
+    marginal_skill_coverage_gain: 0.45
+    market_value: 0.25
+    learning_cost_efficiency: 0.15
+    confidence: 0.15
+  learning_hours_half_value: 160
+
+sensitivity:
+  sensitive_rank_range: 2
+  market_value_scenarios:
+    demand_heavy:
+      demand: 0.50
+      adjusted_salary_association: 0.10
+      trend: 0.10
+      skill_synergy: 0.10
+      confidence: 0.20
+    salary_heavy:
+      demand: 0.10
+      adjusted_salary_association: 0.50
+      trend: 0.10
+      skill_synergy: 0.10
+      confidence: 0.20
+    trend_heavy:
+      demand: 0.10
+      adjusted_salary_association: 0.10
+      trend: 0.50
+      skill_synergy: 0.10
+      confidence: 0.20
+  personal_roi_scenarios:
+    opportunity_heavy:
+      marginal_skill_coverage_gain: 0.70
+      market_value: 0.10
+      learning_cost_efficiency: 0.10
+      confidence: 0.10
+    market_heavy:
+      marginal_skill_coverage_gain: 0.20
+      market_value: 0.55
+      learning_cost_efficiency: 0.10
+      confidence: 0.15
+    learning_cost_heavy:
+      marginal_skill_coverage_gain: 0.20
+      market_value: 0.10
+      learning_cost_efficiency: 0.55
+      confidence: 0.15
+
+optimizer:
+  average_fit_gain_weight: 0.60
+  threshold_coverage_gain_weight: 0.40
+  default_match_threshold: 0.70
+  minimum_marginal_gain: 0.000001
+  selection_mode: "gain_per_expected_hour"

@@ -1,0 +1,28 @@
+"use client";
+
+import type { EChartsOption } from "echarts";
+import { CheckCircle, MinusCircle, Warning } from "@phosphor-icons/react";
+import { EChartsChart } from "@/components/charts/echarts-chart";
+import { Metric } from "@/components/data/metric";
+import { PageFrame } from "@/components/layout/page-frame";
+import { ErrorState, LoadingState, LowConfidenceBanner } from "@/components/states/data-states";
+import { useApi } from "@/hooks/use-api";
+import type { DataQuality, SourcesResponse } from "@/lib/api/types";
+import { integer, percent } from "@/lib/format";
+
+export function DataQualityPage() {
+  const quality = useApi<DataQuality>("/data-quality");
+  const sources = useApi<SourcesResponse>("/sources");
+  if (!quality.data || !sources.data) return <PageFrame title="数据质量" eyebrow="Data Engineering" description="查看分析结果背后的数据完整性与来源状态。">{quality.error || sources.error ? <ErrorState message={quality.error?.message ?? sources.error?.message} retry={() => { void quality.mutate(); void sources.mutate(); }} /> : <LoadingState />}</PageFrame>;
+  const data = quality.data;
+  const missing = Object.entries(data.missing_rate_by_field).sort((a, b) => b[1] - a[1]);
+  const option: EChartsOption = { grid: { left: 110, right: 28, top: 18, bottom: 28 }, tooltip: { trigger: "axis", axisPointer: { type: "shadow" } }, xAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } }, yAxis: { type: "category", inverse: true, data: missing.map(([key]) => fieldName(key)) }, series: [{ type: "bar", barWidth: 8, data: missing.map(([, value]) => ({ value: value * 100, itemStyle: { color: value > .2 ? "#D56565" : value > .1 ? "#C98B45" : "#738B7D" } })) }] };
+  return <PageFrame title="数据质量" eyebrow="Data Engineering" description="每个质量指标均来自后端数据质量报告；未暴露的指标明确标记，不以静态数字替代。">
+    {(sources.data.records.length < 2 || data.salary_parse_rate < .8) && <div className="mb-4"><LowConfidenceBanner reasons={[sources.data.records.length < 2 ? `当前仅 ${sources.data.records.length} 个来源` : "", data.salary_parse_rate < .8 ? `薪资解析率 ${percent(data.salary_parse_rate)}` : ""].filter(Boolean)} /></div>}
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,.6fr)]"><div className="space-y-4"><section className="terminal-panel"><div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="terminal-heading">数据管道健康度</h2></div><div className="grid grid-cols-2 md:grid-cols-4"><Metric label="Bronze 原始记录" value={integer(data.raw_row_count)} /><Metric label="Silver 标准记录" value={integer(data.silver_row_count)} /><Metric label="无效记录率" value={percent(data.invalid_record_rate)} tone={data.invalid_record_rate > .05 ? "warning" : undefined} /><Metric label="整体缺失率" value={percent(data.missing_rate)} tone={data.missing_rate > .1 ? "warning" : undefined} /></div></section><section className="terminal-panel"><div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="terminal-heading">字段缺失率</h2></div><EChartsChart option={option} className="h-[350px] w-full" ariaLabel="Silver 数据字段缺失率" /></section></div><div className="space-y-4"><section className="terminal-panel"><div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="terminal-heading">标准化状态</h2></div><QualityRow label="薪资解析" value={data.salary_parse_rate} /><QualityRow label="岗位标准化" value={data.role_parse_rate} /><QualityRow label="城市标准化" value={data.city_parse_rate} /></section><section className="terminal-panel"><div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="terminal-heading">高级质量指标</h2></div><OptionalRow label="技能抽取 F1" value={data.skill_extraction_f1} /><OptionalRow label="跨平台去重率" value={data.dedup_rate} /></section><section className="terminal-panel"><div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="terminal-heading">来源状态</h2></div>{sources.data.records.map((source) => <div key={source.source_id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-[var(--border-subtle)] px-4 py-3 last:border-0"><div><p className="text-[12px]">{source.source_id}</p><p className="mono mt-1 text-[9px] text-[var(--text-muted)]">最近观测 {source.last_observed_at ?? "未知"}</p></div><span className="mono text-[10px] text-[var(--text-secondary)]">已导入</span></div>)}</section></div></div>
+  </PageFrame>;
+}
+
+function QualityRow({ label, value }: { label: string; value: number }) { const ok = value >= .8; return <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3 last:border-0"><span className="flex items-center gap-2 text-[11px]">{ok ? <CheckCircle size={14} className="text-[var(--positive)]" /> : <Warning size={14} className="text-[var(--warning)]" />}{label}</span><span className="mono text-[11px]">{percent(value)}</span></div>; }
+function OptionalRow({ label, value }: { label: string; value?: number | null }) { return <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3 last:border-0"><span className="flex items-center gap-2 text-[11px]"><MinusCircle size={14} className={value == null ? "text-[var(--text-muted)]" : "text-[var(--positive)]"} />{label}</span><span className="mono text-[10px] text-[var(--text-secondary)]">{value == null ? "API 暂未提供" : percent(value)}</span></div>; }
+function fieldName(value: string) { return ({ company_name: "公司", company_name_normalized: "公司名称", job_title: "职位标题", job_title_normalized: "职位标题", city: "城市", city_code: "城市", education: "学历", education_band: "学历", experience: "经验", experience_band: "经验", salary: "薪资", salary_mid_monthly: "薪资中位数", published_at: "发布日期", published_date: "发布日期" }[value] ?? value); }

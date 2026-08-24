@@ -1,0 +1,9 @@
+source_record_id,source_id,ingestion_run_id,company_name,job_title,city,education,experience,salary,published_at,job_description
+demo-001,demo_source,demo-run-001,示例科技有限公司,数据分析师,北京·海淀区,本科,1-3年,15-25K,2026-08-01,负责SQL和数据分析
+demo-002,demo_source,demo-run-001,示例商业智能有限公司,BI分析师,上海市浦东新区,本科,3-5年,20-30K·13薪,2026/08/02,负责BI平台建设
+demo-003,demo_source,demo-run-001,示例人工智能有限公司,算法工程师,深圳市南山区,硕士,3-5年,30-50K·14薪,2026.08.03,负责机器学习算法
+demo-004,demo_source,demo-run-001,示例咨询有限公司,数据分析实习生,广州市,大专,在校生,200-300元/天,2026-08-04,支持经营分析
+demo-005,demo_source,demo-run-001,示例数据有限公司,数据工程师,杭州市,本科,5-10年,20-30万/年,2026-08-05,建设数据仓库
+demo-006,demo_source,demo-run-001,示例产品有限公司,产品经理,成都市,学历不限,经验不限,面议,2026-08-06,负责产品规划
+demo-007,demo_source,demo-run-001,示例前端有限公司,前端开发工程师,武汉市,本科,1年以内,15-25k,2026-08-07,负责Web前端
+demo-008,demo_source,demo-run-001,,销售顾问,未知城市,,未知经验,30-20K,not-a-date,无效边界样例

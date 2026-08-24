@@ -1,0 +1,36 @@
+version: "1.0.0"
+
+trend:
+  rolling_window_months: 3
+  minimum_observed_months: 7
+  minimum_monthly_sample_size: 20
+  minimum_total_sample_size: 200
+  minimum_posting_date_coverage: 0.70
+  emerging_max_coverage_3m_ago: 0.03
+  emerging_min_change_3m: 0.03
+  growing_min_slope: 0.005
+  growing_min_change_3m: 0.015
+  mature_min_latest_coverage: 0.20
+  mature_max_abs_slope: 0.005
+  mature_max_volatility: 0.04
+  stable_max_abs_slope: 0.003
+  stable_max_volatility: 0.03
+  declining_max_slope: -0.005
+  declining_max_change_3m: -0.015
+  niche_max_latest_coverage: 0.03
+  niche_max_abs_slope: 0.004
+
+salary:
+  minimum_sample_size: 100
+  minimum_skill_jobs: 20
+  minimum_non_skill_jobs: 20
+  minimum_salary_monthly: 1000
+  maximum_salary_monthly: 300000
+  confidence_level: 0.95
+  covariance_type: "HC3"
+  maximum_condition_number: 100000
+
+network:
+  minimum_cooccurrence_count: 3
+  minimum_jaccard: 0.01
+  edge_weight: "jaccard"

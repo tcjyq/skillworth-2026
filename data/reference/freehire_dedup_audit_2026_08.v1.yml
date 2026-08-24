@@ -1,0 +1,99 @@
+version: "1.0.0"
+snapshot_id: freehire_china_tech_2026_08
+scope: audited_existing_eight_merge_groups_only
+decisions:
+  - canonical_job_id_before: job_0a26179bbbb0530d07b09aa0
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: operative-product-manager-2-flextronics-international-z6rcbu7k
+      upstream_requisition_id: WD220973
+    right:
+      source_id: freehire
+      source_job_id: operative-product-manager-1-flextronics-international-hzqrwa2z
+      upstream_requisition_id: WD220974
+    reason: distinct Workday requisitions and explicit title variants 2 versus 1
+
+  - canonical_job_id_before: job_11cbf40ef4b6c1650d6966f5
+    decision: same
+    left:
+      source_id: freehire
+      source_job_id: technical-program-manager-hardware-development-amazon-vphu7qew
+      upstream_requisition_id: "10491143"
+    right:
+      source_id: freehire
+      source_job_id: technical-program-manager-hardware-development-amazon-lk4fns2t
+      upstream_requisition_id: "10491940"
+    reason: conservative keep; exact same title and near-identical duties with no observable level or role variant
+
+  - canonical_job_id_before: job_12a438065e8b95c48247af13
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: staff-senior-machine-learning-engineer-ml-infrastructure-online-unity-id5bl5fq
+      upstream_requisition_id: JOBREQ-2616113
+    right:
+      source_id: freehire
+      source_job_id: staff-senior-machine-learning-engineer-ml-infrastructure-offline-unity-p7wm57qk
+      upstream_requisition_id: JOBREQ-2616270
+    reason: distinct Workday requisitions and explicit online versus offline ML infrastructure variants
+
+  - canonical_job_id_before: job_531f66a95849549c624d1d41
+    decision: same
+    left:
+      source_id: freehire
+      source_job_id: product-manager-revit-architecture-autodesk-zpwvalkq
+      upstream_requisition_id: 26WD100098-1
+    right:
+      source_id: freehire
+      source_job_id: product-manager-revit-architecture-autodesk-2bjeke7m
+      upstream_requisition_id: 26WD100098-1
+    reason: both provenance URLs identify the same Autodesk requisition 26WD100098-1
+
+  - canonical_job_id_before: job_5d9004e7a4447ff688c24fd9
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: data-engineer-aop-row-central-data-engineer-team-amazon-f4vsfa26
+      upstream_requisition_id: "10490462"
+    right:
+      source_id: freehire
+      source_job_id: data-engineer-ii-aop-row-central-data-engineer-team-amazon-3adlrmu6
+      upstream_requisition_id: "10489942"
+    reason: distinct Amazon requisitions and explicit Data Engineer versus Data Engineer II level variant
+
+  - canonical_job_id_before: job_8f08a78e28c8845b81a5ff17
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: business-analyst-tsys-kabp5alw
+      upstream_requisition_id: R0072308
+    right:
+      source_id: freehire
+      source_job_id: business-analyst-ii-tsys-ld4bujzu
+      upstream_requisition_id: R0070999
+    reason: distinct Workday requisitions and explicit Business Analyst versus Business Analyst II level variant
+
+  - canonical_job_id_before: job_b2f5412220bea3c3bda9afe9
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: sr-embedded-software-engineer-2-copeland-c7tlpkbd
+      upstream_requisition_id: JR116004
+    right:
+      source_id: freehire
+      source_job_id: sr-embedded-software-engineer-1-copeland-jq3mep3t
+      upstream_requisition_id: JR116005
+    reason: distinct Workday requisitions and explicit title variants 2 versus 1
+
+  - canonical_job_id_before: job_dc7a2ddffd65a96f2ba485df
+    decision: different
+    left:
+      source_id: freehire
+      source_job_id: senior-data-scientist-i-relx-omwlnomg
+      upstream_requisition_id: R101037
+    right:
+      source_id: freehire
+      source_job_id: senior-data-scientist-ii-relx-mose6kfc
+      upstream_requisition_id: R112695-1
+    reason: distinct Workday requisitions and explicit Senior Data Scientist I versus II level variant

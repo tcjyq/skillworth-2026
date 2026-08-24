@@ -1,0 +1,25 @@
+version: "1.0.0"
+
+source_roles:
+  freehire: supplementary_market
+  nextgig_global_jobs_2026_06: core_market_candidate
+  qarera_skills_2026: external_market_benchmark
+  ncss_public_jobs: core_market_candidate
+  techsalerator_china_jobs_v1: core_market
+  hk_csb_gov_vacancies: engineering_validation
+  boss: supplementary_market
+  zhilian: supplementary_market
+  51job: supplementary_market
+  guopin: supplementary_market
+  official_employment: supplementary_market
+  enterprise_careers: supplementary_market
+  public_dataset: engineering_validation
+  research_dataset: historical_reference
+
+eligibility:
+  minimum_target_sample_size: 50
+  minimum_target_market_ratio: 0.20
+  minimum_skill_extraction_coverage: 0.50
+  maximum_market_age_days: 180
+  minimum_agreement_sample_size: 30
+  required_eligible_sources: 2

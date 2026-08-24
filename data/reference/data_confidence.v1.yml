@@ -1,0 +1,42 @@
+version: "2.0.0"
+
+weights:
+  sample_strength: 0.30
+  effective_source_diversity: 0.20
+  market_freshness: 0.20
+  metric_specific_coverage: 0.15
+  cross_source_agreement: 0.15
+
+levels:
+  high_min_score: 75
+  medium_min_score: 50
+
+sample_strength:
+  target_sample_size: 500
+  warning_below: 50
+  severe_below: 10
+
+effective_source_diversity:
+  target_effective_sources: 4
+  warning_below_effective_sources: 2
+  required_eligible_sources: 2
+
+market_freshness:
+  full_score_days: 30
+  warning_after_days: 90
+  zero_score_days: 180
+  minimum_posting_date_coverage: 0.80
+
+metric_specific_coverage:
+  warning_below: 0.60
+
+cross_source_agreement:
+  minimum_sources: 2
+  minimum_sample_per_source: 30
+  warning_std: 0.15
+  zero_score_std: 0.25
+
+confidence_caps:
+  no_gold_benchmark: 60
+  insufficient_eligible_sources: 65
+  severe_sample_size: 40

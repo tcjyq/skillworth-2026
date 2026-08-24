@@ -1,0 +1,39 @@
+version: "1.0.0"
+annotation_method: "由项目维护者依据 skills.yml 逐条人工标注；expected_skill_ids 是唯一评测真值。"
+fixtures:
+  - fixture_id: jd_cn_001
+    fixture_type: chinese
+    text: "负责数据分析，熟练使用 Python、SQL、Pandas、Excel 和 Power BI，掌握假设检验。"
+    expected_skill_ids: [programming_python, database_sql, data_analysis_pandas, office_excel, visualization_power_bi, statistics_hypothesis]
+  - fixture_id: jd_en_001
+    fixture_type: english
+    text: "Build APIs with PYTHON, FastAPI and PostgreSQL; ship services using Docker and Kubernetes."
+    expected_skill_ids: [programming_python, backend_fastapi, database_postgresql, devops_docker, devops_kubernetes]
+  - fixture_id: jd_mixed_001
+    fixture_type: mixed
+    text: "使用 TypeScript/React 开发前端，后端 Node.js + GraphQL，部署到 AWS。"
+    expected_skill_ids: [programming_typescript, frontend_react, backend_nodejs, backend_graphql, cloud_aws]
+  - fixture_id: jd_dense_001
+    fixture_type: tech_dense
+    text: "Python, Spark, Kafka, Airflow, dbt, Snowflake, Docker, k8s, Terraform, GitHub Actions, Prometheus, Grafana."
+    expected_skill_ids: [programming_python, data_engineering_spark, data_engineering_kafka, data_engineering_airflow, data_engineering_dbt, data_engineering_snowflake, devops_docker, devops_kubernetes, devops_terraform, devops_github_actions, devops_prometheus, devops_grafana]
+  - fixture_id: jd_nontech_001
+    fixture_type: non_technical
+    text: "负责客户关系维护、合同跟进与市场拓展；We go to market and manage client accounts."
+    expected_skill_ids: []
+  - fixture_id: jd_short_negative_001
+    fixture_type: non_technical
+    text: "Manage R&D coordination, C-level communication, go to customer sites and improve air quality."
+    expected_skill_ids: []
+  - fixture_id: jd_short_positive_001
+    fixture_type: mixed
+    text: "熟悉 Go 语言、R语言、C/C++，参与 AI 模型开发。"
+    expected_skill_ids: [programming_go, programming_r, programming_c, programming_cpp, ai_ml_ai]
+  - fixture_id: jd_alias_001
+    fixture_type: english
+    text: "Experience with js, ts, pbi, sklearn, postgres and k8s is required."
+    expected_skill_ids: [programming_javascript, programming_typescript, visualization_power_bi, ai_ml_sklearn, database_postgresql, devops_kubernetes]
+  - fixture_id: jd_ambiguous_acronym_negative_001
+    fixture_type: non_technical
+    text: "Please submit your CV to our MD; commercial vehicle experience is preferred."
+    expected_skill_ids: []

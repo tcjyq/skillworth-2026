@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillWorth Role Gold Set v2",
+  "type": "object",
+  "required": ["metadata", "records"],
+  "properties": {
+    "metadata": {"$ref": "../metadata.schema.json"},
+    "records": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+      "required": ["record_id", "title", "description_excerpt", "source", "gold_role", "difficulty", "split", "annotator", "annotation_notes", "annotated_at", "updated_at", "annotation_version", "ambiguous", "human_confirmed"],
+      "properties": {
+        "record_id": {"type": "string"}, "title": {"type": "string"}, "description_excerpt": {"type": "string"}, "source": {"type": "string"},
+        "gold_role": {"enum": ["data_analyst", "bi_analyst", "business_analyst", "data_scientist", "data_engineer", "analytics_engineer", "ai_engineer", "ml_engineer", "llm_engineer", "mlops_engineer", "backend_engineer", "frontend_engineer", "fullstack_engineer", "software_engineer", "devops_engineer", "cloud_engineer", "security_engineer", "technical_product_manager", "product_manager", "other"]},
+        "difficulty": {"enum": ["easy", "medium", "hard"]}, "split": {"enum": ["development", "held_out_test"]},
+        "annotator": {"type": "string"}, "annotation_notes": {"type": "string"},
+        "annotated_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"},
+        "annotation_version": {"type": "integer", "minimum": 1}, "ambiguous": {"type": "boolean"}, "human_confirmed": {"const": true}
+      }
+    }}
+  }
+}

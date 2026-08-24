@@ -1,0 +1,18 @@
+{
+  "source_id": "demo_source",
+  "source_name": "SkillWorth Synthetic Bronze Demo",
+  "source_type": "demo_fixture",
+  "authorization_status": "public_license_verified",
+  "license_or_terms_reference": "Synthetic fixture created for SkillWorth tests and local demonstration; no third-party records.",
+  "connector_id": "manual_import",
+  "connector_version": "0.1.0",
+  "ingestion_run_id": "demo-run-001",
+  "imported_at": "2026-08-08T00:00:00+08:00",
+  "raw_artifact_path": "data/demo/bronze_jobs.csv",
+  "raw_artifact_sha256": "f3a96dd349dd6da2c4b7dc0ced62ffc1bd0ba0bc5dc2a59e3a22edff3d28980e",
+  "schema_mapping_version": "1.0.0",
+  "pipeline_version": "0.3.0",
+  "row_count_received": 8,
+  "row_count_accepted": 8,
+  "coverage_notes": "Synthetic records covering supported salary, role, city, education, experience and date normalization cases."
+}

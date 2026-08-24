@@ -1,0 +1,10 @@
+DROP VIEW IF EXISTS role_summary;
+DROP VIEW IF EXISTS city_summary;
+DROP VIEW IF EXISTS source_summary;
+DROP VIEW IF EXISTS skill_demand;
+DROP VIEW IF EXISTS source_skill_demand;
+DROP VIEW IF EXISTS monthly_skill_demand;
+DROP VIEW IF EXISTS salary_distribution;
+DROP VIEW IF EXISTS skill_salary;
+DROP VIEW IF EXISTS skill_role;
+DROP VIEW IF EXISTS skill_city;

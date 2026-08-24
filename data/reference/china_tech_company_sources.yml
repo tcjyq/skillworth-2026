@@ -1,0 +1,121 @@
+version: "1.0.0"
+scope: "2026 年中国主要科技企业公开技术岗位样本"
+reviewed_at: "2026-08-10T17:23:18+08:00"
+allowed_statuses:
+  - approved
+  - permission_required
+  - manual_reference_only
+  - rejected
+  - unknown
+
+companies:
+  - company: Tencent
+    career_site: https://careers.tencent.com/
+    job_scope: 腾讯官方社会招聘与校园招聘公开职位
+    public_browsing: true
+    public_job_detail: true
+    login_required: false
+    cookie_required: null
+    csrf_required: null
+    captcha_required: null
+    public_api_observed: false
+    terms_found: true
+    data_reuse_permission: not_granted
+    automation_permission: prohibited_by_current_terms
+    redistribution_permission: not_granted
+    contact: Tencent-Recruit@tencent.com
+    status: manual_reference_only
+    evidence:
+      - url: https://careers.tencent.com/m/zh-cn/termsservice.html
+        finding: 招聘平台条款授予受限的平台使用权，未授予岗位数据自动化采集、复制或再分发权，并明确限制程序化抓取。
+      - url: https://careers.tencent.com/jobdesc.html
+        finding: 岗位详情可公开浏览；公开可见不等同于数据再利用许可。
+    reviewed_at: "2026-08-10"
+
+  - company: Baidu
+    career_site: https://talent.baidu.com/
+    job_scope: 百度官方社会招聘与校园招聘公开职位
+    public_browsing: true
+    public_job_detail: true
+    login_required: false
+    cookie_required: null
+    csrf_required: null
+    captcha_required: null
+    public_api_observed: false
+    terms_found: false
+    data_reuse_permission: not_established
+    automation_permission: not_established
+    redistribution_permission: not_established
+    contact: null
+    status: permission_required
+    evidence:
+      - url: https://talent.baidu.com/jobs/list
+        finding: 官方职位列表可公开访问，但未发现适用于 SkillWorth 自动化分析与再利用的明确许可。
+      - url: https://talent.baidu.com/mobile/recruit/help.html
+        finding: 官方帮助说明投递环节需要登录；本轮未进行登录或受保护接口访问。
+    reviewed_at: "2026-08-10"
+
+  - company: Alibaba
+    career_site: https://www.alibabagroup.com/zh-HK/careers
+    job_scope: 阿里巴巴集团及校园招聘公开职位
+    public_browsing: true
+    public_job_detail: true
+    login_required: false
+    cookie_required: null
+    csrf_required: null
+    captcha_required: null
+    public_api_observed: true
+    terms_found: false
+    data_reuse_permission: not_established
+    automation_permission: not_established
+    redistribution_permission: not_established
+    contact: "0571-28285927"
+    status: permission_required
+    evidence:
+      - url: https://campus-talent.alibaba.com/campus/position
+        finding: 官方职位列表可公开浏览；本轮未发现岗位数据自动化再利用许可。
+      - url: https://developer.alibaba.com/docs/api.htm?apiId=38420
+        finding: 官方开发者文档出现招聘职位相关 API，但其应用授权和数据再利用范围未确认，不能视为无需授权的公开数据 API。
+    reviewed_at: "2026-08-10"
+
+  - company: Meituan
+    career_site: https://zhaopin.meituan.com/web/social
+    job_scope: 美团官方社会招聘公开职位
+    public_browsing: true
+    public_job_detail: true
+    login_required: false
+    cookie_required: null
+    csrf_required: null
+    captcha_required: null
+    public_api_observed: false
+    terms_found: false
+    data_reuse_permission: not_established
+    automation_permission: not_established
+    redistribution_permission: not_established
+    contact: zhaopin@meituan.com
+    status: permission_required
+    evidence:
+      - url: https://zhaopin.meituan.com/web/social
+        finding: 官方社会招聘页面可公开浏览，但未发现允许自动化采集、分析或再分发岗位数据的明确许可。
+    reviewed_at: "2026-08-10"
+
+  - company: ByteDance
+    career_site: https://jobs.bytedance.com/
+    job_scope: 字节跳动官方社会招聘与校园招聘公开职位
+    public_browsing: true
+    public_job_detail: true
+    login_required: false
+    cookie_required: null
+    csrf_required: null
+    captcha_required: null
+    public_api_observed: false
+    terms_found: false
+    data_reuse_permission: not_established
+    automation_permission: not_established
+    redistribution_permission: not_established
+    contact: null
+    status: permission_required
+    evidence:
+      - url: https://jobs.bytedance.com/campus/
+        finding: 官方职位页面可公开浏览；未确认自动化访问和岗位数据再利用许可。不得复用依赖 Cookie、CSRF Token、Session 或登录态的第三方抓取实现。
+    reviewed_at: "2026-08-10"

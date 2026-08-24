@@ -1,0 +1,64 @@
+version: "1.0.0"
+
+target_market:
+  version: "1.0.0"
+  cause_evidence_min_coverage: 0.25
+  target_title_patterns:
+    - "\\bdata (?:analyst|scientist|engineer|architect)\\b"
+    - "\\b(?:business|bi) analyst\\b"
+    - "\\bsoftware\\b"
+    - "\\b(?:backend|back-end|frontend|front-end|full-stack|full stack)\\b"
+    - "\\b(?:developer|programmer)\\b"
+    - "\\b(?:machine learning|artificial intelligence|ai engineer|algorithm engineer)\\b"
+    - "\\b(?:devops|sre|cloud engineer)\\b"
+    - "\\b(?:cyber ?security|security engineer)\\b"
+    - "\\b(?:product manager|product owner)\\b"
+  possible_title_patterns:
+    - "\\b(?:system|systems) engineer\\b"
+    - "\\bsystem architect\\b"
+    - "\\bapplication engineer\\b"
+    - "\\b(?:embedded|firmware|electrical software)\\b"
+    - "\\b(?:calibration|controls?|automation|test) engineer\\b"
+    - "\\btechnical project\\b"
+    - "\\b(?:sap|digitalization|digitalisation|it engineer|data research)\\b"
+  non_target_title_patterns:
+    - "\\bquality\\b"
+    - "\\b(?:production|manufacturing|warehouse|logistics|purchasing|buyer)\\b"
+    - "\\b(?:sales|accountant|accounting|finance|human resources|hr)\\b"
+    - "\\b(?:ehs|planner|mechanical|maintenance|technician|operator)\\b"
+    - "\\b(?:legal|recruiting|commodity|supply chain|material|facility|facilities)\\b"
+    - "\\b(?:treasury|tax|payroll|secretary|marketing|business development)\\b"
+  industry_clue_patterns:
+    automotive_industrial: "\\b(?:automotive|vehicle|manufactur\\w*|production|plant|assembly|machining)\\b"
+    quality_operations: "\\b(?:quality|supplier|warehouse|logistics|purchas\\w*|buyer|supply chain|planner)\\b"
+  technical_description_patterns:
+    - "\\b(?:software|data|digital|python|java|c\\+\\+|sql|cloud)\\b"
+    - "\\b(?:machine learning|artificial intelligence|cyber|embedded|firmware|sap|devops|database|algorithm)\\b"
+  boilerplate_phrases:
+    - "ZF is a global technology company"
+    - "Become our next FutureStarter"
+    - "Req ID"
+    - "Your tasks"
+    - "Your profile"
+
+quality_gates:
+  skills:
+    minimum_gold_samples: 300
+    minimum_held_out_samples: 100
+    minimum_hard_samples: 60
+    minimum_negative_samples: 60
+    minimum_micro_precision: 0.95
+    minimum_micro_recall: 0.90
+    minimum_short_alias_precision: 0.98
+  roles:
+    minimum_gold_samples: 300
+    minimum_held_out_samples: 100
+    minimum_samples_per_target_role: 20
+    minimum_macro_f1: 0.85
+  dedup:
+    minimum_gold_pairs: 300
+    minimum_held_out_pairs: 100
+    minimum_hard_pairs: 100
+    minimum_precision: 0.98
+    minimum_recall: 0.75
+    maximum_false_merge_rate: 0.02

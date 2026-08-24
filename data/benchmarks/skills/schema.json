@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SkillWorth Skill Extraction Gold Set v2",
+  "type": "object",
+  "required": ["metadata", "records"],
+  "properties": {
+    "metadata": {"$ref": "../metadata.schema.json"},
+    "records": {"type": "array", "items": {"type": "object", "additionalProperties": false,
+      "required": ["record_id", "title", "description", "source", "language", "gold_skills", "negative_terms", "difficulty", "split", "annotator", "annotation_notes", "annotated_at", "updated_at", "annotation_version", "ambiguous", "human_confirmed"],
+      "properties": {
+        "record_id": {"type": "string"}, "title": {"type": "string"}, "description": {"type": "string"},
+        "source": {"type": "string"}, "language": {"enum": ["zh", "en", "mixed", "other"]},
+        "gold_skills": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "negative_terms": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "difficulty": {"enum": ["easy", "medium", "hard"]}, "split": {"enum": ["development", "held_out_test"]},
+        "annotator": {"type": "string"}, "annotation_notes": {"type": "string"},
+        "annotated_at": {"type": "string", "format": "date-time"}, "updated_at": {"type": "string", "format": "date-time"},
+        "annotation_version": {"type": "integer", "minimum": 1}, "ambiguous": {"type": "boolean"}, "human_confirmed": {"const": true}
+      }
+    }}
+  }
+}

@@ -1,0 +1,139 @@
+skill,current_category,skill_type,skillworth_eligibility,reason,job_count,company_count,role_count,market_signal,learning_hours_expected,current_skillworth_rank,confidence,sensitivity_rank_min,sensitivity_rank_max
+Python,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,363,145,13,47.64,160.0,1,56.06,1,2
+SQL,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,186,104,10,36.2,100.0,2,55.31,1,2
+AI,ai_ml,broad_concept,excluded,AI 是宽泛领域概念，无法对应单一、可验证的下一步学习目标。,404,165,13,47.03,240.0,3,57.61,1,2
+Git,devops,engineering_tool,main,Git 是明确的工程工具，可形成可验证学习目标。,47,33,6,23.76,55.0,4,47.81,3,3
+Agile,product,general_methodology,excluded,Agile 是一般工作方法，不是具体技术学习资产。,107,72,6,25.4,70.0,5,49.86,1,3
+Optimization,statistics,broad_concept,excluded,Optimization 含义过宽，无法对应单一学习目标。,234,113,12,34.87,180.0,6,53.65,2,3
+Docker,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,59,34,5,25.74,100.0,7,49.69,4,5
+Excel,office,general_productivity_tool,secondary,Excel 对数据岗位有实际价值，但属于岗位相关辅助工具。,113,75,4,24.96,100.0,8,51.72,1,2
+Power BI,visualization,data_tool,main,具体可视化工具，可形成明确学习产出。,70,55,6,24.78,100.0,9,50.27,4,8
+Machine Learning,ai_ml,broad_concept,secondary,机器学习是宽泛能力领域，适合方向分析而非具体技术主榜。,250,102,9,37.83,260.0,10,53.86,1,2
+PowerPoint,office,general_productivity_tool,excluded,一般生产力工具不参与具体技术学习主榜。,67,46,2,18.53,60.0,11,47.7,4,4
+AWS,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,93,53,8,30.81,220.0,12,50.12,6,10
+Word,office,general_productivity_tool,excluded,一般生产力工具不参与具体技术学习主榜。,37,27,1,14.69,35.0,13,41.22,5,5
+Tableau,visualization,data_tool,main,具体可视化工具，可形成明确学习产出。,45,36,4,19.57,100.0,14,50.01,7,26
+Azure,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,68,47,7,28.43,220.0,15,50.27,7,24
+Bash,other,engineering_tool,main,具体工程技术，可形成明确学习产出。,45,27,1,18.44,90.0,16,47.61,7,18
+Java,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,96,44,7,27.98,220.0,17,46.11,8,16
+RAG,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,52,31,6,21.66,140.0,18,47.16,9,32
+Linux,devops,operating_system,main,Linux 可形成具体且可验证的技术学习目标。,74,48,5,24.18,180.0,19,47.8,11,31
+HTML,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,19,11,1,14.58,45.0,20,37.39,5,21
+Kubernetes,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,80,44,7,26.85,220.0,21,45.54,9,21
+Google Cloud,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,53,36,6,26.71,220.0,22,50.78,10,28
+Jira,product,general_productivity_tool,secondary,Jira 是团队协作工具，技术学习价值依赖岗位情境。,23,18,3,14.34,45.0,23,43.87,3,3
+MySQL,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,33,23,4,18.68,110.0,24,32.02,10,19
+React,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,44,32,4,21.43,150.0,25,41.8,14,18
+Grafana,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,17,11,1,16.35,80.0,26,43.08,6,24
+Apache Spark,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,76,39,4,23.65,190.0,27,48.1,14,24
+JSON,other,engineering_tool,main,具体工程技术，可形成明确学习产出。,6,6,1,12.11,20.0,28,40.0,6,29
+PyTorch,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,79,37,5,22.54,180.0,29,46.75,15,34
+Jenkins,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,21,12,1,16.62,100.0,30,43.78,11,28
+Scrum,product,general_methodology,excluded,Scrum 是一般工作方法，不是具体技术学习资产。,21,17,2,13.6,55.0,31,45.65,6,7
+Redis,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,26,19,2,15.13,80.0,32,30.9,12,27
+Confluence,product,general_productivity_tool,excluded,Confluence 是一般协作工具，不进入技术技能主榜。,15,14,1,12.25,35.0,33,40.98,6,7
+XML,other,engineering_tool,main,具体工程技术，可形成明确学习产出。,4,4,1,11.92,30.0,34,38.5,11,35
+Ansible,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,16,11,1,16.29,100.0,35,47.87,21,32
+PostgreSQL,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,26,21,2,18.13,130.0,36,47.87,23,29
+GitHub Actions,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,13,9,2,14.27,70.0,37,36.27,13,31
+TensorFlow,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,48,28,5,20.86,180.0,38,45.38,20,38
+CSS,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,14,10,1,14.6,80.0,39,37.97,15,36
+Apache Kafka,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,37,24,2,18.55,150.0,40,32.55,23,35
+Snowflake,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,24,16,2,17.29,130.0,41,46.4,28,33
+Terraform,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,28,20,2,17.2,130.0,42,42.35,30,32
+C++,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,102,51,6,24.82,260.0,43,51.13,19,48
+MongoDB,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,20,15,4,15.9,110.0,44,29.69,25,34
+Prometheus,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,13,9,1,14.94,100.0,45,36.27,17,39
+Helm,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,6,3,1,13.77,80.0,46,40.0,25,40
+JavaScript,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,25,18,3,18.35,160.0,47,44.59,32,37
+Node.js,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,29,19,3,15.47,120.0,48,31.41,34,39
+Elasticsearch,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,23,17,2,16.41,140.0,49,39.87,37,42
+Pandas,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,17,15,1,14.51,110.0,50,46.95,40,41
+FastAPI,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,12,11,3,13.95,100.0,51,46.44,38,46
+NumPy,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,13,11,1,13.2,90.0,52,43.87,39,43
+Databricks,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,26,18,1,16.22,150.0,53,46.64,40,45
+Argo CD,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,4,2,0,12.58,90.0,54,40.0,39,48
+Data Warehousing,data_engineering,technical_method,secondary,数据仓库是工程方法领域，适合作为岗位方向辅助项。,25,18,1,16.33,170.0,55,45.92,4,4
+SQL Server,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,13,7,1,14.2,130.0,56,47.74,44,50
+GitLab CI,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,7,6,0,11.24,70.0,57,39.77,44,49
+Apache Airflow,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,13,10,1,13.67,120.0,58,42.94,43,49
+Matplotlib,visualization,data_tool,main,具体可视化工具，可形成明确学习产出。,3,2,0,10.98,70.0,59,40.0,46,53
+GraphQL,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,6,5,1,11.4,80.0,60,40.0,47,51
+gRPC,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,8,6,1,11.31,80.0,61,40.0,48,53
+Spring Boot,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,16,11,2,15.98,180.0,62,48.67,44,53
+TypeScript,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,14,11,1,11.7,90.0,63,37.14,47,52
+Flask,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,5,5,0,11.06,90.0,64,40.0,52,58
+Apache Hive,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,10,6,1,12.77,130.0,65,43.34,54,57
+C,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,47,24,1,16.11,220.0,66,49.21,52,70
+Hugging Face,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,9,6,1,11.83,120.0,67,40.0,56,59
+AWS Lambda,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,6,4,1,10.56,90.0,68,40.0,54,65
+PowerShell,other,engineering_tool,main,具体工程技术，可形成明确学习产出。,3,3,0,10.45,90.0,69,40.0,56,66
+scikit-learn,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,12,10,2,11.27,110.0,70,29.21,54,60
+Transformers,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,32,18,1,14.16,180.0,71,44.14,54,66
+Keras,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,6,4,0,10.78,100.0,72,40.0,57,67
+PHP,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,10,4,0,12.36,140.0,73,36.47,52,69
+MATLAB,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,19,14,0,11.38,120.0,74,45.19,57,78
+Hadoop,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,24,19,1,14.15,190.0,75,30.53,54,71
+ClickHouse,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,8,7,1,11.71,130.0,76,40.0,63,65
+A/B Testing,product,technical_method,secondary,A/B Testing 是岗位相关方法，作为辅助技能展示。,15,14,1,10.47,100.0,77,40.58,5,8
+Angular,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,10,10,2,13.08,170.0,78,40.11,62,72
+Express.js,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,9,9,0,9.89,90.0,79,39.18,60,76
+Cassandra,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,6,4,1,12.21,150.0,80,40.0,60,70
+Vue.js,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,11,9,2,11.74,140.0,81,26.99,56,70
+VBA,office,programming_language,secondary,VBA 可形成具体学习目标，但适用岗位范围较窄。,14,11,1,10.87,120.0,82,34.87,5,7
+Go,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,13,10,2,11.49,140.0,83,31.74,64,73
+Computer Vision,ai_ml,broad_concept,secondary,计算机视觉是技术领域，学习路径依赖具体框架与任务。,31,14,2,14.87,230.0,84,41.72,5,8
+XGBoost,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,5,4,0,9.9,100.0,85,38.31,67,74
+Alteryx,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,7,6,0,9.91,100.0,86,33.83,66,73
+Trino,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,4,3,0,10.37,120.0,87,40.0,73,76
+Scala,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,11,9,2,13.31,200.0,88,45.79,71,76
+Apache Flink,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,16,12,1,13.67,210.0,89,40.81,69,78
+OAuth,other,engineering_tool,main,具体工程技术，可形成明确学习产出。,4,4,0,8.87,80.0,90,40.0,68,83
+Looker,visualization,data_tool,main,具体可视化工具，可形成明确学习产出。,4,4,0,9.49,100.0,91,40.0,74,80
+Hypothesis Testing,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,3,2,0,9.47,100.0,92,39.69,7,8
+OpenCV,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,6,4,0,10.63,140.0,93,38.32,74,78
+.NET,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,6,6,1,11.4,170.0,94,40.0,77,82
+R,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,3,3,0,9.57,120.0,95,40.0,79,82
+User Research,product,domain_knowledge,excluded,用户研究属于产品专业方法，不进入技术技能主榜。,5,4,1,9.02,110.0,96,36.58,8,8
+Regression Analysis,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,3,2,0,9.8,140.0,97,39.22,9,9
+Next.js,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,4,4,0,8.76,110.0,98,22.77,68,85
+Ruby,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,5,4,0,9.63,140.0,99,37.78,82,85
+C#,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,12,10,2,12.08,220.0,100,46.48,80,88
+MLflow,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,5,5,0,8.41,110.0,101,33.25,84,86
+Alibaba Cloud,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,10,8,1,11.15,200.0,102,42.31,83,91
+Rust,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,12,8,1,11.78,220.0,103,41.78,82,92
+Django,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,4,4,0,9.03,140.0,104,30.77,81,89
+Vite,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,2,2,0,6.17,45.0,105,40.0,80,90
+Postman,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,2,2,0,6.17,45.0,106,40.0,81,91
+Probability,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,4,3,0,8.6,140.0,107,33.87,10,10
+Nginx,devops,devops_tool,main,具体工程或交付工具，可形成明确学习产出。,3,2,0,7.15,90.0,108,21.69,79,90
+Experiment Design,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,5,4,0,8.36,140.0,109,39.38,11,11
+SQLite,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,1,1,0,5.84,50.0,110,38.34,86,92
+Tencent Cloud,cloud,cloud_platform,main,具体云平台或云技术，可形成明确学习产出。,3,2,0,9.87,200.0,111,40.0,88,95
+Tailwind CSS,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,1,1,0,5.84,55.0,112,38.34,87,93
+Microsoft 365,office,general_productivity_tool,excluded,一般生产力工具不参与具体技术学习主榜。,5,5,0,6.23,70.0,113,38.71,9,9
+Figma,product,general_productivity_tool,secondary,Figma 对前端与产品岗位有辅助价值，但不进入通用技术主榜。,3,3,0,6.14,80.0,114,39.22,12,12
+Polars,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,1,1,0,5.84,75.0,115,38.34,94,94
+Jupyter,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,1,1,0,4.7,35.0,116,30.74,93,100
+Google Sheets,office,general_productivity_tool,excluded,一般生产力工具不参与具体技术学习主榜。,1,1,0,5.54,70.0,117,36.34,10,10
+KNIME,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,2,2,0,6.17,100.0,118,40.0,95,96
+dbt,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,2,2,0,6.17,100.0,119,40.0,96,97
+SPSS,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,1,1,0,5.84,90.0,120,38.34,97,98
+Apache Superset,visualization,data_tool,main,具体可视化工具，可形成明确学习产出。,1,1,0,5.84,90.0,121,38.34,98,99
+Axure RP,product,general_productivity_tool,secondary,Axure 对产品岗位有辅助价值，但不进入通用技术主榜。,1,1,0,5.46,80.0,122,35.81,13,13
+LightGBM,ai_ml,ai_ml_technology,main,具体 AI/ML 技术，可形成明确学习产出。,1,1,0,5.84,100.0,123,38.34,99,101
+JUnit,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,1,1,0,4.68,55.0,124,30.61,100,104
+SciPy,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,1,1,0,5.84,110.0,125,38.34,101,102
+Nuxt,frontend,frontend_technology,main,具体前端技术，可形成明确学习产出。,1,1,0,5.84,110.0,126,38.34,102,103
+NestJS,backend,backend_technology,main,具体后端技术，可形成明确学习产出。,1,1,0,5.84,120.0,127,38.34,103,104
+Selenium,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,1,1,0,4.92,90.0,128,32.21,105,106
+Apache Beam,data_engineering,data_tool,main,具体数据工程技术或平台，可形成明确学习产出。,2,2,0,6.17,170.0,129,40.0,105,106
+Oracle Database,database,database,main,具体数据库或查询技术，可定义可验证的学习目标。,1,1,0,5.84,170.0,130,38.34,107,107
+SAS,data_analysis,data_tool,main,具体数据分析工具，可形成明确学习产出。,5,5,0,5.09,150.0,131,31.11,108,108
+Swift,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,4,3,0,4.7,140.0,132,29.47,109,109
+Cypress,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,2,2,0,3.22,80.0,133,20.3,110,111
+pytest,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,1,1,0,2.84,55.0,134,18.34,110,111
+Causal Inference,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,2,1,0,4.4,200.0,135,28.57,14,14
+Playwright,testing,engineering_tool,main,具体测试工具，可形成明确学习产出。,1,1,0,2.84,80.0,136,18.34,112,112
+Kotlin,programming,programming_language,main,可形成明确学习路径并直接用于技术岗位任务。,2,1,0,3.16,140.0,137,20.3,113,113
+Time Series Analysis,statistics,technical_method,secondary,基础方法价值依赖岗位方向，作为辅助技能展示。,1,1,0,2.84,160.0,138,18.34,15,15

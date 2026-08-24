@@ -1,0 +1,8 @@
+export const percent = (value: number | null | undefined, digits = 1) => value == null ? "—" : `${(value * 100).toFixed(digits)}%`;
+export const signedPercent = (value: number | null | undefined, digits = 1) => value == null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(digits)}%`;
+export const integer = (value: number | null | undefined) => value == null ? "—" : new Intl.NumberFormat("zh-CN").format(value);
+export const money = (value: number | null | undefined) => value == null ? "—" : `¥${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(value)}`;
+export const roleName = (id: string) => ({ data_analyst: "数据分析师", bi_analyst: "BI 分析师", data_scientist: "数据科学家", data_engineer: "数据工程师", ai_engineer: "AI 工程师", backend_engineer: "后端工程师", frontend_engineer: "前端工程师", devops_engineer: "DevOps 工程师", product_manager: "产品经理", other: "其他岗位" }[id] ?? id);
+export const categoryName = (id: string) => ({ programming: "编程语言", database: "数据库", data_analysis: "数据分析", data_engineering: "数据工程", ai_ml: "人工智能", frontend: "前端", backend: "后端", devops: "DevOps", cloud: "云计算", visualization: "可视化", testing: "测试", product: "产品", office: "办公", statistics: "统计", other: "其他" }[id] ?? id);
+export const statusName = (value: string | null | undefined) => value == null ? "暂无模型" : ({ insufficient_sample: "样本不足", qualified: "证据充分", unavailable: "暂不可用", ok: "可用" }[value] ?? value.replaceAll("_", " "));
+export const limitationName = (value: string) => ({ qualified_month_count_below_threshold: "有效月份不足", total_sample_size_below_threshold: "总样本量不足", monthly_sample_size_below_threshold: "月度样本量不足", latest_month_sample_below_threshold: "最近月份样本不足", source_count_below_threshold: "来源数量不足" }[value] ?? value.replaceAll("_", " "));

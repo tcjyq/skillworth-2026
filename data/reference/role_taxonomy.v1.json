@@ -1,0 +1,86 @@
+{
+  "version": "1.2.0",
+  "fallback_role": "other",
+  "roles": [
+    {
+      "id": "bi_analyst",
+      "patterns": ["\\bbi analyst\\b", "\\bbusiness intelligence analyst\\b", "\\bbi\\b", "商业智能分析", "BI分析"]
+    },
+    {
+      "id": "business_analyst",
+      "patterns": ["\\bbusiness analyst\\b", "业务分析师", "商业分析师"]
+    },
+    {
+      "id": "data_scientist",
+      "patterns": ["\\bdata scientist\\b", "数据科学家", "数据科学"]
+    },
+    {
+      "id": "data_engineer",
+      "patterns": ["\\bdata engineer\\b", "\\bbig data engineer\\b", "数据工程师", "大数据开发", "数据开发"]
+    },
+    {
+      "id": "analytics_engineer",
+      "patterns": ["\\banalytics engineer\\b", "分析工程师"]
+    },
+    {
+      "id": "llm_engineer",
+      "patterns": ["\\b(?:llm|large language model) engineer\\b", "大模型工程师", "大语言模型工程师"]
+    },
+    {
+      "id": "mlops_engineer",
+      "patterns": ["\\bmlops(?: engineer)?\\b", "机器学习平台工程师"]
+    },
+    {
+      "id": "ml_engineer",
+      "patterns": ["\\bmachine learning engineer\\b", "\\bml engineer\\b", "机器学习工程师"]
+    },
+    {
+      "id": "ai_engineer",
+      "patterns": ["\\bai engineer\\b", "\\balgorithm engineer\\b", "AI工程师", "人工智能工程师", "算法工程师"]
+    },
+    {
+      "id": "data_analyst",
+      "patterns": ["\\bdata analyst\\b", "数据分析师", "数据分析"]
+    },
+    {
+      "id": "backend_engineer",
+      "patterns": ["\\bbackend(?: engineer| developer)?\\b", "\\bback-end(?: engineer| developer)?\\b", "后端开发", "后端工程师", "服务端开发", "Java开发", "Python开发", "Golang开发"]
+    },
+    {
+      "id": "frontend_engineer",
+      "patterns": ["\\bfrontend(?: engineer| developer)?\\b", "\\bfront-end(?: engineer| developer)?\\b", "前端开发", "前端工程师", "Web前端"]
+    },
+    {
+      "id": "fullstack_engineer",
+      "patterns": ["\\bfull[ -]?stack(?: engineer| developer)?\\b", "全栈开发", "全栈工程师"]
+    },
+    {
+      "id": "cloud_engineer",
+      "patterns": ["\\bcloud(?: platform)? engineer\\b", "云平台工程师", "云计算工程师"]
+    },
+    {
+      "id": "devops_engineer",
+      "patterns": ["\\bdevops(?: engineer)?\\b", "\\bsre\\b", "运维开发", "运维工程师", "平台工程师"]
+    },
+    {
+      "id": "security_engineer",
+      "patterns": ["\\b(?:cyber ?security|information security|security) engineer\\b", "网络安全工程师", "信息安全工程师", "安全工程师"]
+    },
+    {
+      "id": "technical_product_manager",
+      "patterns": ["\\btechnical product manager\\b", "\\bplatform product manager\\b", "技术产品经理", "平台产品经理"]
+    },
+    {
+      "id": "product_manager",
+      "patterns": ["\\bproduct manager\\b", "\\bproduct owner\\b", "产品经理", "产品负责人"]
+    },
+    {
+      "id": "software_engineer",
+      "patterns": ["\\bsoftware engineer\\b", "\\bsoftware developer\\b", "软件工程师", "软件开发工程师"]
+    },
+    {
+      "id": "other",
+      "patterns": []
+    }
+  ]
+}

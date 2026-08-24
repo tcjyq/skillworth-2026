@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "source_id": "nextgig_global_jobs_2026_06",
+  "dataset_name": "NextGig-Rocks/global-job-postings-multi-ats",
+  "dataset_url": "https://huggingface.co/datasets/NextGig-Rocks/global-job-postings-multi-ats",
+  "upstream_revision": "fc9787e07b2a9b5f11a470c503c36e854abd6378",
+  "upstream_last_modified": "2026-06-06T23:49:32Z",
+  "snapshot_name": "nextgig_jobs_2026-06.parquet",
+  "license": "CC BY 4.0",
+  "attribution": "NextGig-Rocks/global-job-postings-multi-ats by NextGig",
+  "full_row_count": 112816,
+  "full_artifact_sha256": "b80c4d541eec3649c5b8d0143a11ddbc9a60691e1c27f6d574b501d4c9ff3f14",
+  "preflight": {
+    "sample_size": 5000,
+    "sampling_method": "Polars sample without replacement, seed 202606; sorted by original dataset row index",
+    "sample_artifact": "nextgig_jobs_2026-06.preflight-5000.parquet",
+    "sample_artifact_sha256": "20d40c5e721e8459d156c7f9ae1b5b53829dbff154e5e6d89b53e13f8d3226d5"
+  },
+  "semantic_limits": {
+    "job_description": "upstream LLM-generated summary, not original JD",
+    "geography": "upstream derived approximation",
+    "date_posted": "sparse; trend eligibility must be evaluated",
+    "source_url": "unavailable in release",
+    "source_job_id": "unavailable in release; connector creates revision-local deterministic identity"
+  }
+}
