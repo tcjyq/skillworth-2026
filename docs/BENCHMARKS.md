@@ -1,5 +1,7 @@
 # Gold Benchmark 与生产质量门禁
 
+本文的 Gold 指人工评测 ground truth，不是 Bronze / Silver / Gold 管道中的 Gold Data Layer。Gold Benchmark 未完成不否定分析就绪数据层已经构建，也不作为当前 V1 blocker；在评测完成前不得发布 Precision、Recall 或 F1。
+
 ## 当前状态
 
 正式 Gold 数据当前为 0；历史技能 fixture 有 9 条，但规模过小、无 held-out split，保留为规则回归样例，不计入生产质量门禁。已从 Real Silver 生成三份本地待标注批次：Role 100、Skill 100、Dedup Pair 100。待标注文件包含真实 JD，因此不进入版本控制。
@@ -43,6 +45,7 @@ python -m app.cli benchmark-skills
 python -m app.cli benchmark-dedup
 python -m app.cli benchmark-all
 python -m app.cli benchmark-status
+python -m app.cli benchmark-annotate
 ```
 
-`benchmark-status` 只检查批次数量、未标注数、ID 唯一性/稳定性、固定 split、Prediction/Gold 分离和质量门禁缺口，不生成或修改任何 Gold Label。当前没有 Annotation UI，因此自动保存、断点续标、历史标签编辑、快捷键和显式 ambiguous/uncertain 状态尚不可用；人工标注准备度为 `NOT READY`。
+`benchmark-status` 只检查批次数量、未标注数、ID 唯一性/稳定性、固定 split、Prediction/Gold 分离和质量门禁缺口，不生成或修改任何 Gold Label。`benchmark-annotate` 启动本地 Annotation Workspace，支持人工确认、保存、断点续标、已有标签编辑、快捷键和显式 `ambiguous` 状态。Workspace framework 已实现不等于正式 Gold Evaluation 已完成；当前仍不得输出未经真实 held-out 数据支持的质量指标。

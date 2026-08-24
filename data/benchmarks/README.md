@@ -16,7 +16,7 @@ Gold Benchmark 用于验证岗位分类、技能抽取与跨平台去重，不�
 python -m app.cli benchmark-status
 ```
 
-该命令不会写 Gold，只报告批次完整性与剩余人工标签数。当前仓库没有 Annotation UI；待标注 YAML/JSONL 具备 `annotator`、`annotation_notes` 和 `difficulty`，但不提供自动保存、断点续标、快捷键或显式 ambiguous/uncertain 状态。
+该命令不会写 Gold，只报告批次完整性与剩余人工标签数。仓库已提供本地 Annotation Workspace：`python -m app.cli benchmark-annotate`，支持人工确认、保存、断点续标、已有标签编辑、快捷键和显式 `ambiguous` 状态。Workspace framework 存在不等于人工 Gold 已完成；正式评测状态仍由 `benchmark-status` 与 evaluator 决定。
 
 `development` 固定占 30%，用于错误分析和规则迭代；`held_out_test` 固定占 70%，只用于最终、可重复的质量门禁评估。任何 taxonomy 修改都必须保留失败清单，不得根据测试集自动改写 taxonomy。若 held-out test 被用于开发，必须发布新的 benchmark version 并保留真正未触碰的 final holdout。
 

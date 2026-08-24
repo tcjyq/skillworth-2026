@@ -1,100 +1,127 @@
 # SkillWorth 2026 Release Readiness
 
-审计日期：2026-08-11（Asia/Shanghai）  
-审计范围：Pre-Release Hardening，不含新数据源、算法、Taxonomy、Source Gate、Confidence 或产品功能变更。  
-当前结论：**Release Candidate 技术回归通过；公开 V1 仍有 P1 人工与治理前置项。**
+审计日期：2026-08-24（Asia/Shanghai）
 
-## 1. 当前公开口径
+审计范围：Project Governance & Documentation Sync；不含新数据源、Gold annotation、算法、分析结果或产品 UI 变更。
 
-- 产品：SkillWorth 2026。
-- Market scope：`china_open_tech_sample`。
-- Source role：`china_supplementary`。
-- Snapshot：`freehire_china_tech_2026_08`。
-- 默认窗口：`180d`。
-- 真实窗口规模：992 个 canonical jobs、313 家公司、134 项观测技能。
-- 首页主榜：12 项 `main + robust + high_skillworth_candidate`。
-- Salary：`unavailable`。
-- Trend：`unavailable`。
-- Disclaimer：当前公开技术岗位补充样本，不代表完整中国招聘市场。
+当前结论：**数据、分析、复现链路、本地 Git 基线与权利边界通过；正式首页仍等待人工视觉批准与 V2 提升决定。**
 
-## 2. 本轮已完成
+## 1. Current Release State
 
-### Visual / Rendered QA
+| 项目 | 当前事实 |
+| --- | --- |
+| Product | V1 Data / Analysis / Story frozen |
+| Homepage | Production candidate 位于 `/lab/visual-v2`；正式 `/` 尚未替换 |
+| Snapshot | `freehire_china_tech_2026_08`，Real v6 |
+| Market scope | `china_open_tech_sample` |
+| Source role | `china_supplementary` |
+| Default window | `180d` |
+| 180d | 998 canonical jobs / 313 companies / 134 observed skills |
+| all-active | 1,140 canonical jobs / 339 companies / 138 observed skills |
+| China supplementary market sources | 1（Freehire） |
+| Salary | `unavailable` |
+| Trend | `unavailable` |
+| Representativeness | 不代表完整中国技术招聘市场 |
 
-- 公开 UI 保持 `VISUAL FREEZE V1`，没有新增页面、区块、指标或信息架构。
-- 已验证首页、Role/Recency Filter、Bubble/键盘替代入口、Drawer、Market Board、Theme、Data Scope、Methodology、移动 Bottom Sheet、API failure 和 reduced motion。
-- 新增浏览器断言：主路径无 console warning/error、无失败 API 请求；减少动态偏好关闭 Hero 位移和长时动画。
-- Drawer 关闭时会取消尚未完成的角色证据请求；现有缓存、真实数据和显示语义不变。
+Final 5、公式、taxonomy、role taxonomy、dedup、learning hours、source set 与 robustness method 均保持冻结。本轮没有修改任何分析结果。
 
-### Gold Benchmark readiness
+## 2. Release Gates
 
-`python -m app.cli benchmark-status` 当前结果：
+### Data / Analysis — PASS
 
-| Benchmark | Pending | Unlabeled | Gold | Development | Held-out test | Configured minimum Gold |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Skill | 100 | 100 | 0 | 27 | 73 | 300 |
-| Role | 100 | 100 | 0 | 26 | 74 | 300 |
-| Dedup Pair | 100 | 100 | 0 | 24 | 76 | 300 |
+- Real v6 已冻结，默认 180d 与 all-active 口径已写入当前文档。
+- Final 5 保持不变，来源范围、分母、Salary/Trend 不可用和代表性限制已披露。
+- 8 个既有 dedup merge groups 已审计：6 个拆分，2 个保守保留合并。
 
-三类批次均通过 ID 唯一性、稳定 ID、确定性 split、Prediction/Gold 字段分离和 notes 字段检查。当前状态仍为 `INSUFFICIENT BENCHMARK DATA`，没有输出虚构指标，也没有写入 Gold Label。
+### Product — PENDING
 
-仓库没有 Annotation UI，因此自动保存、断点续标、历史标签编辑、快捷键和显式 ambiguous/uncertain 状态不可用。当前人工标注准备度为 **NOT READY**。
+- 等待最终人工视觉批准。
+- 等待决定是否将 `/lab/visual-v2` 提升到正式 `/`。
+- Candidate 不是 final homepage；本轮禁止自动提升。
 
-### Repository / dependency safety
+### Reproducibility — PASS
 
-- 未发现 API key、Token、Cookie、Session、CSRF、凭据或私钥实值。
-- `.gitignore` 已覆盖真实 Raw/Bronze/Silver/Gold、外部数据集、Freehire/Real snapshots、Benchmark pending/report、`data/annotation_batches`、Playwright、`.qa`、缓存、日志和构建产物。
-- 已补充无密钥的 `.env.example`；文档中的本机用户名绝对路径已移除。
-- 本地大型数据和完整 JD 只存在于忽略目录；没有删除本地正式数据。
-- npm audit：0 vulnerabilities；Python `pip check`：无依赖冲突。
-- `@playwright/test` 从 1.55.0 升至安全补丁 1.55.1；Vitest 从 3.2.4 升至 3.2.7。
-- E2E 改用可复用的直接子进程启动器，健康检查后运行 Playwright，并在 `finally` 回收明确子进程；验证结束后 18011/13001 均无监听残留。
+- `npm run test:e2e`：从版本化 `data/demo` 重建隔离、确定性的 Demo fixture，不要求本地 Real 数据。
+- `npm run test:e2e:real`：验证本地私有 Freehire v6 manifest 与冻结 Real assertions；Real artifact 不进入 Git。
+- Demo 与 Real 命令、数据依赖和测试选择已明确分离。
 
-限制：当前工作区没有 `.git` 元数据，无法执行 `git status`、`git ls-files` 或历史机密扫描。文件系统扫描与忽略规则通过，但发布前必须在实际 Git 仓库中再次验证 tracked files。
+### Git — PASS
 
-### Documentation
+- `main` 已通过 `--ff-only` 集成已验证 hardening commit `327453944823b993399dc9a9f99f63a2d7d2ca1d`。
+- 本地历史从 2026-08-24 reconstructed baseline `265f40c9044a57c2c0a02c3847fa2de9ef037546` 开始。
+- 更早开发 Git 历史未能恢复；不得 amend、rebase 或重写 reconstructed baseline。
 
-- README 已改为发布候选稿，优先说明产品问题、真实范围、Frontier、稳健排名、Market Themes、Benchmark、架构和本地运行。
-- PRD 的公开信息架构已更新为 SkillWorth 2026 + Methodology / Data Scope；旧八页能力明确归入 `/lab/*`。
-- ARCHITECTURE 已移除“Next.js 尚未开始”的过期表述。
-- BENCHMARKS 已从错误的 120/120/120 修正为真实 100/100/100，并记录 `benchmark-status` 与缺失的标注 UI 能力。
-- 历史审计报告保留其日期与当时阶段，不改写历史结论。
+### Remote — PENDING
 
-## 3. Release blockers
+- 当前没有 GitHub remote。
+- 本轮不创建 remote、不 push。
 
-### P0 — Block release（0）
+### License / Data Rights — PASS
 
-无。没有发现会导致数据造假、敏感信息泄露、公开范围错误或主路径不可用的自动化阻断项。
+- 根目录 MIT 仅覆盖 SkillWorth 自主创作的代码与项目文档。
+- Freehire 软件的 MIT 许可不等于招聘内容采用 MIT。
+- 第三方招聘文本、外部数据集、商标和其他第三方内容保留各自权利与使用边界。
 
-### P1 — Should fix before V1（4）
+### CI — PENDING
 
-1. **Human Gold Benchmark 未完成**：Skill/Role/Dedup Gold 均为 0；每类质量门禁要求至少 300，且必须保留未触碰 held-out test。
-2. **Annotation workflow 不可直接使用**：没有 UI、自动保存、断点续标、历史编辑、快捷键及显式 ambiguous/uncertain 状态；本轮按约束没有新造 Annotation UI。
-3. **仓库级 LICENSE 未选择**：项目代码不能在没有权利人决定的情况下被描述为开源。
-4. **Git tracked/history 未验证**：当前目录没有 `.git`，无法确认真实数据、截图或旧密钥从未被跟踪；发布前必须在目标 Git 仓库中复核。
+- 当前没有版本化 CI workflow。
+- 本地完整验证可作为当前 release evidence，但不应描述为已建立持续集成。
 
-### P2 — Post-release / V1.1（2）
+### README Asset — PENDING
 
-1. Skill Drawer 首次打开某技能/窗口时会并行查询 8 个角色切片。当前已有缓存、关闭取消和失败降级；若要消除 fan-out，需要新增聚合 API 契约，本轮未扩展 API。
-2. pytest 有 1 条 Starlette `TestClient` / `httpx` 生态弃用警告；当前 223 项测试通过，待上游迁移路径稳定后升级。
+- 最终产品截图等待正式首页决定。
+- 本轮不添加截图、部署 badge、release version badge 或 remote link。
 
-### P3 — Optional（1）
+### Gold Evaluation — NOT V1 BLOCKER
 
-1. README 尚未提交一张经过人工挑选的公开首页静态截图；不影响运行、数据语义或测试。
+- Gold Data Layer 是 Bronze / Silver / Gold 管道中的分析就绪数据层。
+- Gold Benchmark / Gold Labels 是人工评测 ground truth；当前正式评测尚未完成。
+- 标注批次、evaluator 与 annotation workspace framework 已存在，但 framework 存在不等于正式评测完成。
+- Gold Evaluation 属于 Future / Independent research，不阻止当前 V1 发布决策。
+- 在人工评测达到既定协议前，禁止声称技能抽取、角色归一或去重的 Precision、Recall、F1。
 
-## 4. Regression evidence
+## 3. Verification Evidence
+
+本轮文档同步后的完整验证以本节为唯一 release gate 统计来源：
 
 | Check | Result |
 | --- | --- |
-| pytest | 223 passed，1 upstream deprecation warning |
+| pytest | 239 passed，1 条既有 Starlette/httpx deprecation warning |
+| pip check | passed |
 | ESLint | passed |
 | TypeScript | passed |
-| Vitest | 11 passed |
-| Playwright | 40 passed，2 desktop skips（移动专用测试） |
-| Next.js production build | passed，20 routes |
-| npm audit | 0 vulnerabilities |
-| pip check | no broken requirements |
+| Vitest | 17 passed |
+| Next.js production build | passed |
+| Demo E2E | 30 passed |
+| Real E2E | 61 passed，3 项设备条件 skip，0 failed |
 
-## 5. Release decision
+标准命令：
 
-工程回归、公开 UI、真实 API 路径、仓库忽略规则和依赖安全已达到 Release Candidate 状态，`VISUAL FREEZE V1` 保持有效。由于 Gold Benchmark、Annotation workflow、项目 LICENSE 和目标 Git tracked-files 审计仍未完成，当前不应标记为完成公开 V1，也不得称为生产级劳动力市场决策系统。
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m pip check
+Set-Location apps\web
+npm run lint
+npm run typecheck
+npm run test -- --run
+npm run build
+npm run test:e2e
+npm run test:e2e:real
+```
+
+`test:e2e:real` 仅在本地 Freehire v6 manifest 与依赖 artifact 可用时运行。任何 frozen Real Finding assertion 回归都必须停止发布流程。
+
+## 4. Remaining Release Blockers / Decisions
+
+### 发布前人工决定
+
+1. 最终人工视觉批准。
+2. 决定是否将 V2 candidate 从 `/lab/visual-v2` 提升到 `/`。
+3. 首页决定后选择 README 最终产品截图。
+
+### 仓库运营待办
+
+1. 建立 GitHub remote。
+2. 建立 CI workflow。
+
+这些待办不会授权本轮自动 promote、截图、创建 remote、push 或 deploy。Gold Evaluation 明确不是 V1 blocker；Salary、Trend 和完整市场代表性仍为产品限制，必须持续披露。

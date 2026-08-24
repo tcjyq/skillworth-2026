@@ -1,6 +1,6 @@
 # Target Market Coverage Report
 
-生成依据：当前 Real Dataset Mode 最新快照；Silver 451 条，Canonical Job 388 条。报告中的目标市场分类是透明标题规则审计，不是人工 Gold Label，也不用于直接修正 Role Taxonomy。
+历史生成依据：2026-08-09 的 Techsalerator Real Dataset Mode 快照；Silver 451 条，Canonical Job 388 条。本报告是 Previous Dataset / Historical Audit，不是当前 Freehire v6 release 口径。报告中的目标市场分类是透明标题规则审计，不是人工 Gold Label，也不用于直接修正 Role Taxonomy。
 
 ## 结论
 

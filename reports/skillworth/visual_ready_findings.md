@@ -1,6 +1,6 @@
-# SkillWorth Visual-ready Findings
+# SkillWorth Visual-ready Findings — Previous Processing Version v4
 
-Snapshot：`freehire_china_tech_2026_08`。口径：2026-08 当前可观察的开放岗位快照，不代表所有岗位均发布于 2026 年。
+Snapshot：`freehire_china_tech_2026_08`。本文件保存 **Previous processing version v4** 的 visual-ready 导出，不是当前 release 数字真源。v4 的 992 / 1,134 已由 v6 的 998 / 1,140 取代；当前分析事实见 `reports/skillworth/final_data_analysis.md`，当前 snapshot 口径见 `docs/FREEHIRE_CHINA_SNAPSHOT_REPORT.md`。以下历史数字不应标记为 Current、Latest、Now 或 Present。
 
 ## 1. 从主榜排除的技能
 

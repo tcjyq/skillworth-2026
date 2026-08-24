@@ -64,9 +64,11 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 
 当前公开默认口径为 `market_scope=china_open_tech_sample`、`source_role=china_supplementary`、`recency_window=180d`。界面采用 Cinematic Data Intelligence 视觉语言，但视觉不得替代解释；任意数字、图表点位或推荐文本必须能追溯到 API 与方法论。
 
+Production Homepage Candidate 当前位于 `/lab/visual-v2`；它已统一 Public Surface 与面向学生的方法表达，但尚未替换正式 `/`，也不应称为 final homepage。提升决定与最终产品截图属于人工发布决策。
+
 ## 6. 约束与工程原则
 
-- 核心技术栈：Python、FastAPI、Pydantic、Polars、DuckDB、Parquet、PyArrow、NumPy、Statsmodels、Scikit-learn、NetworkX、RapidFuzz；Next.js、TypeScript、Tailwind CSS、shadcn/ui、ECharts；pytest、Vitest、Playwright。
+- 核心技术栈：Python、FastAPI、Pydantic、Polars、DuckDB、Parquet、PyArrow、NumPy、Statsmodels、NetworkX、RapidFuzz；Next.js、TypeScript、Tailwind CSS、shadcn/ui、ECharts；pytest、Vitest、Playwright。
 - 默认运行方式必须仅依赖本地公开/合成样例数据；任何真实 Connector 默认关闭。
 - Connector 与分析层解耦；API 与前端不直接读取原始文件。
 - 指标方法、权重、阈值和已知局限必须版本化并记录于 `docs/METHODOLOGY.md`。
@@ -82,6 +84,15 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 - [x] 已创建可重建 DuckDB Analytics Warehouse、核心表、Analysis Views、数据测试和 Query Benchmark。
 - [x] 已创建正式 Analytics、FastAPI、Next.js、合规 Connector Framework 与独立 Real Dataset Mode；招聘平台授权 Connector 仍按设计默认关闭。
 
+当前 V1 状态分类：
+
+| 状态 | 范围 |
+| --- | --- |
+| **DONE** | Data / Analysis / Story、Final 5、Demo 与 Real 可复现链路、API/Web、Public Surface、Methodology 学生化。 |
+| **DEFERRED** | `/lab/visual-v2` 是否提升到 `/`、最终 README 产品截图、remote 与 CI。 |
+| **FUTURE RESEARCH** | 第二个许可清晰的中国来源、独立时间快照、人民币薪资证据、正式 Gold Benchmark / Gold Labels。 |
+| **NOT V1 BLOCKER** | Salary/Trend 当前不可用、完整市场代表性不可用、Gold Evaluation 未完成；必须如实披露，且不得发布 Precision、Recall 或 F1。 |
+
 ## 8. 未来 12 个开发阶段
 
 - [x] **Phase 1 — 产品、架构与 Data Contract**：建立 monorepo、工程原则、PRD、架构、方法论、数据源和数据字典，并初始化可测试 Python 包。
@@ -96,14 +107,15 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 - [x] **Phase 9 — Personal Skill Opportunity Engine**：实现用户技能输入、岗位 Skill Fit、阈值覆盖、候选技能边际增益、crossing jobs、筛选、置信度与集合化计算。
 - [x] **Phase 10 — 学习时间优化器**：实现 Learning Cost 情景、Iterative Greedy、预算约束、每步重算边际收益与测试基准；Beam Search 保持 optional、当前未启用。
 - [x] **Phase 11 — FastAPI 与 Next.js 产品层**：实现稳定 API、Dashboard、数据质量页、Portfolio/Optimizer 流程、Vitest、Playwright 和可访问状态设计。
-- [ ] **Phase 12 — 端到端验证与发布材料**：执行浏览器测试、性能和方法论审计，完善 README、架构图、Demo 数据说明与项目展示材料。
+- [ ] **Phase 12 — 端到端验证与发布材料（部分完成）**：浏览器回归、Demo/Real E2E 拆分、README/架构/Demo 说明和 release hardening 已完成；最终人工视觉批准、候选首页提升、正式截图、remote 与 CI 延后处理。
 
-## 9. 待确认项
+## 9. Deferred 与 Future Research
 
-- 初始公开/合成 Demo 数据集的许可、字段和时间范围。
-- 首批支持的目标岗位 taxonomy 与城市范围。
-- Learning Cost 初始估计的来源、维护者和用户编辑方式。
-- Market Value 与 Personal ROI 权重的校准样本及版本治理方式。
+- **DEFERRED / Release decision**：是否把 `/lab/visual-v2` 提升为正式 `/`，以及基于该决定选取最终 README 产品截图。
+- **DEFERRED / Repository operations**：建立 GitHub remote 与 CI workflow。
+- **FUTURE RESEARCH**：引入第二个许可清晰、结构独立的中国技术岗位来源。
+- **FUTURE RESEARCH**：积累相互独立的时间快照和可比较人民币薪资证据。
+- **FUTURE / Independent research**：完成正式 Gold Benchmark / Gold Labels 和 held-out evaluation；它不是 V1 blocker，在评测完成前不得声称 Precision、Recall 或 F1。
 
 ## 10. 交付版本划分
 

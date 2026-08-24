@@ -6,6 +6,10 @@ SkillWorth 不只看招聘需求。它把 **Market Signal（市场信号）** �
 
 本项目基于当前可观察的中国公开技术岗位补充样本，从市场价值与学习投入重新看技术技能的性价比。它是一件可复现的数据分析与交互可视化作品，不是完整中国招聘市场、就业承诺或权威排名。
 
+## 当前产品状态
+
+V1 Data / Analysis / Story 已冻结。Production Homepage Candidate 当前仍位于 `/lab/visual-v2`，正式 `/` 尚未切换；Public Surface 与面向学生的方法说明已经统一，但是否将候选页提升为正式首页仍待人工产品决定。候选页不是 final homepage。
+
 ## 为什么做这个项目
 
 普通的热门技能排行榜回答：
@@ -206,6 +210,8 @@ Next.js
 
 管道保留每条岗位记录的 provenance，使用固定快照和 source gating 控制可复现范围；去重后的 canonical job 仍能追溯原始来源。技能 taxonomy、质量报告和分析配置均版本化。未获得明确合法授权的数据源默认关闭，只允许手动导入或授权 Connector。
 
+这里的 Gold 是分析就绪的 **Gold Data Layer**。人工评测真值另称 **Gold Benchmark / Gold Labels**；两者不是同一概念。
+
 ## 工程实现
 
 项目后半部分支撑前面的分析结论，而不是在前端重复计算指标：
@@ -218,18 +224,20 @@ Next.js
 
 仓库目录职责与关键架构决策见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。项目还预留了人工 Gold Evaluation infrastructure，包括固定样本、评估器和标注工作区；V1 没有正式 Gold 结果，因此不发布 Precision、Recall 或 F1。
 
-## 测试状态
+## 当前验证
 
-2026-08-21 重新核验的当前结果：
+2026-08-24 在 reconstructed baseline 及 data-integrity hardening 集成后重新核验：
 
 | 检查 | 结果 |
 | --- | --- |
-| Python test suite | 238 passed |
+| Python test suite | 239 passed，1 条既有 Starlette/httpx deprecation warning |
+| pip check | passed |
 | ESLint | passed |
 | TypeScript | passed |
-| Vitest | 12 passed |
-| Playwright | 44 passed，2 expected skipped |
-| Next.js production build | passed，生成 20 个页面/路由 |
+| Vitest | 17 passed |
+| Demo E2E | 30 passed |
+| Real E2E | 61 passed，3 项设备条件 skip，0 failed |
+| Next.js production build | passed |
 
 运行相同检查：
 
@@ -238,12 +246,12 @@ Next.js
 Set-Location apps\web
 npm run lint
 npm run typecheck
-npm run test
+npm run test -- --run
 npm run build
 npm run test:e2e
 ```
 
-`npm run test:e2e` 会从已提交的 `data/demo` 合成 fixture 重建隔离的 Demo 数据，不依赖本机 Real 数据。冻结 Freehire v6 数据故事验证使用 `npm run test:e2e:real`；该命令要求本地存在 `data/modes/freehire/current.json`，或通过 `SKILLWORTH_REAL_MODE_MANIFEST` 指向等价的本地 manifest。
+`npm run test:e2e` 会从已提交的 `data/demo` 合成 fixture 重建隔离、确定性的 Demo 数据，不依赖本机 Real 数据。冻结 Freehire v6 数据故事验证使用 `npm run test:e2e:real`；该命令要求本地存在 `data/modes/freehire/current.json`，或通过 `SKILLWORTH_REAL_MODE_MANIFEST` 指向等价的本地 manifest。
 
 ## 本地运行
 

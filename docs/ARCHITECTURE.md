@@ -4,6 +4,8 @@
 
 SkillWorth 采用“数据产品优先”的 monorepo 结构：数据接入、数据处理、指标计算、API 和展示层彼此隔离。这样可以确保一个 Dashboard 数字始终可沿着 API → analytics → Gold → Silver/Bronze → 原始来源回溯。
 
+当前主链路固定为：Raw → Bronze → Silver → Gold Data Layer → DuckDB → Analytics → API → Web。Gold Data Layer 是分析就绪数据，不等于人工 Gold Benchmark / Gold Labels。
+
 ```mermaid
 flowchart LR
     A[手动导入 / 授权 Connector] --> B[Raw + Source Manifest]
@@ -28,10 +30,11 @@ flowchart LR
 │   └── web/                  # Next.js 页面、图表、交互
 ├── packages/
 │   ├── analytics/            # 可测试的统计、评分、图网络与优化算法
-│   ├── connectors/           # 手动导入和授权来源 Adapter
-│   ├── contracts/            # API / Arrow / 领域数据契约
-│   ├── data-pipeline/        # Bronze → Silver → Gold 管道和质量规则
-│   └── ui/                   # 共享前端组件和设计 token
+│   ├── connectors/           # reserved / planned，当前为空
+│   ├── contracts/            # reserved / planned，当前为空
+│   ├── data-pipeline/        # 当前 Connector、Bronze → Silver → Gold 与质量规则
+│   └── ui/                   # reserved / planned，当前为空
+├── backend/app/sql/          # DuckDB 核心表、Views 与分析 SQL
 ├── data/
 │   ├── raw/                  # 原始受控文件，不提交
 │   ├── bronze/               # 不可变导入记录，不提交
@@ -42,9 +45,13 @@ flowchart LR
 │   ├── reference/            # taxonomy、城市/岗位映射等可版本化参考数据
 │   └── demo/                 # 受许可或合成、可提交的样例数据
 ├── docs/                     # 产品、架构、方法论、数据来源
-├── infra/                    # 本地开发与未来部署配置
-└── tests/e2e/                # 跨应用 Playwright 测试
+├── infra/                    # reserved / planned，当前为空
+├── scripts/                  # reserved / planned，当前为空
+├── tests/                    # Python unit / integration tests
+└── apps/web/e2e/             # 跨应用 Playwright tests
 ```
+
+预留目录只表达未来边界，不代表实现已经存在。当前手动导入、公开数据 Adapter 和 Freehire Connector 均位于 `packages/data-pipeline/src/app`；本轮不为追求目录图对称而移动代码。
 
 ## 3. 数据层架构
 
@@ -85,7 +92,7 @@ Gold 数据以 Parquet 为持久化交换格式；DuckDB 只负责本地分析�
 
 Source Registry 还保存来源的分析用途。Analytics Service 在查询边界应用配置化 Source Eligibility Gate：核心市场查询与 Data Quality/工程验证查询共享 Warehouse，但使用不同 `source_scope`，避免通过复制数据表制造两套事实。Platform-balanced 与 Confidence 只消费 eligibility 结果，不自行重复定义门槛。
 
-### 3.4 DuckDB Analytics Warehouse
+### 3.5 DuckDB Analytics Warehouse
 
 Phase 5 在 `data/warehouse/skillworth.duckdb` 构建可重建的本地分析 Warehouse。构建器只读取 Gold、Silver 技能关系和版本化 skills Parquet，不读取 Bronze/Raw 或外部平台。它在一个 DuckDB 事务内以 `CREATE OR REPLACE` 重建表和 Analysis Views，因此重复执行会得到同一输入快照对应的同一仓库状态。
 
@@ -107,7 +114,7 @@ Phase 10 增加 `DecisionScoreEngine`、`SensitivityAnalyzer` 和 `LearningOptim
 
 ### Connectors
 
-Connector 是唯一允许接触外部来源或用户上传文件的层。所有 Connector 实现同一概念契约：发现能力、授权状态、读取记录、生成 manifest 和标准化字段映射。未获得明确授权的 Connector 只能返回 disabled 状态，不能发起规避性请求。
+Connector 是唯一允许接触外部来源或用户上传文件的职责边界。当前实现尚未拆入预留的 `packages/connectors`，而是实际位于 `packages/data-pipeline/src/app/connectors.py`、`freehire.py`、`freehire_snapshot.py` 与 `source_import.py`。它们负责授权状态、读取记录、生成 manifest 和字段映射；未获得明确授权的 Connector 只能返回 disabled 状态，不能发起规避性请求。
 
 初始启用项仅为 `manual_import`。BOSS、智联、51Job、国聘等平台只保留 Connector 类型和配置占位，需在数据许可、访问方式和速率策略确认后单独启用。
 
@@ -148,7 +155,10 @@ Next.js 负责筛选器、结果可视化、状态反馈和方法说明入口。
 | 数据管道与分析单元测试 | pytest | 解析、标准化、去重、指标公式、边界条件。 |
 | API 集成测试 | pytest + FastAPI TestClient | schema、筛选参数、错误处理、响应 provenance。 |
 | Web 单元/组件测试 | Vitest | 格式化、筛选状态、图表数据适配、空状态。 |
-| 端到端测试 | Playwright | 导入 Demo 数据后查看市场、技能和优化流程。 |
+| Demo 端到端测试 | Playwright | 从版本化 `data/demo` 重建确定性 fixture，不依赖本地 Real 数据。 |
+| Real 端到端测试 | Playwright | 使用本地私有 Freehire v6 manifest 验证冻结数据故事与完整真实路径。 |
+
+Demo / Real E2E 共用 `apps/web/scripts/run-e2e.mjs`，但测试选择和数据依赖分离：`npm run test:e2e` 只运行 Demo / navigation 范围；`npm run test:e2e:real` 要求本地 `data/modes/freehire/current.json` 或 `SKILLWORTH_REAL_MODE_MANIFEST`。两种模式的 Real、DuckDB 与派生产物均不得进入 Git。
 
 ## 7. Phase 11 FastAPI 服务层
 
@@ -170,10 +180,11 @@ Python 数据管道已在 `packages/data-pipeline/src/app` 初始化，支持配
 
 `FreehirePublicApiConnector` 只负责公开 API 响应的获取、缓存、schema 校验和 RawJob 映射；它不计算市场指标。`build-freehire-snapshot` 将固定 artifact 送入现有 `import_source` 管道，再由 `AdvancedAnalyticsRepository` 构建网络，最后由独立 Analytics 模块生成 `china_skillworth_summary`、`china_skillworth_visual_ready` 与 `china_skillworth_market_themes`。语义资格来自 taxonomy，排名稳健性、候选 Gate、时间窗与 Theme mapping 来自 `china_skillworth.v1.yml`；API 只做参数过滤。复杂 SQL 仍位于 `backend/app/sql/`。
 
-快照目录不可覆盖；原始 `snapshot_metadata.json` 与 JSONL hash 固定，新的处理逻辑使用显式 pipeline version 重新派生，不改写 Raw artifact。`current.json` 是唯一可移动指针，仅在 Warehouse、图和 SkillWorth 表全部成功后更新。FastAPI `/market/china-skillworth` 只读取物化结果，并在响应 body 与 headers 携带 market scope、source role、snapshot、岗位/公司/来源数和免责声明。
-# Visual V2.1 实验路由
+快照目录不可覆盖；原始 `snapshot_metadata.json` 与 JSONL hash 固定，新的处理逻辑使用显式 pipeline version 重新派生，不改写 Raw artifact。`current.json` 是唯一可移动指针，仅在 Warehouse、图和 SkillWorth 表全部成功后更新。FastAPI `/market/china-skillworth` 只读取物化结果，并在响应 body 与 headers 携带 market scope、source role、snapshot、岗位/公司/来源数和免责声明。响应 metadata 的 `access_date` 在 Real Mode 取 manifest 的 `access_date` / `acquired_at`，在 Demo Mode 取版本化 fixture manifest 的 `imported_at`；它只描述访问/导入日期，不参与指标。
 
-`apps/web/src/app/lab/visual-v2` 是独立视觉体验实验，不替换公开首页，也不改变数据契约、指标公式或 Final 5 Findings。原型复用现有 `useApi`、`deriveFinalFindings` 与 Gold / analytics 输出，只在浏览器展示层增加叙事编排。
+## 10. Visual V2.1 候选路由
+
+`apps/web/src/app/lab/visual-v2` 是 Production Homepage Candidate，当前仍不替换正式 `/`，也不改变数据契约、指标公式或 Final 5 Findings。Public Surface 已统一，Methodology 已面向学生表达；是否提升为正式首页仍待人工产品决定。候选页复用现有 `useApi`、`deriveFinalFindings` 与 Gold Data Layer / analytics 输出，只在浏览器展示层增加叙事编排。
 
 - `gsap` + `ScrollTrigger`：只负责 Hero、C++ 排名落差和角色转换三个重点场景的滚动强调，不再维持全页 pinned 节点舞台。
 - `@gsap/react`：通过 `useGSAP` 将时间线绑定到组件作用域，并在卸载、热更新与媒体条件变化时统一清理。

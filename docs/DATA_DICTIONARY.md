@@ -115,6 +115,8 @@ Phase 2 Silver Parquet 还包含以下物理字段：
 
 ### 4.3 `canonical_jobs`（Gold / `canonical_jobs.parquet`）
 
+这里的 Gold 指 **Gold Data Layer**：经过标准化、去重且可供分析的实体层。它不表示人工确认真值，也不等同于第 13 节的 Gold Benchmark / Gold Labels。
+
 | 字段 | 类型 | 必填 | 含义 |
 | --- | --- | ---: | --- |
 | `canonical_job_id` | string | 是 | 去重后的规范岗位主键。 |
@@ -213,6 +215,8 @@ Analysis Views：`role_summary`、`city_summary`、`source_summary`、`skill_dem
 | `taxonomy_version` | string | 是 | 词典版本。 |
 
 约束：`learning_hours_min <= learning_hours_expected <= learning_hours_max`；`skill_id` 与忽略大小写后的 `canonical_name` 均唯一。Phase 3 的 source of truth 是 `data/taxonomy/skills.yml`，`skills.parquet` 是其可计算快照。
+
+“Observed skill / 观测技能”是统计语义：在指定数据切片内至少关联 1 个 canonical job 的去重技能，计数可包含 `main`、`secondary` 和 `excluded`。`main` 只表示可进入默认技能排名层，不等于 `high_skillworth_candidate=true`，也不等于 `robust`。API 查询值 `eligibility=all` 是返回全部三类的筛选指令，不是持久化枚举值。Explore 中“已观察技能”因此可能没有 `skillworth_rank`。
 
 ### 6.3 `job_skills`
 
@@ -437,9 +441,11 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 
 `logic_fingerprint` 包含 Pipeline、Role/City/Skill taxonomy、Warehouse objects 和 Analytics methodology 版本。`ModeComparisonReport.business_logic_consistent` 只比较这些逻辑契约，不要求 Demo 与 Real 的市场数值相同。
 
-## 11. Gold Benchmark 数据契约
+## 13. Gold Benchmark / Gold Labels 数据契约
 
-### 11.1 Role Gold Record
+本节的 Gold 指人工评测 ground truth，只用于验证 Role、Skill Extraction 与 Dedup；它与第 4 节的 Gold Data Layer 是两套不同概念。人工评测未达到协议前不得发布 Precision、Recall 或 F1。
+
+### 13.1 Role Gold Record
 
 | 字段 | 类型 | 空值 | 说明 |
 | --- | --- | --- | --- |
@@ -451,15 +457,15 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 | annotator_notes | string | 否 | 判断依据与边界说明。 |
 | split | enum | 否 | `development` 或 `held_out_test`。 |
 
-### 11.2 Skill Gold Record
+### 13.2 Skill Gold Record
 
 `gold_skills` 为人工确认的稳定 `skill_id` 集合；`negative_terms` 记录文本中出现但不应提取为技能的歧义词；`language` 为 zh、en、mixed 或 other。其余字段见 `data/benchmarks/skills/schema.json`。
 
-### 11.3 Dedup Gold Pair
+### 13.3 Dedup Gold Pair
 
 `gold_duplicate` 是人工确认的 pair 真值；`difficulty` 为 easy、medium、hard；`source_pair` 保留左右来源组合；`split` 与其他 Benchmark 相同。pending batch 的 `gold_duplicate` 为 null，不能送入 evaluator。
 
-## 12. Canonical Job 新增字段
+## 14. Canonical Job 新增字段
 
 | 字段 | 类型 | 空值 | 说明 |
 | --- | --- | --- | --- |
@@ -476,7 +482,7 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 | last_seen_at | timestamp string | 是 | 最晚观测时间。 |
 | canonical_merge_version | string | 否 | 字段级融合规则版本。 |
 
-### 12.1 Silver 市场范围与原生薪资字段
+### 14.1 Silver 市场范围与原生薪资字段
 
 | 字段 | 类型 | 空值 | 说明 |
 | --- | --- | --- | --- |
@@ -492,7 +498,7 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 
 兼容字段 `published_at` 等于 `first_posted_at`，`salary_mid_monthly` 等于无冲突的 `canonical_salary`；发生冲突时二者均为空，防止下游薪资分析误用强制融合值。
 
-## 13. Metric Guardrail 与 Freshness 字段
+## 15. Metric Guardrail 与 Freshness 字段
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -513,7 +519,7 @@ Phase 11 API 的市场筛选字段为 `role_id`、`city_code`、`experience_band
 
 Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_duplicate` 仅为标注建议；`gold_role`、`gold_skills`、`gold_duplicate` 为 null，直到人工确认。字段 `annotator`、`annotation_notes`、`difficulty`、`split` 均为正式契约。
 
-## 14. NextGig Silver 语义字段
+## 16. NextGig Silver 语义字段
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -534,9 +540,9 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | salary_normalization_method | string | 月频转换规则或失败状态。 |
 | fx_rate / fx_rate_date / fx_source | nullable | 当前固定 null；禁止静默换汇。 |
 
-## 15. Freehire snapshot 与 China SkillWorth 字段
+## 17. Freehire snapshot 与 China SkillWorth 字段
 
-### 15.1 Snapshot provenance
+### 17.1 Snapshot provenance
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -553,7 +559,7 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | `pipeline_job_count` | integer | 进入 Bronze/Silver Data Contract 的行数。 |
 | `rejected_job_count` | integer | API schema 无效行数；不包含重复 slug。 |
 
-### 15.2 `china_skillworth_summary`
+### 17.2 `china_skillworth_summary`
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -575,7 +581,9 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 
 `GET /market/china-skillworth` 的响应元数据另含 `access_date`（nullable date）：Real Mode 取冻结 manifest 的 `acquired_at` / `access_date`，Demo Mode 取版本化合成 fixture manifest 的 `imported_at`。该字段只描述数据访问/导入日期，不参与指标或排名计算。
 
-### 15.3 `china_skillworth_visual_ready`
+产品级 `market_scope=china_open_tech_sample` 与 `source_role=china_supplementary` 描述公开样本边界；它们不同于通用市场查询的 `market_scope=target|all` 和 Source Registry 的 `analysis_role=supplementary_market`。各字段必须按所属 contract 解释，不得跨层替换。
+
+### 17.3 `china_skillworth_visual_ready`
 
 粒度为 `skill_id × recency_window × role_id`；`role_id=null` 表示全角色。该表是 API 的只读 visual-ready 来源，不替代 `china_skillworth_summary` 的基础审计记录。
 
@@ -597,6 +605,6 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | `window_status` | enum | `available` 或 `insufficient`。 |
 | `salary_signal_status` / `trend_signal_status` | status | 当前固定 `unavailable`，不得填充占位分数。 |
 
-### 15.4 `china_skillworth_market_themes`
+### 17.4 `china_skillworth_market_themes`
 
 每行是 `market_theme × recency_window`，提供主题成员技能岗位并集的 `job_count/coverage`、公司并集和角色数。主题名必须已存在于 taxonomy，不参与具体技术主榜。
