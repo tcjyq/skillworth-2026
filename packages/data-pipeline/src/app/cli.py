@@ -13,6 +13,7 @@ from app.annotation_batches import prepare_annotation_batches
 from app.annotation_launcher import launch_annotation_workspace
 from app.benchmark_status import benchmark_readiness_status
 from app.dedup_pipeline import deduplicate_silver
+from app.demo_dataset import build_demo_dataset
 from app.dedup_benchmark import evaluate_dedup_benchmark
 from app.config import load_role_taxonomy
 from app.role_benchmark import evaluate_role_benchmark
@@ -130,6 +131,11 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=REPOSITORY_ROOT / "data/warehouse/query_benchmark.json",
     )
+    demo_parser = subparsers.add_parser(
+        "build-demo-dataset",
+        help="Rebuild deterministic Demo Mode artifacts from the versioned synthetic fixture",
+    )
+    demo_parser.add_argument("--output-root", type=Path, required=True)
     list_source_parser = subparsers.add_parser("list-sources", help="List configured recruitment data sources")
     list_source_parser.add_argument(
         "--sources-config",
@@ -379,6 +385,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(report.model_dump(mode="json"), ensure_ascii=False, indent=2))
         print(f"warehouse_database={args.database}")
         print(f"benchmark_report={args.benchmark_report}")
+        return 0
+
+    if args.command == "build-demo-dataset":
+        logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+        result = build_demo_dataset(output_root=args.output_root)
+        print(json.dumps(result.model_dump(mode="json"), ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "list-sources":

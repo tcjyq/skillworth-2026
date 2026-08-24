@@ -243,6 +243,8 @@ npm run build
 npm run test:e2e
 ```
 
+`npm run test:e2e` 会从已提交的 `data/demo` 合成 fixture 重建隔离的 Demo 数据，不依赖本机 Real 数据。冻结 Freehire v6 数据故事验证使用 `npm run test:e2e:real`；该命令要求本地存在 `data/modes/freehire/current.json`，或通过 `SKILLWORTH_REAL_MODE_MANIFEST` 指向等价的本地 manifest。
+
 ## 本地运行
 
 Windows PowerShell：

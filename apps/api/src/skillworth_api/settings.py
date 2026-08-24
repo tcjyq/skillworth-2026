@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -23,6 +24,7 @@ class ApiSettings(BaseModel):
     market_scope: str = "demo_dataset"
     source_role: str = "engineering_validation"
     snapshot: str = "demo"
+    access_date: date | None = None
     job_count: int = Field(default=0, ge=0)
     company_count: int = Field(default=0, ge=0)
     source_count: int = Field(default=0, ge=0)
@@ -32,7 +34,12 @@ class ApiSettings(BaseModel):
     def from_environment(cls) -> "ApiSettings":
         mode = os.getenv("SKILLWORTH_DATA_MODE", "demo").strip().lower()
         if mode == "demo":
-            return cls()
+            demo_manifest = os.getenv("SKILLWORTH_DEMO_MODE_MANIFEST")
+            if demo_manifest:
+                return cls._from_manifest(Path(demo_manifest), data_mode="demo")
+            fixture_manifest = REPOSITORY_ROOT / "data/demo/source_manifest.json"
+            payload = json.loads(fixture_manifest.read_text(encoding="utf-8"))
+            return cls(access_date=_date_from_value(payload.get("imported_at")))
         if mode != "real":
             raise ValueError("SKILLWORTH_DATA_MODE must be demo or real")
         manifest_path = Path(
@@ -43,17 +50,36 @@ class ApiSettings(BaseModel):
         )
         if not manifest_path.is_file():
             raise FileNotFoundError(f"Real Dataset Mode manifest does not exist: {manifest_path}")
+        return cls._from_manifest(manifest_path, data_mode="real")
+
+    @classmethod
+    def _from_manifest(
+        cls, manifest_path: Path, *, data_mode: Literal["demo", "real"]
+    ) -> "ApiSettings":
+        if not manifest_path.is_file():
+            raise FileNotFoundError(
+                f"{data_mode.title()} Dataset Mode manifest does not exist: {manifest_path}"
+            )
         payload = json.loads(manifest_path.read_text(encoding="utf-8"))
         return cls(
-            data_mode="real",
+            data_mode=data_mode,
             warehouse_path=Path(payload["warehouse_path"]),
             graph_edges_path=Path(payload["graph_edges_path"]),
             quality_report_path=Path(payload["quality_report_path"]),
-            market_scope=payload.get("market_scope", "real_dataset"),
+            market_scope=payload.get("market_scope", f"{data_mode}_dataset"),
             source_role=payload.get("source_role", "unknown"),
             snapshot=payload.get("snapshot", payload.get("snapshot_id", "unknown")),
+            access_date=_date_from_value(
+                payload.get("access_date") or payload.get("acquired_at")
+            ),
             job_count=payload.get("job_count", payload.get("canonical_job_count", 0)),
             company_count=payload.get("company_count", 0),
             source_count=payload.get("source_count", 0),
             disclaimer=payload.get("disclaimer", "Real dataset scope is documented in its manifest."),
         )
+
+
+def _date_from_value(value: object) -> date | None:
+    if not value:
+        return None
+    return datetime.fromisoformat(str(value).replace("Z", "+00:00")).date()

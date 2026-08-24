@@ -48,6 +48,7 @@ function response(records: ChinaSkillWorthRecord[], jobCount: number, roleId: st
     market_scope: "china_open_tech_sample",
     source_role: "china_supplementary",
     snapshot: "freehire_china_tech_2026_08",
+    access_date: "2026-08-10",
     recency_window: roleId ? "180d" : records[0]?.recency_window ?? "180d",
     job_count: jobCount,
     company_count: 313,

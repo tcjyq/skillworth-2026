@@ -20,7 +20,9 @@ def test_api_settings_keep_demo_default_and_load_real_snapshot(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.delenv("SKILLWORTH_DATA_MODE", raising=False)
-    assert ApiSettings.from_environment().data_mode == "demo"
+    demo_settings = ApiSettings.from_environment()
+    assert demo_settings.data_mode == "demo"
+    assert demo_settings.access_date.isoformat() == "2026-08-08"
 
     manifest = tmp_path / "current.json"
     manifest.write_text(
@@ -29,6 +31,7 @@ def test_api_settings_keep_demo_default_and_load_real_snapshot(
                 "warehouse_path": str(tmp_path / "real.duckdb"),
                 "graph_edges_path": str(tmp_path / "edges.parquet"),
                 "quality_report_path": str(tmp_path / "quality.json"),
+                "acquired_at": "2026-08-10T12:30:00+08:00",
             }
         ),
         encoding="utf-8",
@@ -40,6 +43,7 @@ def test_api_settings_keep_demo_default_and_load_real_snapshot(
 
     assert settings.data_mode == "real"
     assert settings.warehouse_path == tmp_path / "real.duckdb"
+    assert settings.access_date.isoformat() == "2026-08-10"
 
 
 def test_health_and_openapi_document_every_public_endpoint() -> None:
@@ -107,6 +111,7 @@ def test_china_skillworth_endpoint_exposes_scope_and_unavailable_signals(tmp_pat
         market_scope="china_open_tech_sample",
         source_role="china_supplementary",
         snapshot="2026-08",
+        access_date="2026-08-10",
         job_count=2,
         company_count=2,
         source_count=1,
@@ -118,6 +123,7 @@ def test_china_skillworth_endpoint_exposes_scope_and_unavailable_signals(tmp_pat
 
     assert response.status_code == 200
     assert response.json()["snapshot"] == "2026-08"
+    assert response.json()["access_date"] == "2026-08-10"
     assert response.json()["recency_window"] == "180d"
     assert response.json()["skill_count"] == 1
     assert response.json()["source_role"] == "china_supplementary"

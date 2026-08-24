@@ -157,6 +157,7 @@ export type ChinaSkillWorthResponse = {
   market_scope: string;
   source_role: string;
   snapshot: string;
+  access_date: string | null;
   recency_window: string;
   job_count: number;
   company_count: number;

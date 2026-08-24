@@ -55,6 +55,7 @@ class ChinaSkillWorthSummaryResponse(ApiModel):
     market_scope: str
     source_role: str
     snapshot: str
+    access_date: date | None = None
     recency_window: Literal["90d", "180d", "365d", "all_active"]
     job_count: int = Field(ge=0)
     company_count: int = Field(ge=0)

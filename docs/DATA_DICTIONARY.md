@@ -573,6 +573,8 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | `sensitive_ranking_warning` | nullable string | 排名跨度达到阈值时为 `Sensitive Ranking Warning`。 |
 | `market_scope` / `source_role` | string | `china_open_tech_sample` / `china_supplementary`。 |
 
+`GET /market/china-skillworth` 的响应元数据另含 `access_date`（nullable date）：Real Mode 取冻结 manifest 的 `acquired_at` / `access_date`，Demo Mode 取版本化合成 fixture manifest 的 `imported_at`。该字段只描述数据访问/导入日期，不参与指标或排名计算。
+
 ### 15.3 `china_skillworth_visual_ready`
 
 粒度为 `skill_id × recency_window × role_id`；`role_id=null` 表示全角色。该表是 API 的只读 visual-ready 来源，不替代 `china_skillworth_summary` 的基础审计记录。

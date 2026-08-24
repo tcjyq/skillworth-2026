@@ -57,6 +57,7 @@ export function ExploreMode() {
   const selected = records.find((record) => record.skill_id === selectedId) ?? ranked[0] ?? observed[0] ?? null;
   const lowEvidence = Boolean(role && result.data && (result.data.job_count < 10 || allRanked.length === 0));
   const evidenceLevel = result.data && result.data.job_count <= 3 ? "极低样本" : "低样本";
+  const success = !result.error ? result.data : undefined;
 
   function changeViewMode(nextMode: "skill" | "role") {
     setViewMode(nextMode);
@@ -69,7 +70,7 @@ export function ExploreMode() {
   return <section id="explore" className={styles.exploreMode} aria-labelledby="explore-title">
     <div className={styles.exploreIntro}>
       <p>开始自己的查找</p>
-      <h2 id="explore-title">探索 {result.data?.skill_count ?? 134} 项技能</h2>
+      <h2 id="explore-title">{success ? `探索 ${success.skill_count} 项技能` : "探索技能"}</h2>
       <p>按技能或岗位查找，首先看岗位覆盖、公司覆盖、学习时间和排名稳定性。</p>
     </div>
 
@@ -81,20 +82,21 @@ export function ExploreMode() {
       <label><span>观察窗口</span><select aria-label="观察窗口" value={recency} onChange={(event) => { setRecency(event.target.value as (typeof RECENCY)[number]["value"]); setSelectedId(null); }}>{RECENCY.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
     </div>
 
-    {result.error && <div className={styles.exploreState}>技能数据暂时无法读取，请稍后重试。</div>}
+    {result.error && <div className={styles.exploreState}><p>当前数据暂时无法读取</p><button type="button" onClick={() => void result.mutate()}>重试</button></div>}
     {!result.data && !result.error && <div className={styles.exploreState}>正在读取完整技能集合…</div>}
-    {result.data && <>
+    {success && success.records.length === 0 && <div className={styles.exploreState}>当前筛选条件下没有可展示的技能</div>}
+    {success && success.records.length > 0 && <>
       <div className={styles.resultSummary} aria-live="polite">
         <span><b>{records.length}</b> 项可搜索技能</span>
         <span><b>{allRanked.length}</b> 项进入主排名层</span>
         <span><b>{allObserved.length}</b> 项仅观察</span>
-        <span><b>{result.data.job_count}</b> 个岗位样本</span>
+        <span><b>{success.job_count}</b> 个岗位样本</span>
         {normalized && <span><b>{searched.length}</b> 项匹配搜索</span>}
       </div>
 
       {lowEvidence && <div className={`${styles.lowEvidence} ${evidenceLevel === "极低样本" ? styles.severeEvidence : ""}`}>
         <strong>当前岗位样本较少。以下排序仅反映当前开放样本，不构成稳定推荐。</strong>
-        <dl><div><dt>样本</dt><dd>{result.data.job_count} 个岗位</dd></div><div><dt>证据状态</dt><dd>{evidenceLevel}</dd></div><div><dt>解释</dt><dd>可以查看当前样本中的技能排序与观察结果，但不宜将精确名次视为稳定结论。</dd></div></dl>
+        <dl><div><dt>样本</dt><dd>{success.job_count} 个岗位</dd></div><div><dt>证据状态</dt><dd>{evidenceLevel}</dd></div><div><dt>解释</dt><dd>可以查看当前样本中的技能排序与观察结果，但不宜将精确名次视为稳定结论。</dd></div></dl>
       </div>}
 
       {filtered.length === 0 ? <div className={styles.exploreState}>当前筛选中没有找到“{query}”。清除岗位筛选后可继续搜索全局技能集合。</div> : <div className={styles.exploreWorkspace}>

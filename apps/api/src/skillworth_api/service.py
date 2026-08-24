@@ -153,6 +153,7 @@ class ApiService:
             market_scope=self.settings.market_scope,
             source_role=self.settings.source_role,
             snapshot=self.settings.snapshot,
+            access_date=self.settings.access_date,
             recency_window=query.recency_window,
             job_count=int(scope["job_count"]),
             company_count=int(scope["company_count"]),

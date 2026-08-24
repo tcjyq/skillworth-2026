@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "node scripts/run-e2e.mjs"
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:e2e:real": "node scripts/run-e2e.mjs --real"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

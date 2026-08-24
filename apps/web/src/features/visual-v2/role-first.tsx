@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthResponse, RolesResponse } from "@/lib/api/types";
 import { roleLabel } from "./terminology";
+import { recencyLabel, sourceRoleLabel } from "./market-metadata";
 import styles from "./visual-v2.module.css";
 
 const PRIMARY_ROLES = [
@@ -35,6 +36,9 @@ export function RoleFirst() {
   const observed = result.data?.records.filter((record) => record.skillworth_rank == null && record.job_count > 0).slice(0, 6) ?? [];
   const sampleSize = result.data?.job_count ?? 0;
   const lowEvidence = Boolean(result.data && sampleSize < 10);
+  const hasError = Boolean(result.error || global.error);
+  const isLoading = !hasError && (!result.data || !global.data);
+  const success = !hasError && result.data && global.data ? result.data : undefined;
 
   function selectRole(nextRole: string) {
     setRole(nextRole);
@@ -55,9 +59,10 @@ export function RoleFirst() {
     {showMore && <label className={styles.moreRoleSelect}><span>全部岗位方向</span><select value={role} onChange={(event) => selectRole(event.target.value)}>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · {item.canonical_job_count} 岗位</option>)}</select></label>}
 
     <article className={styles.roleResult} aria-live="polite">
-      {!result.data && !result.error && <p className={styles.roleLoading}>正在读取该方向的当前样本…</p>}
-      {result.error && <p className={styles.roleLoading}>该方向暂时无法读取，请稍后重试。</p>}
-      {result.data && <>
+      {isLoading && <p className={styles.roleLoading}>正在读取该方向的当前样本…</p>}
+      {hasError && <div className={styles.roleLoading}><p>当前数据暂时无法读取</p><button type="button" onClick={() => { void result.mutate(); void global.mutate(); }}>重试</button></div>}
+      {success && success.records.length === 0 && <p className={styles.roleLoading}>当前岗位方向下没有可展示的技能</p>}
+      {success && success.records.length > 0 && <>
         <header className={styles.roleResultHeader}>
           <div><p>当前方向</p><h3>{roleLabel(role, true)}</h3></div>
           <dl><div><dt>样本</dt><dd>{sampleSize} 个岗位</dd></div><div><dt>证据状态</dt><dd>{evidenceLabel(sampleSize)}</dd></div></dl>
@@ -72,7 +77,7 @@ export function RoleFirst() {
             return <div className={styles.roleSkillRow} key={record.skill_id}><strong>{record.skill}</strong><span>{record.job_count} 个岗位提到</span><b>{globalRank != null ? `#${globalRank}` : "仅观察"} <i>→</i> #{record.skillworth_rank}</b></div>;
           }) : <div className={styles.noRoleRanking}><strong>当前没有可计算的岗位排名</strong><p>{observed.length} 项已观察技能：{observed.map((record) => record.skill).join("、")}。保留真实观察，不制造排名。</p></div>}
         </div>
-        <p className={styles.roleSource}>样本：Freehire 中国公开技术岗位补充样本 · 近 180 天</p>
+        <p className={styles.roleSource}>样本：{sourceRoleLabel(success.source_role)} · {recencyLabel(success.recency_window)}</p>
       </>}
     </article>
   </section>;

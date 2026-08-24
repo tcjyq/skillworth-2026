@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthResponse } from "@/lib/api/types";
 import { PublicNavigation } from "@/features/visual-v2/public-navigation";
+import { accessDateLabel, availabilityLabel, recencyLabel, sourceRoleLabel } from "@/features/visual-v2/market-metadata";
 import styles from "@/features/visual-v2/visual-v2.module.css";
 
 const marketSignals = [
@@ -31,6 +32,8 @@ const technicalDetails = [
 export function MethodologyPage() {
   const result = useApi<ChinaSkillWorthResponse>("/market/china-skillworth?eligibility=main&robustness=all&recency_window=180d");
   const scope = result.data;
+  const success = !result.error && scope && scope.job_count > 0 && scope.records.length > 0 ? scope : undefined;
+  const empty = !result.error && scope && (scope.job_count === 0 || scope.records.length === 0);
 
   return <div className={`${styles.page} ${styles.methodologyPage}`}>
     <PublicNavigation />
@@ -43,14 +46,14 @@ export function MethodologyPage() {
 
       <section className={styles.studentMethod} aria-label="学生可读的方法说明">
         <article className={styles.methodScope}>
-          <div><h2>我们分析了什么？</h2><p>当前结果来自可观察的中国公开技术岗位补充样本。</p></div>
-          <dl>
-            <div><dt>岗位</dt><dd>{scope?.job_count ?? "—"}</dd></div>
-            <div><dt>公司</dt><dd>{scope?.company_count ?? "—"}</dd></div>
-            <div><dt>技能</dt><dd>{scope?.skill_count ?? "—"}</dd></div>
-            <div><dt>观察窗口</dt><dd>近 180 天</dd></div>
+          <div><h2>我们分析了什么？</h2><p>{success ? `当前结果来自${sourceRoleLabel(success.source_role)}。` : "数据成功读取后，这里会显示当前样本来源与范围。"}</p></div>
+          {success ? <><dl>
+            <div><dt>岗位</dt><dd>{success.job_count}</dd></div>
+            <div><dt>公司</dt><dd>{success.company_count}</dd></div>
+            <div><dt>技能</dt><dd>{success.skill_count}</dd></div>
+            <div><dt>观察窗口</dt><dd>{recencyLabel(success.recency_window)}</dd></div>
           </dl>
-          <p className={styles.methodMeta}>数据截止 2026-08-10 · Freehire 中国公开技术岗位补充样本 · 当前仅有一个补充来源</p>
+          <p className={styles.methodMeta}>{accessDateLabel(success.access_date)} · 快照 {success.snapshot} · {sourceRoleLabel(success.source_role)} · {success.source_count} 个来源 · {success.market_scope}</p></> : <div className={styles.exploreState} role="status">{result.error ? <><p>当前数据暂时无法读取</p><button type="button" onClick={() => void result.mutate()}>重试</button></> : empty ? "当前筛选条件下没有可展示的技能" : "正在读取当前市场样本……"}</div>}
         </article>
 
         <article className={styles.methodQuestion}>
@@ -71,8 +74,8 @@ export function MethodologyPage() {
         <article className={styles.methodLimits}>
           <div><h2>现在不能回答什么？</h2><p>这些限制直接公开，不用缺失数据制造看似完整的答案。</p></div>
           <dl>
-            <div><dt>薪资比较</dt><dd>不可用</dd></div>
-            <div><dt>市场趋势</dt><dd>不可用</dd></div>
+            <div><dt>薪资比较</dt><dd>{success ? availabilityLabel(success.salary_signal_status) : "暂不可用"}</dd></div>
+            <div><dt>市场趋势</dt><dd>{success ? availabilityLabel(success.trend_signal_status) : "暂不可用"}</dd></div>
             <div><dt>完整中国市场代表性</dt><dd>不具备</dd></div>
           </dl>
         </article>
