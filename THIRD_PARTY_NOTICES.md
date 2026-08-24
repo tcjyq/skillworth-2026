@@ -12,7 +12,15 @@
 - Repository: https://github.com/greensock/GSAP
 - License: https://gsap.com/community/standard-license/
 
-SkillWorth 仅在独立 Visual V2 实验路由中使用 GSAP core、ScrollTrigger 与 React hook，未复制 React Bits、Aceternity UI 或其他参考项目的组件源码。
+SkillWorth 在独立 Visual V2 与 3D 技能场实验路由中使用 GSAP core、ScrollTrigger 与 React hook，未复制 React Bits、Aceternity UI 或其他参考项目的组件源码。
+
+## React Three Fiber, Drei, Three.js and camera-controls
+
+- Packages: `@react-three/fiber` 9.7.0, `@react-three/drei` 10.7.8, `three` 0.180.0, `camera-controls` 3.1.2
+- License: MIT
+- Repositories: https://github.com/pmndrs/react-three-fiber, https://github.com/pmndrs/drei, https://github.com/mrdoob/three.js, https://github.com/yomotsu/camera-controls
+
+SkillWorth 仅在 `/lab/3d-skill-field` 的客户端动态分包中使用这些库。原型使用项目自行实现的确定性布局、实例化节点、关系线和交互状态机，未复制第三方可视化产品源码。
 
 ## NextGig Global Job Postings — June 2026
 

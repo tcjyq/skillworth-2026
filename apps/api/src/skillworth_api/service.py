@@ -17,6 +17,9 @@ from skillworth_analytics import (
     LearningOptimizerRequest,
     OpportunityRequest,
     PersonalSkillOpportunityEngine,
+    SkillRelationRepository,
+    load_exploratory_relation_config,
+    calculate_demand_ranks,
     load_data_confidence_config,
     load_decision_score_config,
 )
@@ -29,6 +32,8 @@ from .schemas import (
     DataQualityResponse,
     ChinaSkillWorthQuery,
     ChinaSkillWorthSummaryResponse,
+    ChinaSkillRelationsQuery,
+    ChinaSkillRelationsResponse,
     MarketSummaryResponse,
     ProductScopeMetadata,
     RelatedSkillRecord,
@@ -65,6 +70,12 @@ class ApiService:
             confidence_config=confidence_config,
         )
         self._cache = TTLCache(settings.cache_ttl_seconds)
+        self._relations = SkillRelationRepository(
+            settings.warehouse_path,
+            load_exploratory_relation_config(
+                REPOSITORY_ROOT / "data/reference/exploratory_relations.v1.yml"
+            ),
+        )
         self._source_registry = load_source_registry(
             REPOSITORY_ROOT / "data/reference/sources.v1.yml"
         )
@@ -137,6 +148,23 @@ class ApiService:
         if query.role is not None:
             scope_clauses[-1] = "role_id = ?"
             scope_parameters.append(query.role)
+        if rows and "demand_rank" not in rows[0]:
+            rank_rows = self._query(
+                "SELECT skill_id, job_count, skillworth_eligibility "
+                "FROM china_skillworth_visual_ready WHERE "
+                + " AND ".join(scope_clauses),
+                scope_parameters,
+            )
+            demand_ranks = calculate_demand_ranks([
+                (
+                    str(item["skill_id"]),
+                    int(item["job_count"]),
+                    str(item["skillworth_eligibility"]),
+                )
+                for item in rank_rows
+            ])
+            for row in rows:
+                row["demand_rank"] = demand_ranks.get(str(row["skill_id"]))
         scope = self._query(
             "SELECT coalesce(max(sample_size), 0) AS job_count, "
             "coalesce(max(company_sample_size), 0) AS company_count, "
@@ -162,6 +190,30 @@ class ApiService:
             disclaimer=self.settings.disclaimer,
             market_themes=tuple(themes),
             records=tuple(rows),
+        )
+
+    def china_skill_relations(
+        self, query: ChinaSkillRelationsQuery
+    ) -> ChinaSkillRelationsResponse:
+        if query.market_scope is not None and query.market_scope != self.settings.market_scope:
+            raise ValueError("market_scope does not match the active dataset")
+        if query.source_role is not None and query.source_role != self.settings.source_role:
+            raise ValueError("source_role does not match the active dataset")
+        as_of_date = self.settings.access_date
+        if as_of_date is None:
+            row = self._query("SELECT max(published_at) AS as_of_date FROM jobs")[0]
+            as_of_date = row["as_of_date"] or date.today()
+        result = self._relations.related_skills(
+            core_skill_id=query.core_skill_id,
+            role_id=query.role_id,
+            recency_window=query.recency_window,
+            as_of_date=as_of_date,
+        )
+        return ChinaSkillRelationsResponse(
+            market_scope=self.settings.market_scope,
+            source_role=self.settings.source_role,
+            snapshot=self.settings.snapshot,
+            **result.model_dump(),
         )
 
     def skill_detail(self, skill_id: str, filters: AnalyticsFilters) -> SkillDetailResponse | None:

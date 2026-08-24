@@ -191,3 +191,9 @@ Python 数据管道已在 `packages/data-pipeline/src/app` 初始化，支持配
 - HTML / CSS 与少量 SVG 是主图形层；本轮不引入 WebGL、Three.js、React Three Fiber 或 3D force graph。
 - Story Mode 继续从 `deriveFinalFindings` 读取冻结 Final 5；Explore Mode 直接请求 `/market/china-skillworth?eligibility=all`，按 `skillworth_rank` 与真实 `job_count` 分为主排名层和已观察技能。主排名层只表示当前规则可计算排名，不等于正式推荐。
 - `prefers-reduced-motion` 下不创建 scrub 时间线，所有内容保持完整静态可见。
+
+## 11. 3D Skill Field 隔离原型
+
+`apps/web/src/app/lab/3d-skill-field` 是独立 Human Review 原型，不接入 `/lab/visual-v2` 或正式 `/`。页面动态加载 Three.js / React Three Fiber / Drei，使 3D bundle 不进入其他路由首屏；普通 DOM 负责搜索、模式、详情、小样本提示、键盘操作与 WebGL fallback。
+
+统一 Scene Director 管理 `GLOBAL_VALUE`、`GLOBAL_DEMAND`、`ROLE_VALUE`、`RELATION_GLOBAL`、`RELATION_ROLE`，并协调职业/技能上下文、相机目标、标签、详情与可中断过渡。布局模块只消费 API 输出：SkillWorth 半径使用 `skillworth_rank`，需求半径使用 `demand_rank`，职业半径使用相应 role slice rank；节点大小始终由 `job_coverage` 的平方根呈现变换得到。关联星座消费 `/market/china-skill-relations`，前端不计算 Jaccard、PMI 或证据门槛。

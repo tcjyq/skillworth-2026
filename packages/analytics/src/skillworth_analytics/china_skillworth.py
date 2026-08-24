@@ -418,6 +418,7 @@ class ChinaSkillWorthVisualRecord(BaseModel):
     learning_hours_max: float = Field(gt=0)
     skillworth_score: float = Field(ge=0, le=100)
     skillworth_rank: int | None = Field(default=None, ge=1)
+    demand_rank: int | None = Field(default=None, ge=1)
     sensitivity_rank_min: int = Field(ge=1)
     sensitivity_rank_max: int = Field(ge=1)
     ranking_robustness: float = Field(ge=0, le=100)
@@ -441,6 +442,21 @@ class ChinaSkillWorthVisualBuildReport(BaseModel):
     record_count: int = Field(ge=0)
     windows: tuple[RecencyWindowSummary, ...]
     records: tuple[ChinaSkillWorthVisualRecord, ...]
+
+
+def calculate_demand_ranks(
+    records: list[tuple[str, int, str]],
+) -> dict[str, int]:
+    """Rank main skills by existing canonical job demand with a stable tie-break."""
+    ordered = sorted(
+        (
+            (skill_id, job_count)
+            for skill_id, job_count, eligibility in records
+            if eligibility == "main"
+        ),
+        key=lambda item: (-item[1], item[0]),
+    )
+    return {skill_id: rank for rank, (skill_id, _) in enumerate(ordered, start=1)}
 
 
 def build_china_skillworth_visual_ready(
@@ -1191,6 +1207,14 @@ def _visual_records_for_scope(
         key=lambda skill_id: (-partial[skill_id]["score"].skillworth_score, skill_id),
     )
     main_ranks = {skill_id: rank for rank, skill_id in enumerate(main_order, start=1)}
+    demand_ranks = calculate_demand_ranks([
+        (
+            skill_id,
+            len(item["job_ids"]),
+            str(item["metadata"]["skillworth_eligibility"]),
+        )
+        for skill_id, item in partial.items()
+    ])
     output: list[ChinaSkillWorthVisualRecord] = []
     for skill_id, item in partial.items():
         metadata = item["metadata"]
@@ -1240,6 +1264,7 @@ def _visual_records_for_scope(
                 learning_hours_max=float(metadata["learning_hours_max"]),
                 skillworth_score=score.skillworth_score,
                 skillworth_rank=main_ranks.get(skill_id),
+                demand_rank=demand_ranks.get(skill_id),
                 sensitivity_rank_min=rank_min,
                 sensitivity_rank_max=rank_max,
                 ranking_robustness=robustness.score,

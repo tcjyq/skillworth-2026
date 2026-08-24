@@ -13,11 +13,13 @@ const apiPort = Number(process.env.SKILLWORTH_E2E_API_PORT ?? "18011");
 const webPort = Number(process.env.SKILLWORTH_E2E_WEB_PORT ?? "13001");
 const baseURL = `http://127.0.0.1:${webPort}`;
 const realMode = process.argv.includes("--real");
+const captureReview = process.argv.includes("--capture-3d-review");
 const mode = realMode ? "real" : "demo";
-const playwrightArgs = process.argv.slice(2).filter((argument) => argument !== "--real");
+const playwrightArgs = process.argv.slice(2).filter((argument) => !["--real", "--capture-3d-review"].includes(argument));
 const realManifest = resolve(repositoryRoot, process.env.SKILLWORTH_REAL_MODE_MANIFEST ?? "data/modes/freehire/current.json");
 const demoRoot = resolve(repositoryRoot, `.tmp/e2e-demo-${process.pid}`);
 const demoManifest = resolve(demoRoot, "manifest.json");
+const playwrightBrowsersPath = process.env.PLAYWRIGHT_BROWSERS_PATH ?? resolve(repositoryRoot, ".tmp/playwright-browsers");
 const children = [];
 const childErrors = new WeakMap();
 
@@ -148,8 +150,10 @@ async function main() {
 
   const playwright = start(
     process.execPath,
-    [resolve(webRoot, "node_modules/@playwright/test/cli.js"), "test", ...playwrightArgs],
-    { cwd: webRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, SKILLWORTH_E2E_MODE: mode } },
+    captureReview
+      ? [resolve(webRoot, "scripts/capture-3d-skill-field-review.mjs")]
+      : [resolve(webRoot, "node_modules/@playwright/test/cli.js"), "test", ...playwrightArgs],
+    { cwd: webRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: playwrightBrowsersPath, SKILLWORTH_E2E_MODE: mode } },
   );
   return await waitForExit(playwright);
 }

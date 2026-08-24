@@ -590,3 +590,11 @@ Ranking Robustness 范围 0–100，独立于 Data Confidence。敏感性名次�
 Market Theme 只允许使用 taxonomy 中已存在的 canonical skill 作为主题名，并以配置化 theme → skill IDs 映射计算岗位、公司和角色并集；映射允许重叠，主题不参与主榜排名。当前没有凭空建立 `Cloud`、`Data` 或 `Security` taxonomy 项。
 
 `90d`、`180d`、`365d` 只纳入 `published_at >= snapshot_date - days` 的岗位；`all_active` 纳入快照全部开放岗位。有限窗口缺少发布日期的岗位不进入分母。每个窗口按 `minimum_jobs` 标记 available/insufficient，并重新计算 Demand、Company Breadth、Role Breadth、Confidence、SkillWorth 与敏感性；Skill Synergy 暂沿用同一快照的全局共现网络信号，避免把稀疏窗口网络噪声误当趋势。Posting Recency 不是 Trend，所有窗口的 `trend_signal` 仍为 unavailable。首页窗口按“最短 available 且覆盖至少 80% all-active 岗位”选择，当前结果为 180d。
+
+### 11.5 Demand Rank 与探索型职业关系
+
+`demand_rank` 仅在同一 `recency_window × role_id` 切片的 main 技能内按 `job_count DESC` 排序，稳定 tie-break 为 `skill_id ASC`；secondary / excluded 固定为 null。它复用现有岗位需求口径，不能解释为 SkillWorth，也不重新定义冻结 Finding。Freehire v6 180d 下 C++ 的该排名仍为第 3，SkillWorth 排名仍为第 35。
+
+`GET /market/china-skill-relations` 是 3D 探索视图的分析输出。cohort 先按时间窗和可选 `role_id` 从 `jobs` 确定，再按 `canonical_job_id` 去重读取技能并集。每条关系计算共同岗位数、核心技能条件覆盖率、Jaccard 与 PMI；仅保留达到 `exploratory_relations.v1.yml` 配置门槛的关系。v1 门槛与既有全局 Skill Graph 一致：共同岗位至少 3 且 Jaccard 至少 0.01，但配置独立版本化，避免未来职业探索调整影响冻结网络或 Final 5。
+
+职业 cohort `n >= 10` 正常展示；`4 <= n < 10` 返回 `small_role_sample` 和固定限制文案；`n <= 3` 返回 `insufficient_role_sample` 且不输出确定性关系排序。PMI 不参与第一层距离、大小、颜色或线宽编码。

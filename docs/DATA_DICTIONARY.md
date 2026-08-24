@@ -599,6 +599,7 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | `company_sample_size` | integer | 当前时间窗及角色切片的公司分母。 |
 | `role_count` / `role_breadth` | integer/float | 达到支持阈值的角色数与 breadth 分数。 |
 | `skillworth_rank` | nullable integer | 仅 main 技能按当前切片 SkillWorth score 排名；secondary/excluded 为 null。 |
+| `demand_rank` | nullable integer | 仅 main 技能按当前切片 `job_count DESC, skill_id ASC` 排名；secondary/excluded 为 null。用于招聘需求视图，不改变 SkillWorth。 |
 | `sensitivity_rank_min/max` | integer | 当前切片全部观测技能在配置场景中的名次范围。 |
 | `ranking_robustness` / `robustness_level` | float/enum | 排名稳健性分数与 `robust`、`moderate`、`sensitive`。不得解释为 Confidence。 |
 | `high_skillworth_candidate` | boolean | 是否通过配置化主榜候选门槛。 |
@@ -607,6 +608,22 @@ Benchmark pending batch 中 `predicted_role`、`predicted_skills`、`predicted_d
 | `window_status` | enum | `available` 或 `insufficient`。 |
 | `salary_signal_status` / `trend_signal_status` | status | 当前固定 `unavailable`，不得填充占位分数。 |
 
-### 17.4 `china_skillworth_market_themes`
+### 17.4 `GET /market/china-skill-relations`
+
+探索型技能关系接口以 `canonical_job_id` 为岗位分母，接受 `core_skill_id`、可选 `role_id`、`recency_window`，以及用于校验当前数据集边界的可选 `market_scope` / `source_role`。它不修改 SkillWorth、Final 5 或正式市场结论。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `sample_size` | integer | 当前时间窗与职业 cohort 的 canonical jobs 数。 |
+| `core_job_count` / `related_job_count` | integer | 当前 cohort 中分别观察到核心技能与关联技能的岗位数。 |
+| `cooccurrence_count` | integer | 同时观察到两项技能的 canonical jobs 数。 |
+| `core_conditional_coverage` | float | `cooccurrence_count / core_job_count`。 |
+| `jaccard` | float | `cooccurrence / (core + related - cooccurrence)`。 |
+| `pmi` | float | 以当前 cohort 为基线的 pointwise mutual information；只供 Advanced evidence 使用。 |
+| `evidence_status` | enum | `supported`、`small_role_sample`、`insufficient_role_sample` 或 `core_skill_not_observed`；关系记录可为 `small_sample_supported`。 |
+| `limitations` | string[] | 小样本或不可用状态的永久展示文案。 |
+| `metadata` | object | 方法版本、配置版本、支持门槛与 `canonical_job_id` 分母声明。 |
+
+### 17.5 `china_skillworth_market_themes`
 
 每行是 `market_theme × recency_window`，提供主题成员技能岗位并集的 `job_count/coverage`、公司并集和角色数。主题名必须已存在于 taxonomy，不参与具体技术主榜。

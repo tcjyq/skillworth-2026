@@ -285,9 +285,26 @@ def test_build_china_skillworth_summary_uses_job_company_role_and_network_eviden
     assert {
         "skill_type",
         "skillworth_eligibility",
+        "demand_rank",
         "ranking_robustness",
         "robustness_level",
         "high_skillworth_candidate",
         "recency_window",
         "market_theme",
     } <= columns
+    main_records = [
+        row
+        for row in visual.records
+        if row.recency_window == "180d"
+        and row.role_id is None
+        and row.skillworth_eligibility == "main"
+    ]
+    demand_order = sorted(main_records, key=lambda row: (-row.job_count, row.skill_id))
+    assert [row.demand_rank for row in demand_order] == list(
+        range(1, len(demand_order) + 1)
+    )
+    assert all(
+        row.demand_rank is None
+        for row in visual.records
+        if row.skillworth_eligibility != "main"
+    )

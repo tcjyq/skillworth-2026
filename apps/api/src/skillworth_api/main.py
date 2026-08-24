@@ -22,6 +22,8 @@ from .schemas import (
     DataQualityResponse,
     ChinaSkillWorthSummaryResponse,
     ChinaSkillWorthQuery,
+    ChinaSkillRelationsQuery,
+    ChinaSkillRelationsResponse,
     ErrorBody,
     ErrorResponse,
     HealthResponse,
@@ -122,6 +124,25 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             f"china_skillworth:{query.model_dump_json()}",
             None,
             lambda: service.china_skillworth_summary(query),
+        )
+
+    @app.get(
+        "/market/china-skill-relations",
+        response_model=ChinaSkillRelationsResponse,
+        responses=ERROR_RESPONSES,
+        tags=["market"],
+    )
+    def china_skill_relations(
+        response: Response,
+        query: ChinaSkillRelationsQuery = Depends(),
+        service: ApiService = Depends(_service),
+    ) -> ChinaSkillRelationsResponse:
+        return _cached(
+            response,
+            service,
+            f"china_skill_relations:{query.model_dump_json()}",
+            None,
+            lambda: service.china_skill_relations(query),
         )
 
     @app.get("/skills", response_model=SkillDemandResult, responses=ERROR_RESPONSES, tags=["skills"])

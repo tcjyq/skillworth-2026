@@ -1,0 +1,83 @@
+import { expect, test } from "@playwright/test";
+
+const realMode = process.env.SKILLWORTH_E2E_MODE === "real";
+
+test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced Motion", async ({ page, isMobile }) => {
+  const consoleMessages: string[] = [];
+  page.on("console", (message) => { if (["error", "warning"].includes(message.type())) consoleMessages.push(message.text()); });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/lab/3d-skill-field");
+  await expect(page.getByRole("heading", { name: /项技术，哪些更值得你先学/ })).toBeVisible();
+  await expect(page.getByTestId("skill-field-canvas")).toBeVisible();
+
+  const search = page.getByRole("combobox", { name: "搜索技能或职业" });
+  await search.fill(realMode ? "Python" : "SQL");
+  await page.getByRole("option", { name: new RegExp(realMode ? "Python" : "SQL") }).first().click();
+  await expect(page.getByRole("heading", { name: new RegExp(`${realMode ? "Python" : "SQL"}，通常和哪些技能`) })).toBeVisible();
+  await expect(page.getByRole("heading", { name: realMode ? "Python" : "SQL", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "回到全局" }).click();
+  await page.getByRole("button", { name: "只看招聘需求" }).click();
+  await expect(page.getByRole("heading", { name: "如果只看招聘需求，答案会怎么变？" })).toBeVisible();
+
+  await search.fill(realMode ? "DevOps" : "数据分析");
+  const roleOption = page.getByRole("option", { name: new RegExp(realMode ? "DevOps" : "数据分析") }).last();
+  await roleOption.click();
+  await expect(page.getByRole("heading", { name: /答案会怎么变/ })).toBeVisible();
+  await expect(page.getByText(/个岗位样本/).first()).toBeVisible();
+  if (isMobile) expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
+  expect(consoleMessages).toEqual([]);
+});
+
+test("WebGL 初始化失败时保留 2D 搜索与技能列表", async ({ page }) => {
+  await page.goto("/lab/3d-skill-field?fallback=1");
+  await expect(page.getByRole("heading", { name: "已切换到 2D 技能视图" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "搜索技能或职业" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "2D 技能列表" })).toBeVisible();
+});
+
+test("WebGL 运行中上下文丢失时自动转为 2D", async ({ page }) => {
+  await page.goto("/lab/3d-skill-field");
+  const canvas = page.getByTestId("skill-field-canvas").locator("canvas");
+  await expect(canvas).toBeVisible();
+  await canvas.dispatchEvent("webglcontextlost", { cancelable: true });
+  await expect(page.getByRole("heading", { name: "已切换到 2D 技能视图" })).toBeVisible();
+});
+
+test("Real v6 保持冻结样本与关键排名迁移", async ({ page }) => {
+  test.skip(!realMode);
+  const globalResponse = await page.request.get("/backend-api/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d");
+  expect(globalResponse.ok()).toBe(true);
+  const globalPayload = await globalResponse.json();
+  const globalRank = (skillId: string) => globalPayload.records.find((record: { skill_id: string }) => record.skill_id === skillId)?.skillworth_rank;
+  expect(globalRank("devops_kubernetes")).toBe(18);
+  expect(globalRank("devops_terraform")).toBe(33);
+  expect(globalRank("data_engineering_spark")).toBe(19);
+  expect(globalRank("data_engineering_kafka")).toBe(23);
+  await page.goto("/lab/3d-skill-field");
+  await expect(page.getByRole("heading", { name: "134 项技术，哪些更值得你先学？" })).toBeVisible();
+  await expect(page.getByLabel("数据范围").getByText("998 个岗位").first()).toBeVisible();
+  await page.getByRole("button", { name: "只看招聘需求" }).click();
+  await expect(page.getByRole("status")).toContainText("招聘需求 #3 → 学习性价比 #35");
+
+  const search = page.getByRole("combobox", { name: "搜索技能或职业" });
+  await search.fill("DevOps");
+  await page.getByRole("option", { name: /DevOps/ }).last().click();
+  await expect(page.getByText("21 个岗位样本", { exact: false }).first()).toBeVisible();
+  await search.fill("Kubernetes");
+  await page.getByRole("option", { name: /Kubernetes/ }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText("学习性价比第 1");
+  await search.fill("Terraform");
+  await page.getByRole("option", { name: /Terraform/ }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText("学习性价比第 3");
+
+  await search.fill("数据工程");
+  await page.getByRole("option", { name: /数据工程师/ }).last().click();
+  await expect(page.getByText("38 个岗位样本", { exact: false }).first()).toBeVisible();
+  await search.fill("Apache Spark");
+  await page.getByRole("option", { name: /Apache Spark/ }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText("学习性价比第 3");
+  await search.fill("Kafka");
+  await page.getByRole("option", { name: /Apache Kafka|Kafka/ }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText("学习性价比第 5");
+});

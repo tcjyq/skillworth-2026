@@ -38,6 +38,7 @@ from .china_skillworth import (
     MarketSignalInput,
     build_china_skillworth_summary,
     build_china_skillworth_visual_ready,
+    calculate_demand_ranks,
     load_china_skillworth_config,
     write_skillworth_visual_reports,
 )
@@ -66,6 +67,12 @@ from .optimizer import (
     LearningOptimizerRequest,
     LearningOptimizerResult,
     LearningOptimizerStep,
+)
+from .skill_relations import (
+    ExploratoryRelationConfig,
+    SkillRelationRepository,
+    SkillRelationResult,
+    load_exploratory_relation_config,
 )
 
 __all__ = [
@@ -110,6 +117,9 @@ __all__ = [
     "SkillDemandRecord",
     "SkillDimensionRecord",
     "SkillTrendResult",
+    "ExploratoryRelationConfig",
+    "SkillRelationRepository",
+    "SkillRelationResult",
     "SourceBiasRecord",
     "ScoreComponent",
     "SensitivityAnalyzer",
@@ -118,8 +128,10 @@ __all__ = [
     "load_advanced_analytics_config",
     "build_china_skillworth_summary",
     "build_china_skillworth_visual_ready",
+    "calculate_demand_ranks",
     "load_china_skillworth_config",
     "write_skillworth_visual_reports",
     "load_data_confidence_config",
     "load_decision_score_config",
+    "load_exploratory_relation_config",
 ]

@@ -125,6 +125,7 @@ export type ChinaSkillWorthRecord = {
   learning_hours_max: number;
   skillworth_score: number;
   skillworth_rank: number | null;
+  demand_rank: number | null;
   sensitivity_rank_min: number | null;
   sensitivity_rank_max: number | null;
   ranking_robustness: number;
@@ -168,6 +169,44 @@ export type ChinaSkillWorthResponse = {
   trend_signal_status: "available" | "unavailable";
   market_themes: ChinaMarketTheme[];
   records: ChinaSkillWorthRecord[];
+};
+
+export type SkillRelationRecord = {
+  core_skill_id: string;
+  related_skill_id: string;
+  related_skill: string;
+  related_skill_category: string;
+  role_id: string | null;
+  recency_window: "90d" | "180d" | "365d" | "all_active";
+  sample_size: number;
+  core_job_count: number;
+  related_job_count: number;
+  cooccurrence_count: number;
+  core_conditional_coverage: number;
+  jaccard: number;
+  pmi: number;
+  evidence_status: "supported" | "small_sample_supported";
+};
+
+export type SkillRelationsResponse = {
+  market_scope: string;
+  source_role: string;
+  snapshot: string;
+  core_skill_id: string;
+  role_id: string | null;
+  recency_window: "90d" | "180d" | "365d" | "all_active";
+  sample_size: number;
+  core_job_count: number;
+  evidence_status: "supported" | "small_role_sample" | "insufficient_role_sample" | "core_skill_not_observed";
+  records: SkillRelationRecord[];
+  metadata: {
+    methodology_version: string;
+    config_version: string;
+    canonical_job_denominator: "canonical_job_id";
+    minimum_cooccurrence_count: number;
+    minimum_jaccard: number;
+  };
+  limitations: string[];
 };
 
 export type Role = { role_id: string; canonical_job_count: number; company_count: number; city_count: number; salary_mid_median: number | null };

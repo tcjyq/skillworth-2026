@@ -24,6 +24,7 @@ const record = (overrides: Partial<ChinaSkillWorthRecord>): ChinaSkillWorthRecor
   learning_hours_max: 100,
   skillworth_score: 16,
   skillworth_rank: 1,
+  demand_rank: 1,
   sensitivity_rank_min: 1,
   sensitivity_rank_max: 2,
   ranking_robustness: 80,

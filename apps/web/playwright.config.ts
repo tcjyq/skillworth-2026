@@ -6,7 +6,7 @@ const e2eMode = process.env.SKILLWORTH_E2E_MODE ?? "demo";
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: e2eMode === "demo" ? ["navigation.spec.ts", "demo.spec.ts"] : "**/*.spec.ts",
+  testMatch: e2eMode === "demo" ? ["navigation.spec.ts", "demo.spec.ts", "3d-skill-field.spec.ts"] : "**/*.spec.ts",
   testIgnore: e2eMode === "real" ? ["demo.spec.ts"] : [],
   timeout: 30_000,
   use: { baseURL, trace: "retain-on-failure" },

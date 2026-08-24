@@ -60,6 +60,7 @@ def test_health_and_openapi_document_every_public_endpoint() -> None:
         "/market/summary",
         "/market/trends",
         "/market/china-skillworth",
+        "/market/china-skill-relations",
         "/skills",
         "/skills/{skill_id}",
         "/skills/{skill_id}/trend",
@@ -128,6 +129,7 @@ def test_china_skillworth_endpoint_exposes_scope_and_unavailable_signals(tmp_pat
     assert response.json()["skill_count"] == 1
     assert response.json()["source_role"] == "china_supplementary"
     assert response.json()["records"][0]["skillworth_eligibility"] == "main"
+    assert response.json()["records"][0]["demand_rank"] == 1
     assert response.json()["records"][0]["synergy_score"] == 0.4
     assert response.json()["market_themes"][0]["market_theme"] == "AI"
     assert response.json()["records"][0]["trend_signal_status"] == "unavailable"
@@ -156,6 +158,17 @@ def test_market_skill_role_source_and_quality_endpoints_use_real_warehouse_outpu
     skill_id = skills.json()["records"][0]["skill_id"]
     for suffix in ("", "/trend", "/salary", "/related"):
         assert client.get(f"/skills/{skill_id}{suffix}").status_code == 200
+    relations = client.get(
+        "/market/china-skill-relations",
+        params={"core_skill_id": skill_id, "recency_window": "all_active"},
+    )
+    assert relations.status_code == 200
+    assert relations.json()["core_skill_id"] == skill_id
+    assert relations.json()["metadata"]["canonical_job_denominator"] == "canonical_job_id"
+    assert client.get(
+        "/market/china-skill-relations",
+        params={"core_skill_id": skill_id, "market_scope": "wrong-scope"},
+    ).status_code == 422
 
     roles = client.get("/roles")
     assert roles.status_code == 200

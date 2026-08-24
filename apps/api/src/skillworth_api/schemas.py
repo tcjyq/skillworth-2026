@@ -19,6 +19,12 @@ from skillworth_analytics.analytics import (
 )
 from skillworth_analytics.guardrails import SourceEligibilityEvidence
 from skillworth_analytics.china_skillworth import ChinaSkillWorthVisualRecord
+from skillworth_analytics.skill_relations import (
+    RecencyWindow,
+    RelationEvidenceStatus,
+    SkillRelationMetadata,
+    SkillRelationRecord,
+)
 
 
 class ApiModel(BaseModel):
@@ -85,6 +91,29 @@ class ChinaSkillWorthQuery(ApiModel):
     role: str | None = Field(default=None, min_length=1)
     skill_type: str | None = Field(default=None, min_length=1)
     recency_window: Literal["90d", "180d", "365d", "all_active"] = "180d"
+
+
+class ChinaSkillRelationsQuery(ApiModel):
+    core_skill_id: str = Field(min_length=1, max_length=128)
+    role_id: str | None = Field(default=None, min_length=1, max_length=128)
+    recency_window: RecencyWindow = "180d"
+    market_scope: str | None = Field(default=None, min_length=1, max_length=128)
+    source_role: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class ChinaSkillRelationsResponse(ApiModel):
+    market_scope: str
+    source_role: str
+    snapshot: str
+    core_skill_id: str
+    role_id: str | None
+    recency_window: RecencyWindow
+    sample_size: int = Field(ge=0)
+    core_job_count: int = Field(ge=0)
+    evidence_status: RelationEvidenceStatus
+    records: tuple[SkillRelationRecord, ...]
+    metadata: SkillRelationMetadata
+    limitations: tuple[str, ...] = ()
 
 
 class MarketQuery(ApiModel):

@@ -1,0 +1,5 @@
+version: "exploratory-relations-v1"
+minimum_cooccurrence_count: 3
+minimum_jaccard: 0.01
+role_normal_sample_size: 10
+role_small_sample_minimum: 4

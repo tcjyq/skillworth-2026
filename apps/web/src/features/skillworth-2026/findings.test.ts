@@ -25,6 +25,7 @@ function record(skill: string, overrides: Partial<ChinaSkillWorthRecord>): China
     learning_hours_max: 100,
     skillworth_score: 12,
     skillworth_rank: 10,
+    demand_rank: 10,
     sensitivity_rank_min: 8,
     sensitivity_rank_max: 14,
     ranking_robustness: 70,
