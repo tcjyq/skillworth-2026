@@ -5,6 +5,7 @@ import type { ChinaSkillWorthRecord, ChinaSkillWorthResponse } from "@/lib/api/t
 import { ExploreMode } from "./explore-mode";
 import { RoleFirst } from "./role-first";
 import { CppMoment } from "./story-visuals";
+import { VisualLoading } from "./visual-loading";
 
 const api = vi.hoisted(() => ({
   responses: new Map<string, Record<string, unknown>>(),
@@ -143,5 +144,27 @@ describe("Visual V2 data integrity", () => {
 
     expect(screen.getByText("样本：17 个岗位 · 近 180 天 · 数据截止 2026-09-03")).toBeInTheDocument();
     expect(screen.queryByText(/998 个岗位/)).not.toBeInTheDocument();
+  });
+
+  it("keeps the C++ evidence in cause-to-result order", () => {
+    const findings = {
+      frontier: [],
+      cpp: { demandRank: 3, skillworthRank: 35, learningHours: 260, jobCount: 92, companyCount: 48 },
+      roles: [],
+      synergy: { sampleSize: 0, scale: { pair: "Python–SQL", cooccurrence: 0, jaccard: 0, pmi: 0 }, affinity: [] },
+      robustCore: [],
+    } satisfies FinalFindings;
+
+    const { container } = render(<CppMoment findings={findings} metadata={response()} />);
+    const sequence = Array.from(container.querySelectorAll("[data-cpp-sequence]"));
+
+    expect(sequence.map((node) => node.getAttribute("data-cpp-sequence"))).toEqual(["demand", "investment", "result"]);
+  });
+
+  it("renders loading as stable evidence lanes", () => {
+    const { container } = render(<VisualLoading label="正在读取证据…" />);
+
+    expect(screen.getByRole("status", { name: "正在读取证据…" })).toHaveAttribute("aria-busy", "true");
+    expect(container.querySelectorAll("[data-loading-evidence]")).toHaveLength(3);
   });
 });

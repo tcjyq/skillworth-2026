@@ -36,15 +36,47 @@ export function VisualV2Page() {
 
   useGSAP(() => {
     const media = gsap.matchMedia();
-    media.add({ reduceMotion: "(prefers-reduced-motion: reduce)" }, (context) => {
-      const { reduceMotion } = context.conditions as { reduceMotion: boolean };
+    media.add({ desktop: "(min-width: 900px) and (pointer: fine)", reduceMotion: "(prefers-reduced-motion: reduce)" }, (context) => {
+      const { desktop, reduceMotion } = context.conditions as { desktop: boolean; reduceMotion: boolean };
       if (reduceMotion) return;
 
       gsap.timeline({ defaults: { ease: "expo.out" } })
         .fromTo("[data-motion-nav]", { clipPath: "inset(0 50% 100% 50%)" }, { clipPath: "inset(0 0% 0% 0%)", duration: 0.8 })
-        .fromTo("[data-motion-title] > span", { clipPath: "inset(100% 0 0 0)", yPercent: 24 }, { clipPath: "inset(0% 0 0 0)", yPercent: 0, duration: 0.9, stagger: 0.08 }, 0.12)
-        .fromTo("[data-motion-conclusion]", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.75 }, 0.34);
+        .fromTo("[data-motion-hero-meta]", { scaleX: 0, opacity: 0.35, transformOrigin: "left center" }, { scaleX: 1, opacity: 1, duration: 0.62 }, 0.08)
+        .fromTo("[data-motion-title] > span:first-child", { clipPath: "inset(100% 0 0 0)", yPercent: 16 }, { clipPath: "inset(0% 0 0 0)", yPercent: 0, duration: 0.72 }, 0.18)
+        .fromTo("[data-motion-title] > span:last-child", { clipPath: "inset(100% 0 0 0)", yPercent: 10 }, { clipPath: "inset(0% 0 0 0)", yPercent: 0, duration: 0.82 }, 0.31)
+        .fromTo("[data-motion-aperture]", { autoAlpha: 0, scale: 0.82, rotate: -31 }, { autoAlpha: 1, scale: 1, rotate: -17, duration: 1.05 }, 0.3)
+        .fromTo("[data-motion-conclusion]", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.72 }, 0.48)
+        .fromTo("[data-motion-authority]", { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.62 }, 0.58)
+        .fromTo("[data-motion-actions]", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.58 }, 0.68);
 
+      if (!desktop) return;
+      const hero = root.current?.querySelector<HTMLElement>("[data-signal-hero]");
+      const aperture = root.current?.querySelector<HTMLElement>("[data-motion-aperture]");
+      if (!hero || !aperture) return;
+      const moveX = gsap.quickTo(aperture, "x", { duration: 0.75, ease: "power3.out" });
+      const moveY = gsap.quickTo(aperture, "y", { duration: 0.75, ease: "power3.out" });
+      const handlePointerMove = (event: PointerEvent) => {
+        const bounds = hero.getBoundingClientRect();
+        const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - 0.5) * 2));
+        const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - 0.5) * 2));
+        moveX(x * 13);
+        moveY(y * 9);
+        hero.style.setProperty("--signal-focus-x", `${50 + x * 3.5}%`);
+        hero.style.setProperty("--signal-focus-y", `${50 + y * 3.5}%`);
+      };
+      const handlePointerLeave = () => {
+        moveX(0);
+        moveY(0);
+        hero.style.setProperty("--signal-focus-x", "50%");
+        hero.style.setProperty("--signal-focus-y", "50%");
+      };
+      hero.addEventListener("pointermove", handlePointerMove, { passive: true });
+      hero.addEventListener("pointerleave", handlePointerLeave);
+      return () => {
+        hero.removeEventListener("pointermove", handlePointerMove);
+        hero.removeEventListener("pointerleave", handlePointerLeave);
+      };
     });
     return () => media.revert();
   }, { scope: root });
@@ -57,10 +89,18 @@ export function VisualV2Page() {
 
     const media = gsap.matchMedia();
     media.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
-      const evidence = gsap.timeline({ scrollTrigger: { trigger: chapter, start: "top bottom", end: "bottom top", scrub: 0.7 } });
-      evidence.fromTo(ranks, { scale: 0.92, opacity: 0.72, filter: "brightness(.82)" }, { scale: 1, opacity: 1, filter: "brightness(1)", duration: 0.55 })
-        .to(ranks, { scale: 0.97, opacity: 0.7, filter: "brightness(.74)", duration: 0.45 });
-      ScrollTrigger.create({ trigger: chapter, start: "top top", end: "bottom bottom", pin: copy, pinSpacing: false });
+      const demand = ranks.querySelector("[data-cpp-sequence='demand']");
+      const investment = ranks.querySelector("[data-cpp-sequence='investment']");
+      const result = ranks.querySelector("[data-cpp-sequence='result']");
+      const support = ranks.querySelectorAll("[data-cpp-support]");
+      if (!demand || !investment || !result) return;
+      gsap.timeline({ scrollTrigger: { trigger: chapter, start: "top 76%", end: "bottom 32%", scrub: 0.72 } })
+        .fromTo(demand, { autoAlpha: 0.28, scale: 0.95, filter: "brightness(.58)" }, { autoAlpha: 1, scale: 1, filter: "brightness(1)", duration: 0.28 })
+        .fromTo(investment, { autoAlpha: 0.12, scaleX: 0.3, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.2 })
+        .to(demand, { opacity: 0.62, filter: "brightness(.72)", duration: 0.18 })
+        .fromTo(result, { autoAlpha: 0.18, x: -14, filter: "blur(7px) brightness(.72)" }, { autoAlpha: 1, x: 0, filter: "blur(0px) brightness(1)", duration: 0.24 })
+        .fromTo(support, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.16 });
+      ScrollTrigger.create({ trigger: chapter, start: "top top+=96", end: "bottom 72%", pin: copy, pinSpacing: false });
     });
     return () => media.revert();
   }, { scope: root, dependencies: [Boolean(availableFindings)], revertOnUpdate: true });
@@ -77,18 +117,18 @@ export function VisualV2Page() {
     <PublicNavigation />
 
     <main>
-      <section id="top" className={styles.hero} aria-labelledby="hero-title">
-        <div className={styles.heroAtmosphere} aria-hidden="true"><span className={styles.heroAperture} /><span className={styles.heroHalo} /></div>
-        <div className={styles.heroMeta}><span>面向中国大学生的技能学习决策参考</span><span>{scopeSuccess ? accessDateLabel(scopeSuccess.access_date) : frozenGlobal.error ? "当前数据暂时无法读取" : scopeEmpty ? "当前样本暂无可展示数据" : "正在读取当前市场样本……"}</span></div>
+      <section id="top" className={styles.hero} aria-labelledby="hero-title" data-signal-hero>
+        <div className={styles.heroAtmosphere} aria-hidden="true"><span className={styles.heroAperture} data-motion-aperture><i className={styles.heroFocus} /></span><span className={styles.heroHalo} /></div>
+        <div className={styles.heroMeta} data-motion-hero-meta><span>面向中国大学生的技能学习决策参考</span><span>{scopeSuccess ? accessDateLabel(scopeSuccess.access_date) : frozenGlobal.error ? "当前数据暂时无法读取" : scopeEmpty ? "当前样本暂无可展示数据" : "正在读取当前市场样本……"}</span></div>
         <h1 id="hero-title" aria-label="2026，学什么技术最值？" data-motion-title><span>2026，</span><span>学什么技术最值？</span></h1>
         <div className={styles.heroConclusion} data-motion-conclusion>
           {availableFindings ? <><strong>{availableFindings.frontier.map((record) => record.skill).join(" · ")}</strong><p>当前最稳健的学习性价比选择</p></> : findingError ? <><strong>当前数据暂时无法读取</strong><p>不会用手写排名替代失败的 API 结果</p></> : findingLoading ? <><strong>正在读取当前市场样本……</strong><p>结论将在证据完整后显示</p></> : <><strong>当前样本暂不支持冻结结论</strong><p>保留不可用状态，不制造推荐结果</p></>}
         </div>
-        <div className={styles.authorityStrip}>
+        <div className={styles.authorityStrip} data-motion-authority>
           {scopeSuccess ? <><dl><div><dt>岗位</dt><dd>{scopeSuccess.job_count}</dd></div><div><dt>公司</dt><dd>{scopeSuccess.company_count}</dd></div><div><dt>技能</dt><dd>{scopeSuccess.skill_count}</dd></div><div><dt>观察窗口</dt><dd>{recencyLabel(scopeSuccess.recency_window)}</dd></div></dl>
           <p><b>来源</b> {sourceRoleLabel(scopeSuccess.source_role)}<br /><span>{scopeSuccess.disclaimer}</span></p></> : <p role="status">{frozenGlobal.error ? "当前数据暂时无法读取" : scopeEmpty ? "当前筛选条件下没有可展示的技能" : "正在读取当前市场样本……"}</p>}
         </div>
-        <div className={styles.heroActions}><a className={styles.primaryAction} href="#cpp"><span>看看为什么</span><ArrowDown size={20} /></a><a className={styles.secondaryAction} href="#roles">找适合我的方向</a></div>
+        <div className={styles.heroActions} data-motion-actions><a className={styles.primaryAction} href="#cpp"><span>看看为什么</span><ArrowDown size={20} /></a><a className={styles.secondaryAction} href="#roles">找适合我的方向</a></div>
         <div className={styles.heroSignalRail} aria-hidden="true"><span>MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY · MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY ·</span><span>MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY · MARKET SUPPORT · LEARNING INVESTMENT · EVIDENCE BOUNDARY ·</span></div>
       </section>
 
