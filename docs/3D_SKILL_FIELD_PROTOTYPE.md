@@ -31,9 +31,9 @@ DOM Search / Controls / Detail
 ```
 
 - `state/`：单一 reducer 管理 mode、role、skill、relation、最近 5 步路径、transition token 和 Reduced Motion。
-- `layout/`：价值、需求和职业场只让 rank 影响半径；方向来自 stable hash。节点大小是 capped square-root job coverage。
+- `layout/`：价值、需求和职业场只让 rank 影响半径；方向来自 stable hash。价值核心保留 `2.75` 的安全半径，第一价值轨道从 `3.7` 开始；节点大小是 capped square-root job coverage，不改变覆盖度相对顺序。
 - `data/`：只把 API 输出转换为 scene model，不重算 SkillWorth、Market Signal、Confidence、Robustness、Jaccard 或 PMI。
-- `scene/`：一个可见 `InstancedMesh`、一个透明放大命中 `InstancedMesh`、单批关系线、最多 5 条职业排名迁移轨迹、有界 Camera Director 和 demand render loop。
+- `scene/`：一个可见 `InstancedMesh`、一个透明放大命中 `InstancedMesh`、单批关系线、最多 3 条职业排名上升轨迹、五种稳定默认视角、有界 Camera Director 和 demand render loop。
 - `ui/`：搜索、控件、证据面板、关系轨道与 WebGL 2D fallback 全部为 DOM。
 
 ## Data contracts
@@ -49,19 +49,22 @@ DOM Search / Controls / Detail
 - 搜索技能会保留职业上下文；搜索职业进入 `ROLE_VALUE`。支持模糊匹配、上下键、Enter 与 Escape。
 - 关系星座为 1 个中心、最多 7 个 Primary 和 12 个 Secondary；距离保留 Jaccard 排序，线亮度使用共同岗位数的平方根变换。
 - Camera 限制在水平约 ±45°、垂直约 ±20°、15–34 距离；无自动旋转、自由平移、节点拖动或 scroll hijack。
-- Desktop 默认 5 个 DOM label，关系场实测 8 个；Mobile 通过 CSS 限制默认 3–4 个。Canvas 节点不进入 134 次 Tab 顺序。
-- Reduced Motion 直接定位，保留排名变化信息。WebGL 不可用时保留搜索、职业、详情和关系列表。
+- 标签按选中技能、故事技能、职业变化、Top 技能、hover 的优先级做确定性屏幕空间避让；Desktop 默认 5 个技能标签、关系场 6 个，Mobile 为 3–4 个。Canvas 节点不进入 134 次 Tab 顺序。
+- C++ 在需求模式直接显示 `招聘需求 #3`，回到学习性价比时保留 `需求 #3` 起点并落到真实 `学习性价比 #35`；DevOps 直接标注 Kubernetes `#18 → #1`、Terraform `#33 → #3`。
+- Reduced Motion 直接定位并取消迁移轨迹和证据粒子，保留排名变化信息。WebGL 不可用时保留搜索、职业、详情、C++ `#3 → #35` 和关系列表。
 
 ## Measured performance
 
-Real v6，Edge production build，1440×900 CSS viewport，高 DPR 模拟：
+Real v6，Edge production build，2026-08-25 采样。桌面为 1440×900、device DPR 2、renderer DPR 1.45、BALANCED；移动为 390×844、device DPR 3、触摸模拟、renderer DPR 1.1、LOW。这里的 FPS 是测试机 Edge 中按最近 30 个有效渲染帧间隔计算的实际画布帧率，不是物理手机实测，也不应外推到所有移动设备。
 
-- 3D dynamic chunk：916,156 bytes raw，240,868 bytes gzip，196,675 bytes Brotli。
-- 134 个真实节点；全局 2 draw calls，关系场 4 draw calls，0 textures。
-- 静止采样期新增渲染帧 0；需求迁移 54 fps，关系迁移 59 fps。
-- Desktop renderer DPR cap 1.55；Mobile cap 1.15。
-- JS heap：约 14.4 MiB used / 26.8 MiB total。
-- 产品级 console / GPU warning：0。Edge 报告了 Next.js 生成 CSS 的未使用 preload 提示，它不是 WebGL/GPU 错误。
-- 3D 依赖只在本 Lab route 的 dynamic import 中，不进入正式首页 LCP critical path。
+- 3D dynamic chunk：926,066 bytes raw，243,964 bytes gzip，199,422 bytes Brotli；依赖仍只进入本 Lab route，不进入正式首页 LCP critical path。
+- 134 个真实节点；全局 7 draw calls，普通关系场 5，选中关系 6，均满足 `<= 7 / <= 10` 红线；0 textures、0 post-processing passes。
+- Desktop：静止新增渲染帧 0；需求切换约 240.2 fps；关系迁移约 119.8 fps；选中 Python–SQL 约 120.0 fps。
+- Desktop 标签 5 个，关系场 6 个；环境粒子 96，选中关系证据粒子 4，未选中为 0。
+- Mobile LOW：静止新增渲染帧 0；需求切换持续最低 223.4 fps，搜索 Python 116.1 fps，触摸旋转 120.0 fps，选择 Python–SQL 117.8 fps，回到全局 232.2 fps，全部高于 40–45 fps 目标。
+- Mobile 标签 3–4 个，环境粒子 48，LOW 关系证据粒子 0；使用约 12.7 MiB JS heap / 21.8 MiB total。
+- Desktop 使用约 14.5 MiB JS heap / 29.8 MiB total；产品级 console warning 0，GPU warning 0。Edge 的 Next.js CSS preload 提示单独记录为浏览器 preload warning，不属于 WebGL/GPU warning。
+- 未采用 Line2：批量渐变、非选中关系降至背景、端点完整亮度和按需证据粒子已足够清楚；因此 Line2 增加 0 draw calls，避免引入额外跨平台线宽路径。
+- 截图、A–F 录屏与原始 JSON 位于 Git 忽略的 `output/3d-skill-field-review/`；共 50 张 PNG、8 段 WebM。真人理解测试仍须按 `docs/3D_SKILL_FIELD_HUMAN_TEST.md` 由未参与项目的人执行，当前没有伪造用户结果。
 
 原始采样与人工评审产物由 `npm run capture:3d-review` 生成至 Git 忽略的 `output/3d-skill-field-review/`。

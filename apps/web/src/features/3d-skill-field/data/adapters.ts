@@ -30,38 +30,62 @@ export function buildSceneModel({
   const rankField = mode === "GLOBAL_DEMAND" ? "demand_rank" : "skillworth_rank";
   const layout = buildRankedLayout(records, rankField);
   const globalLayout = buildRankedLayout(globalRecords, "skillworth_rank");
-  const nodes = records.map((record) => {
-    const position = layout[record.skill_id];
-    const defaultLabel = (position.rank !== null && position.rank <= 4) || STORY_SKILLS.has(record.skill_id);
-    return {
-      record,
-      position: position.position,
-      size: Math.max(position.size, 0.18),
-      visualState: position.observedOnly ? "observed-only" : "default",
-      labelPriority: defaultLabel ? 50 - (position.rank ?? 40) : 0,
-      relation: null,
-    } satisfies SceneNode;
-  });
   const cpp = records.find((record) => record.skill_id === "programming_cpp");
   const demandLayout = buildRankedLayout(globalRecords, "demand_rank");
   const cppShift = cpp?.demand_rank && cpp.skillworth_rank && (mode === "GLOBAL_VALUE" || mode === "GLOBAL_DEMAND") ? [{
+    kind: mode === "GLOBAL_DEMAND" ? "cpp-demand" as const : "cpp-value" as const,
     skillId: cpp.skill_id,
     label: cpp.skill,
     start: mode === "GLOBAL_DEMAND" ? globalLayout[cpp.skill_id].position : demandLayout[cpp.skill_id].position,
     end: layout[cpp.skill_id].position,
     globalRank: mode === "GLOBAL_DEMAND" ? cpp.skillworth_rank : cpp.demand_rank,
     roleRank: mode === "GLOBAL_DEMAND" ? cpp.demand_rank : cpp.skillworth_rank,
+    startLabel: mode === "GLOBAL_DEMAND" ? `学习性价比 #${cpp.skillworth_rank}` : `需求 #${cpp.demand_rank}`,
+    endLabel: mode === "GLOBAL_DEMAND" ? `招聘需求 #${cpp.demand_rank}` : `学习性价比 #${cpp.skillworth_rank}`,
+    summary: mode === "GLOBAL_VALUE" ? `#${cpp.demand_rank} → #${cpp.skillworth_rank}` : null,
   }] : [];
   const roleShifts = mode === "ROLE_VALUE"
     ? selectRoleRankShifts(globalRecords, records).map(({ skill, globalRank, roleRank }) => ({
+        kind: "role" as const,
         skillId: skill.skill_id,
         label: skill.skill,
         start: globalLayout[skill.skill_id].position,
         end: layout[skill.skill_id].position,
         globalRank,
         roleRank,
+        startLabel: `全局 #${globalRank}`,
+        endLabel: `#${globalRank} → #${roleRank}`,
+        summary: null,
       }))
     : cppShift;
+  const roleShiftIds = new Set(roleShifts.map((shift) => shift.skillId));
+  const nodes = records.map((record) => {
+    const position = layout[record.skill_id];
+    const topRanked = position.rank !== null && position.rank <= 5;
+    const isCpp = record.skill_id === "programming_cpp";
+    const visualState = position.observedOnly
+      ? "observed-only"
+      : mode === "GLOBAL_DEMAND"
+        ? isCpp ? "selected" : "muted"
+        : mode === "ROLE_VALUE"
+          ? roleShiftIds.has(record.skill_id) ? "selected" : topRanked ? "highlighted" : "muted"
+          : "default";
+    const labelPriority = roleShiftIds.has(record.skill_id)
+      ? 0
+      : mode === "GLOBAL_DEMAND"
+        ? topRanked ? 400 - (position.rank ?? 40) : 0
+        : mode === "ROLE_VALUE"
+          ? topRanked ? 500 - (position.rank ?? 40) : 0
+          : topRanked || STORY_SKILLS.has(record.skill_id) ? 400 - (position.rank ?? 40) : 0;
+    return {
+      record,
+      position: position.position,
+      size: Math.max(position.size, 0.18),
+      visualState,
+      labelPriority,
+      relation: null,
+    } satisfies SceneNode;
+  });
   return { nodes, lines: [], roleShifts, focus: [0, 0, 0] };
 }
 
@@ -89,8 +113,8 @@ function relationScene(
       record,
       position: constellationNode?.position ?? backgroundPosition,
       size: isCore ? 1.18 : Math.max(globalLayout[record.skill_id].size, 0.15),
-      visualState: isCore || isSelectedRelation ? "selected" : constellationNode ? "highlighted" : "muted",
-      labelPriority: isCore ? 100 : constellationNode?.ring === "primary" ? 80 : constellationNode?.ring === "secondary" ? 35 : 0,
+      visualState: isCore || isSelectedRelation ? "selected" : constellationNode ? selectedRelationId ? "muted" : "highlighted" : "muted",
+      labelPriority: isCore ? 1_000 : isSelectedRelation ? 900 : constellationNode?.ring === "primary" ? 600 : constellationNode?.ring === "secondary" ? 200 : 0,
       relation,
     } satisfies SceneNode;
   });

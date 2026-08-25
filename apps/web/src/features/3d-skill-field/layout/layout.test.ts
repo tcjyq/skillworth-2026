@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildConstellationLayout,
   buildRankedLayout,
+  LAYOUT_CONFIG,
   nodeSize,
   roleEvidence,
   selectRoleRankShifts,
@@ -58,6 +59,25 @@ describe("ranked radial layouts", () => {
 
   it("uses a square-root node-size transform", () => {
     expect(nodeSize(0.36) / nodeSize(0.09)).toBeCloseTo(2, 2);
+  });
+
+  it("keeps every skill sphere outside the value-core safety zone", () => {
+    const layout = buildRankedLayout(skills, "skillworth_rank");
+    for (const node of Object.values(layout)) {
+      expect(node.radius - node.size).toBeGreaterThanOrEqual(LAYOUT_CONFIG.ranked.coreSafeRadius);
+    }
+  });
+
+  it("places Python rank #1 on the first value orbit outside the safety zone", () => {
+    const layout = buildRankedLayout(skills, "skillworth_rank");
+    expect(layout.python.rank).toBe(1);
+    expect(layout.python.radius).toBe(LAYOUT_CONFIG.ranked.innerRadius);
+    expect(layout.python.radius).toBeGreaterThan(LAYOUT_CONFIG.ranked.coreSafeRadius);
+  });
+
+  it("caps visual size without changing coverage size order", () => {
+    expect(nodeSize(1)).toBeLessThanOrEqual(LAYOUT_CONFIG.node.maxVisualSize);
+    expect(nodeSize(0.36)).toBeGreaterThan(nodeSize(0.09));
   });
 });
 
@@ -130,14 +150,13 @@ describe("role sample gates", () => {
 });
 
 describe("role rank-shift presentation", () => {
-  it("selects at most five largest real rank changes without hard-coded skills", () => {
+  it("selects at most three largest real rank changes without hard-coded skills", () => {
     const roleSkills = skills.map((skill) => ({
       ...skill,
       skillworth_rank: skill.skill_id === "cpp" ? 1 : skill.skill_id === "python" ? 20 : skill.skillworth_rank,
     }));
     const shifts = selectRoleRankShifts(skills, roleSkills);
-    expect(shifts).toHaveLength(2);
+    expect(shifts).toHaveLength(1);
     expect(shifts[0]).toMatchObject({ skill: { skill_id: "cpp" }, globalRank: 35, roleRank: 1, rankShift: 34 });
-    expect(shifts[1]).toMatchObject({ skill: { skill_id: "python" }, globalRank: 1, roleRank: 20, rankShift: 19 });
   });
 });

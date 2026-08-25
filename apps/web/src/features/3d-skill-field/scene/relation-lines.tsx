@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { stableHash } from "../layout";
 import type { SceneLine } from "../types";
-import { relationFlowParticleCount, type QualityProfileName } from "./visual-system";
+import styles from "../skill-field.module.css";
+import { formatRelationEvidence, relationFlowParticleCount, type QualityProfileName } from "./visual-system";
 
 function relationCurve(line: SceneLine) {
   const start = new THREE.Vector3(...line.start);
@@ -61,6 +63,8 @@ export function RelationLines({ lines, selectedRelationId, reducedMotion, qualit
     }
     return new THREE.BufferAttribute(positions, 3);
   }, [lines, quality, reducedMotion, selectedRelationId]);
+  const selectedLine = lines.find((item) => item.relation.related_skill_id === selectedRelationId) ?? null;
+  const evidencePosition = selectedLine ? relationCurve(selectedLine).getPoint(0.56).toArray() as [number, number, number] : null;
   useEffect(() => () => geometry.dispose(), [geometry]);
   if (!lines.length) return null;
   return <>
@@ -71,5 +75,8 @@ export function RelationLines({ lines, selectedRelationId, reducedMotion, qualit
       <bufferGeometry><primitive object={flow} attach="attributes-position" /></bufferGeometry>
       <pointsMaterial color="#f1f0e9" size={0.085} sizeAttenuation transparent opacity={0.88} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped />
     </points>}
+    {selectedLine && evidencePosition && <Html position={evidencePosition} center distanceFactor={12} zIndexRange={[22, 0]}>
+      <span className={styles.relationEvidenceLabel}>{formatRelationEvidence(selectedLine.relation.cooccurrence_count, selectedLine.relation.recency_window)}</span>
+    </Html>}
   </>;
 }

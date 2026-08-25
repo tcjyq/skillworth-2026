@@ -31,16 +31,16 @@ export function RoleShiftLines({ shifts, reducedMotion, transitionToken }: { shi
     material.opacity = 0.48;
     invalidate();
     if (reducedMotion) return;
-    const tween = gsap.to(material, { opacity: 0, delay: 0.18, duration: 1.25, ease: "power2.out", onUpdate: invalidate });
+    const tween = gsap.to(material, { opacity: 0, delay: 0.3, duration: 1.45, ease: "power2.out", onUpdate: invalidate });
     return () => { tween.kill(); };
   }, [invalidate, reducedMotion, shifts, transitionToken]);
   if (!shifts.length) return null;
   return <>
-    <lineSegments geometry={geometry} raycast={() => undefined}><lineBasicMaterial ref={materialRef} color="#c8dc62" transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped /></lineSegments>
-    {shifts.map((shift, index) => <Html key={`${shift.skillId}-ghost`} position={shift.start} center distanceFactor={13} zIndexRange={[17, 0]}><span className={styles.rankGhost} data-mobile-extra={index >= 3 ? "true" : undefined}>#{shift.globalRank}</span></Html>)}
+    {!reducedMotion && <lineSegments geometry={geometry} raycast={() => undefined}><lineBasicMaterial ref={materialRef} color="#c8dc62" transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped /></lineSegments>}
+    {!reducedMotion && shifts.filter((shift) => shift.kind !== "cpp-demand").map((shift, index) => <Html key={`${shift.skillId}-ghost`} position={shift.start} center distanceFactor={13} zIndexRange={[17, 0]}><span className={styles.rankGhost} data-mobile-extra={index >= 3 ? "true" : undefined}>{shift.startLabel}</span></Html>)}
     {shifts.map((shift, index) => <Html key={shift.skillId} position={shift.end} center distanceFactor={13} zIndexRange={[18, 0]}>
-      <span className={styles.roleShiftLabel} data-mobile-extra={index >= 3 ? "true" : undefined} data-reduced-motion={reducedMotion ? "true" : undefined}>
-        {shift.label}<small>#{shift.globalRank} → #{shift.roleRank}</small>
+      <span className={styles.roleShiftLabel} data-kind={shift.kind} data-mobile-extra={index >= 3 ? "true" : undefined} data-reduced-motion={reducedMotion ? "true" : undefined}>
+        {shift.label}<small>{shift.endLabel}</small>{shift.summary && <b>{shift.summary}</b>}
       </span>
     </Html>)}
   </>;

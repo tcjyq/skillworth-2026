@@ -2,6 +2,10 @@ import { stableHash } from "../layout";
 
 export type QualityProfileName = "HIGH" | "BALANCED" | "LOW";
 
+export function nextQualityProfile(current: QualityProfileName): QualityProfileName {
+  return current === "HIGH" ? "BALANCED" : "LOW";
+}
+
 export const DECORATIVE_PARTICLE_POLICY = {
   pickable: false,
   countsAsSkillNode: false,
@@ -11,7 +15,7 @@ export const QUALITY_PROFILES = {
   HIGH: {
     dpr: [1, 1.7] as const,
     particleCount: 160,
-    visibleLabelCount: 8,
+    visibleLabelCount: 6,
     bloomMode: "off" as const,
     aaMode: "msaa" as const,
     haloIntensity: 1,
@@ -31,7 +35,7 @@ export const QUALITY_PROFILES = {
   LOW: {
     dpr: [1, 1.1] as const,
     particleCount: 48,
-    visibleLabelCount: 4,
+    visibleLabelCount: 3,
     bloomMode: "off" as const,
     aaMode: "msaa" as const,
     haloIntensity: 0.42,

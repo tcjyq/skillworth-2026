@@ -12,7 +12,7 @@ import { RoleShiftLines } from "./role-shift-lines";
 import { SkillNodes } from "./skill-nodes";
 import { Atmosphere } from "./atmosphere";
 import { ValueCore } from "./value-core";
-import { QUALITY_PROFILES, type QualityProfileName } from "./visual-system";
+import { nextQualityProfile, QUALITY_PROFILES, relationFlowParticleCount, type QualityProfileName } from "./visual-system";
 import * as THREE from "three";
 import styles from "../skill-field.module.css";
 
@@ -21,7 +21,12 @@ function WebGLContextGuard({ onContextLost }: { onContextLost: () => void }) {
   useEffect(() => {
     const handleContextLoss = (event: Event) => { event.preventDefault(); onContextLost(); };
     gl.domElement.addEventListener("webglcontextlost", handleContextLoss);
-    return () => gl.domElement.removeEventListener("webglcontextlost", handleContextLoss);
+    const host = gl.domElement.closest<HTMLElement>('[data-testid="skill-field-canvas"]');
+    if (host) host.dataset.contextGuardReady = "true";
+    return () => {
+      gl.domElement.removeEventListener("webglcontextlost", handleContextLoss);
+      if (host) delete host.dataset.contextGuardReady;
+    };
   }, [gl, onContextLost]);
   return null;
 }
@@ -54,7 +59,7 @@ export default function SkillFieldCanvas({
   const profile = QUALITY_PROFILES[quality];
   const downgradeQuality = useCallback(() => {
     if (requestedQuality) return;
-    setQuality((current) => current === "HIGH" ? "BALANCED" : "LOW");
+    setQuality(nextQualityProfile);
   }, [requestedQuality]);
   const valueMode = mode === "GLOBAL_VALUE" || mode === "GLOBAL_DEMAND";
   return <div className={styles.canvas} data-testid="skill-field-canvas" aria-label="交互式 3D 技能星域">
@@ -68,7 +73,7 @@ export default function SkillFieldCanvas({
       <color attach="background" args={["#090d0b"]} />
       <fog attach="fog" args={["#090d0b", 24, 52]} />
       <WebGLContextGuard onContextLost={onContextLost} />
-      <PerformanceProbe qualityProfile={quality} particleCount={profile.particleCount} visibleLabelCount={profile.visibleLabelCount} aaMode={profile.aaMode} bloomMode={profile.bloomMode} postProcessingPassCount={0} onSustainedLowFps={downgradeQuality} />
+      <PerformanceProbe qualityProfile={quality} environmentalParticleCount={profile.particleCount} relationParticleCount={relationFlowParticleCount(quality, reducedMotion, Boolean(selectedRelationId))} visibleLabelCount={profile.visibleLabelCount} aaMode={profile.aaMode} bloomMode={profile.bloomMode} postProcessingPassCount={0} onSustainedLowFps={downgradeQuality} />
       <Atmosphere particleCount={profile.particleCount} />
       <ValueCore visible={valueMode} />
       <RoleShiftLines shifts={model.roleShifts} reducedMotion={reducedMotion} transitionToken={transitionToken} />
@@ -82,7 +87,7 @@ export default function SkillFieldCanvas({
         onHover={setHoveredSkillId}
         onSelect={onSelect}
       />
-      <Labels nodes={model.nodes} hoveredSkillId={hoveredSkillId} visibleLabelCount={profile.visibleLabelCount} onSelect={onSelect} />
+      <Labels nodes={model.nodes} hoveredSkillId={hoveredSkillId} visibleLabelCount={profile.visibleLabelCount} protectValueCore={valueMode} onSelect={onSelect} />
       <CameraDirector mode={mode} focus={model.focus} reducedMotion={reducedMotion} transitionToken={transitionToken} />
     </Canvas>
   </div>;

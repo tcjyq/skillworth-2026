@@ -77,7 +77,7 @@ const HALO_FRAGMENT_SHADER = `
 function nodeColor(node: SceneNode) {
   if (node.visualState === "observed-only") return new THREE.Color("#6e7b71");
   const color = new THREE.Color(skillColor(node.record.skill_id, node.record.skill_category).color);
-  if (node.visualState === "muted") return color.multiplyScalar(0.3);
+  if (node.visualState === "muted") return color.multiplyScalar(0.4);
   if (node.visualState === "highlighted") return color.multiplyScalar(1.04);
   if (node.visualState === "selected") return color.multiplyScalar(1.12);
   return color.multiplyScalar(0.78);
@@ -155,7 +155,7 @@ export function SkillNodes({
     render();
     const tween = reducedMotion ? null : gsap.to(progress, {
       value: 1,
-      duration: 0.92,
+      duration: 1.45,
       ease: "power3.inOut",
       overwrite: true,
       onUpdate: render,

@@ -34,9 +34,9 @@ export type PositionedSkill = {
 };
 
 export const LAYOUT_CONFIG = {
-  ranked: { innerRadius: 2.6, outerRadius: 12.2, observedRadius: 14.1, gamma: 0.72 },
+  ranked: { coreSafeRadius: 2.75, innerRadius: 3.7, outerRadius: 13.3, observedRadius: 15.2, gamma: 0.72 },
   relation: { primaryMin: 3.4, primaryMax: 6.2, secondaryMin: 7.6, secondaryMax: 10.8 },
-  node: { coverageCap: 0.5, scale: 1.7 },
+  node: { coverageCap: 0.5, scale: 1.45, maxVisualSize: 0.9 },
 } as const;
 
 export function stableHash(value: string) {
@@ -62,7 +62,10 @@ function directionFor(skillId: string): [number, number, number] {
 }
 
 export function nodeSize(jobCoverage: number) {
-  return Math.sqrt(Math.min(Math.max(jobCoverage, 0), LAYOUT_CONFIG.node.coverageCap)) * LAYOUT_CONFIG.node.scale;
+  return Math.min(
+    Math.sqrt(Math.min(Math.max(jobCoverage, 0), LAYOUT_CONFIG.node.coverageCap)) * LAYOUT_CONFIG.node.scale,
+    LAYOUT_CONFIG.node.maxVisualSize,
+  );
 }
 
 export function buildRankedLayout<T extends LayoutSkill>(skills: T[], rankField: RankField) {
@@ -144,7 +147,7 @@ export function roleEvidence(sampleSize: number) {
   return { status: "normal" as const, canRank: true, warning: null };
 }
 
-export function selectRoleRankShifts<T extends LayoutSkill>(globalSkills: T[], roleSkills: T[], limit = 5) {
+export function selectRoleRankShifts<T extends LayoutSkill>(globalSkills: T[], roleSkills: T[], limit = 3) {
   const globalById = new Map(globalSkills.map((skill) => [skill.skill_id, skill]));
   return roleSkills
     .flatMap((roleSkill) => {
@@ -157,7 +160,7 @@ export function selectRoleRankShifts<T extends LayoutSkill>(globalSkills: T[], r
         rankShift: Math.abs(globalSkill.skillworth_rank - roleSkill.skillworth_rank),
       }];
     })
-    .filter((item) => item.rankShift > 0 && (item.roleRank <= 5 || item.globalRank <= 5))
+    .filter((item) => item.roleRank <= 5 && item.roleRank < item.globalRank)
     .toSorted((left, right) => right.rankShift - left.rankShift
       || left.roleRank - right.roleRank
       || left.skill.skill_id.localeCompare(right.skill.skill_id))

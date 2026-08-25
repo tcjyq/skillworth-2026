@@ -22,12 +22,16 @@ export type SceneLine = {
 };
 
 export type SceneRoleShift = {
+  kind: "cpp-demand" | "cpp-value" | "role";
   skillId: string;
   label: string;
   start: [number, number, number];
   end: [number, number, number];
   globalRank: number;
   roleRank: number;
+  startLabel: string;
+  endLabel: string;
+  summary: string | null;
 };
 
 export type SceneModel = {

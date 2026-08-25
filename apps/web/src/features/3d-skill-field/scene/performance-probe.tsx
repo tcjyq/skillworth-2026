@@ -3,9 +3,10 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
-export function PerformanceProbe({ qualityProfile, particleCount, visibleLabelCount, aaMode, bloomMode, postProcessingPassCount, onSustainedLowFps }: {
+export function PerformanceProbe({ qualityProfile, environmentalParticleCount, relationParticleCount, visibleLabelCount, aaMode, bloomMode, postProcessingPassCount, onSustainedLowFps }: {
   qualityProfile: string;
-  particleCount: number;
+  environmentalParticleCount: number;
+  relationParticleCount: number;
   visibleLabelCount: number;
   aaMode: string;
   bloomMode: string;
@@ -16,11 +17,13 @@ export function PerformanceProbe({ qualityProfile, particleCount, visibleLabelCo
   const frameTimes = useRef<number[]>([]);
   const lowFpsStartedAt = useRef<number | null>(null);
   const downgradeTriggered = useRef(false);
+  const frameDurations = useRef<number[]>([]);
 
-  useFrame(({ gl }) => {
+  useFrame(({ gl }, delta) => {
     const now = performance.now();
     renderedFrames.current += 1;
     frameTimes.current = [...frameTimes.current.filter((time) => now - time <= 1000), now];
+    if (delta > 0 && delta < 0.1) frameDurations.current = [...frameDurations.current.slice(-29), delta];
     const host = gl.domElement.closest<HTMLElement>('[data-testid="skill-field-canvas"]');
     if (!host) return;
     host.dataset.renderedFrames = String(renderedFrames.current);
@@ -31,7 +34,12 @@ export function PerformanceProbe({ qualityProfile, particleCount, visibleLabelCo
     host.dataset.rendererDpr = gl.getPixelRatio().toFixed(2);
     host.dataset.lastRenderedAt = now.toFixed(1);
     host.dataset.qualityProfile = qualityProfile;
-    host.dataset.particleCount = String(particleCount);
+    const rollingSeconds = frameDurations.current.reduce((total, item) => total + item, 0);
+    host.dataset.actualFps = frameDurations.current.length >= 12 && rollingSeconds > 0
+      ? (frameDurations.current.length / rollingSeconds).toFixed(1)
+      : "0";
+    host.dataset.environmentalParticleCount = String(environmentalParticleCount);
+    host.dataset.relationParticleCount = String(relationParticleCount);
     host.dataset.visibleLabelCount = String(visibleLabelCount);
     host.dataset.aaMode = aaMode;
     host.dataset.bloomMode = bloomMode;

@@ -100,8 +100,8 @@ function SkillFieldExperience() {
 
   return <main className={styles.page}>
     <header className={styles.localHeader}>
-      <Link href="/lab/visual-v2" aria-label="返回 SkillWorth 2026">SKILLWORTH <span>技能星域</span></Link>
-      <nav aria-label="3D 原型导航"><Link href="/methodology">方法与数据</Link><span>独立 Lab 原型</span></nav>
+      <Link href="/lab/visual-v2" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span><small>3D 技能星域 · Lab</small></Link>
+      <nav aria-label="3D 原型导航"><Link href="/methodology">方法与数据</Link><span>Signal Aperture Lab</span></nav>
     </header>
     <section className={styles.stage} aria-labelledby="skill-field-title">
       <div className={styles.stageTop}>
@@ -119,11 +119,11 @@ function SkillFieldExperience() {
         <div className={styles.scenePane}>
           {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas model={model} mode={state.mode} activeSkillId={state.activeSkill?.skillId ?? null} selectedRelationId={state.selectedRelationId} reducedMotion={state.reducedMotion} transitionToken={state.transitionToken} onSelect={selectSkill} onClearSelection={() => dispatch({ type: "clear-selection" })} onContextLost={() => setWebgl(false)} /></CanvasBoundary> : fallback}
           <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />球越大，岗位覆盖越高</span></div>
-          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint}><span>VALUE CORE</span>越靠近这里，越值得优先关注<small>方向无业务意义</small></div>}
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint}><span>◎ 价值核心</span>越靠近这里，越值得优先关注<small>方向无业务意义</small></div>}
           {sceneLimitations.map((item) => <p className={styles.sceneWarning} key={item}>{item}</p>)}
           {roleGate?.status === "insufficient" && <button className={styles.sceneAlternative} type="button" onClick={() => dispatch({ type: "clear-role" })}>查看全局{state.activeSkill ? "关系" : "星域"}</button>}
           <RelationRail key={state.activeSkill?.skillId ?? "none"} relations={relations.data?.records ?? []} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.activeSkill?.skillId ?? "", limit })} />
-          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && cpp?.demand_rank && cpp.skillworth_rank && <div key={state.mode} className={styles.rankShift} role="status"><span>C++</span><strong>热门，不一定最值得先学。 招聘需求 #{cpp.demand_rank} → 学习性价比 #{cpp.skillworth_rank}</strong></div>}
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && cpp?.demand_rank && cpp.skillworth_rank && <div key={state.mode} className={styles.rankShift} role="status"><span>C++</span><strong>{state.mode === "GLOBAL_DEMAND" ? `招聘需求 #${cpp.demand_rank}` : `#${cpp.demand_rank} → #${cpp.skillworth_rank} · 热门，不一定最值得先学。`}</strong></div>}
         </div>
         <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} onSelectRelation={selectSkill} />
       </div>

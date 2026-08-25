@@ -3,6 +3,7 @@ import {
   QUALITY_PROFILES,
   DECORATIVE_PARTICLE_POLICY,
   formatRelationEvidence,
+  nextQualityProfile,
   relationFlowParticleCount,
   skillColor,
 } from "./visual-system";
@@ -49,6 +50,12 @@ describe("adaptive rendering profiles", () => {
     expect(relationFlowParticleCount("HIGH", true, true)).toBe(0);
     expect(relationFlowParticleCount("BALANCED", false, false)).toBe(0);
     expect(relationFlowParticleCount("BALANCED", false, true)).toBeGreaterThan(0);
+  });
+
+  it("only downgrades one quality level and never bounces upward", () => {
+    expect(nextQualityProfile("HIGH")).toBe("BALANCED");
+    expect(nextQualityProfile("BALANCED")).toBe("LOW");
+    expect(nextQualityProfile("LOW")).toBe("LOW");
   });
 });
 
