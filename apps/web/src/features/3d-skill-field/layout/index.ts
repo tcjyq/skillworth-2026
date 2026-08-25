@@ -96,25 +96,28 @@ export function buildRankedLayout<T extends LayoutSkill>(skills: T[], rankField:
   ) as Record<string, PositionedSkill>;
 }
 
-export function selectConstellationRelations(relations: RelationDatum[]) {
+export function selectConstellationRelations(relations: RelationDatum[], primaryLimit = 5) {
   const sorted = relations
     .filter((relation) => relation.cooccurrence_count >= 3)
     .toSorted((left, right) => right.jaccard - left.jaccard
       || right.cooccurrence_count - left.cooccurrence_count
       || left.related_skill_id.localeCompare(right.related_skill_id));
-  return { primary: sorted.slice(0, 7), secondary: sorted.slice(7, 19) };
+  return { primary: sorted.slice(0, primaryLimit), secondary: sorted.slice(primaryLimit, primaryLimit + 12) };
 }
 
-export function buildConstellationLayout(coreSkillId: string, relations: RelationDatum[]) {
-  const { primary, secondary } = selectConstellationRelations(relations);
+export function buildConstellationLayout(coreSkillId: string, relations: RelationDatum[], primaryLimit = 5) {
+  const { primary, secondary } = selectConstellationRelations(relations, primaryLimit);
   const buildRing = (items: RelationDatum[], min: number, max: number, ring: "primary" | "secondary") =>
     items.map((relation, index) => {
       const progress = items.length <= 1 ? 0 : index / (items.length - 1);
       const distance = min + progress * (max - min);
-      const direction = directionFor(relation.related_skill_id);
+      const angularOffset = (stableHash(coreSkillId) % 360) * Math.PI / 180;
+      const angle = angularOffset + index * Math.PI * 2 / Math.max(items.length, 1) + (ring === "secondary" ? Math.PI / Math.max(items.length, 1) : 0);
+      const z = (((stableHash(relation.related_skill_id) >>> 7) % 2001) / 1000 - 1) * (ring === "primary" ? 1.15 : 1.7);
+      const planarRadius = Math.sqrt(Math.max(distance ** 2 - z ** 2, 0));
       return {
         skillId: relation.related_skill_id,
-        position: direction.map((value) => value * distance) as [number, number, number],
+        position: [Math.cos(angle) * planarRadius, Math.sin(angle) * planarRadius * 0.72, z] as [number, number, number],
         distance,
         ring,
         relation,

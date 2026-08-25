@@ -3,12 +3,13 @@
 import { Html } from "@react-three/drei";
 import type { SceneNode } from "../types";
 import styles from "../skill-field.module.css";
+import { formatRelationEvidence } from "./visual-system";
 
-export function Labels({ nodes, hoveredSkillId, onSelect }: { nodes: SceneNode[]; hoveredSkillId: string | null; onSelect: (skillId: string) => void }) {
+export function Labels({ nodes, hoveredSkillId, visibleLabelCount, onSelect }: { nodes: SceneNode[]; hoveredSkillId: string | null; visibleLabelCount: number; onSelect: (skillId: string) => void }) {
   const visible = nodes
     .filter((node) => node.labelPriority > 0 || node.record.skill_id === hoveredSkillId)
     .toSorted((left, right) => right.labelPriority - left.labelPriority)
-    .slice(0, hoveredSkillId ? 10 : 8);
+    .slice(0, hoveredSkillId ? visibleLabelCount + 2 : visibleLabelCount);
   return <>{visible.map((node, index) => (
     <Html key={node.record.skill_id} position={node.position} center distanceFactor={12} zIndexRange={[20, 0]}>
       <button
@@ -19,7 +20,7 @@ export function Labels({ nodes, hoveredSkillId, onSelect }: { nodes: SceneNode[]
         onClick={() => onSelect(node.record.skill_id)}
       >
         <span>{node.record.skill}</span>
-        {node.relation && <small>{node.relation.cooccurrence_count} 个岗位一起出现</small>}
+        {node.relation && <small>{formatRelationEvidence(node.relation.cooccurrence_count, node.relation.recency_window)}</small>}
       </button>
     </Html>
   ))}</>;

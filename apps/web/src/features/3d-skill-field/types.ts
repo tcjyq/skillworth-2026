@@ -17,6 +17,8 @@ export type SceneLine = {
   end: [number, number, number];
   primary: boolean;
   relation: SkillRelationRecord;
+  coreColor: string;
+  targetColor: string;
 };
 
 export type SceneRoleShift = {

@@ -79,8 +79,14 @@ const relations = Array.from({ length: 24 }, (_, index) => ({
 }));
 
 describe("relation constellation", () => {
-  it("caps the primary ring at 7 and secondary ring at 12", () => {
+  it("caps the default primary constellation at 5 and secondary presence at 12", () => {
     const selected = selectConstellationRelations(relations);
+    expect(selected.primary).toHaveLength(5);
+    expect(selected.secondary).toHaveLength(12);
+  });
+
+  it("expands primary relations to 7 only when explicitly requested", () => {
+    const selected = selectConstellationRelations(relations, 7);
     expect(selected.primary).toHaveLength(7);
     expect(selected.secondary).toHaveLength(12);
   });
@@ -104,6 +110,12 @@ describe("relation constellation", () => {
     const second = buildConstellationLayout("python", relations);
     expect(first).toEqual(second);
     expect(first.nodes[1].distance).toBeLessThanOrEqual(first.nodes[2].distance);
+  });
+
+  it("uses a camera-readable 2.5D plane with bounded z depth", () => {
+    const layout = buildConstellationLayout("python", relations);
+    const relationNodes = layout.nodes.filter((node) => node.ring !== "center");
+    expect(Math.max(...relationNodes.map((node) => Math.abs(node.position[2])))).toBeLessThanOrEqual(1.8);
   });
 });
 

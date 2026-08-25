@@ -7,6 +7,7 @@ import type { ChinaSkillWorthRecord, SkillRelationRecord } from "@/lib/api/types
 import { roleEvidence } from "../layout";
 import type { SceneState } from "../state/scene-machine";
 import styles from "../skill-field.module.css";
+import { formatRelationEvidence } from "../scene/visual-system";
 
 gsap.registerPlugin(useGSAP);
 
@@ -64,7 +65,7 @@ export function DetailPanel({
     {relation && <section className={styles.relationDetail} data-evidence-block>
       <h3>{record.skill} + {relation.related_skill}</h3>
       <p>经常一起出现</p>
-      <strong>{relation.cooccurrence_count} 个岗位同时提到它们。</strong>
+      <strong>{formatRelationEvidence(relation.cooccurrence_count, relation.recency_window)}</strong>
       <span>在提到 {record.skill} 的岗位中，{(relation.core_conditional_coverage * 100).toFixed(1)}% 同时提到 {relation.related_skill}。</span>
       <button type="button" onClick={() => onSelectRelation(relation.related_skill_id)}>以 {relation.related_skill} 继续探索</button>
     </section>}

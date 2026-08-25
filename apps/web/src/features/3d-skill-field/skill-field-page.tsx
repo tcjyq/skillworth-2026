@@ -52,6 +52,7 @@ function SkillFieldExperience() {
   }) : null;
   const relations = useApi<SkillRelationsResponse>(relationParams ? `/market/china-skill-relations?${relationParams}` : null);
   const [webgl, setWebgl] = useState<boolean | null>(null);
+  const [relationExpansion, setRelationExpansion] = useState<{ skillId: string; limit: number } | null>(null);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setWebgl(supportsWebGL()));
     return () => window.cancelAnimationFrame(frame);
@@ -65,6 +66,7 @@ function SkillFieldExperience() {
   const scopedRecords = useMemo(() => state.activeRole
     ? roleGate?.canRank ? role.data?.records ?? [] : globalRecords.map((record) => ({ ...record, skillworth_rank: null, demand_rank: null }))
     : globalRecords, [globalRecords, role.data?.records, roleGate?.canRank, state.activeRole]);
+  const relationPrimaryLimit = relationExpansion && relationExpansion.skillId === state.activeSkill?.skillId ? relationExpansion.limit : 5;
   const model = useMemo(() => buildSceneModel({
     mode: state.mode,
     records: scopedRecords,
@@ -72,7 +74,8 @@ function SkillFieldExperience() {
     activeSkillId: state.activeSkill?.skillId ?? null,
     selectedRelationId: state.selectedRelationId,
     relations: relations.data?.records ?? [],
-  }), [globalRecords, relations.data?.records, scopedRecords, state.activeSkill?.skillId, state.mode, state.selectedRelationId]);
+    relationPrimaryLimit,
+  }), [globalRecords, relationPrimaryLimit, relations.data?.records, scopedRecords, state.activeSkill?.skillId, state.mode, state.selectedRelationId]);
   const selectedRecord = (state.activeSkill
     ? scopedRecords.find((record) => record.skill_id === state.activeSkill?.skillId) ?? globalRecords.find((record) => record.skill_id === state.activeSkill?.skillId)
     : null) ?? null;
@@ -112,14 +115,15 @@ function SkillFieldExperience() {
         {effectiveState.activeRole && <strong>{effectiveState.activeRole.label} · {effectiveState.activeRole.sampleSize} 个岗位样本</strong>}
       </div>
       <ExplorationPath state={effectiveState} onSelect={selectSkill} />
-      <div className={styles.workspace}>
+      <div className={styles.workspace} data-has-selection={selectedRecord ? "true" : "false"}>
         <div className={styles.scenePane}>
           {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas model={model} mode={state.mode} activeSkillId={state.activeSkill?.skillId ?? null} selectedRelationId={state.selectedRelationId} reducedMotion={state.reducedMotion} transitionToken={state.transitionToken} onSelect={selectSkill} onClearSelection={() => dispatch({ type: "clear-selection" })} onContextLost={() => setWebgl(false)} /></CanvasBoundary> : fallback}
           <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />球越大，岗位覆盖越高</span></div>
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint}><span>VALUE CORE</span>越靠近这里，越值得优先关注<small>方向无业务意义</small></div>}
           {sceneLimitations.map((item) => <p className={styles.sceneWarning} key={item}>{item}</p>)}
           {roleGate?.status === "insufficient" && <button className={styles.sceneAlternative} type="button" onClick={() => dispatch({ type: "clear-role" })}>查看全局{state.activeSkill ? "关系" : "星域"}</button>}
-          <RelationRail relations={relations.data?.records ?? []} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} />
-          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && cpp?.demand_rank && cpp.skillworth_rank && <div key={state.mode} className={styles.rankShift} role="status"><span>C++</span><strong>招聘需求 #{cpp.demand_rank} → 学习性价比 #{cpp.skillworth_rank}</strong></div>}
+          <RelationRail key={state.activeSkill?.skillId ?? "none"} relations={relations.data?.records ?? []} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.activeSkill?.skillId ?? "", limit })} />
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && cpp?.demand_rank && cpp.skillworth_rank && <div key={state.mode} className={styles.rankShift} role="status"><span>C++</span><strong>热门，不一定最值得先学。 招聘需求 #{cpp.demand_rank} → 学习性价比 #{cpp.skillworth_rank}</strong></div>}
         </div>
         <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} onSelectRelation={selectSkill} />
       </div>

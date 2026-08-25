@@ -12,7 +12,14 @@ export function RoleShiftLines({ shifts, reducedMotion, transitionToken }: { shi
   const materialRef = useRef<THREE.LineBasicMaterial>(null);
   const { invalidate } = useThree();
   const geometry = useMemo(() => {
-    const positions = shifts.flatMap((shift) => [...shift.start, ...shift.end]);
+    const positions = shifts.flatMap((shift, shiftIndex) => {
+      const start = new THREE.Vector3(...shift.start);
+      const end = new THREE.Vector3(...shift.end);
+      const control = start.clone().lerp(end, 0.5);
+      control.y += (shiftIndex % 2 ? -1 : 1) * Math.min(start.distanceTo(end) * 0.08, 0.8);
+      const points = new THREE.QuadraticBezierCurve3(start, control, end).getPoints(18);
+      return points.slice(0, -1).flatMap((point, index) => [...point.toArray(), ...points[index + 1].toArray()]);
+    });
     const output = new THREE.BufferGeometry();
     output.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     return output;
@@ -29,7 +36,8 @@ export function RoleShiftLines({ shifts, reducedMotion, transitionToken }: { shi
   }, [invalidate, reducedMotion, shifts, transitionToken]);
   if (!shifts.length) return null;
   return <>
-    <lineSegments geometry={geometry}><lineBasicMaterial ref={materialRef} color="#c8dc62" transparent depthWrite={false} /></lineSegments>
+    <lineSegments geometry={geometry} raycast={() => undefined}><lineBasicMaterial ref={materialRef} color="#c8dc62" transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped /></lineSegments>
+    {shifts.map((shift, index) => <Html key={`${shift.skillId}-ghost`} position={shift.start} center distanceFactor={13} zIndexRange={[17, 0]}><span className={styles.rankGhost} data-mobile-extra={index >= 3 ? "true" : undefined}>#{shift.globalRank}</span></Html>)}
     {shifts.map((shift, index) => <Html key={shift.skillId} position={shift.end} center distanceFactor={13} zIndexRange={[18, 0]}>
       <span className={styles.roleShiftLabel} data-mobile-extra={index >= 3 ? "true" : undefined} data-reduced-motion={reducedMotion ? "true" : undefined}>
         {shift.label}<small>#{shift.globalRank} → #{shift.roleRank}</small>
