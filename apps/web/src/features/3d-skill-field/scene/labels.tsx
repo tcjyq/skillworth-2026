@@ -42,10 +42,10 @@ export function Labels({ nodes, hoveredSkillId, visibleLabelCount, protectValueC
       height: size.height,
       maxVisible: visibleLabelCount,
       protectedRects: protectValueCore ? [{
-        left: size.width * 0.5 - 58,
-        top: size.height * 0.45,
-        right: size.width * 0.5 + 228,
-        bottom: size.height * 0.64,
+        left: size.width * 0.5 - 250,
+        top: size.height * 0.48,
+        right: size.width * 0.5 + 48,
+        bottom: size.height * 0.72,
       }] : [],
     });
     const nextSignature = [...next].map(([id, item]) => `${id}:${item.visible ? 1 : 0}:${item.offset.join(",")}`).join("|");

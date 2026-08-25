@@ -119,7 +119,7 @@ function SkillFieldExperience() {
         <div className={styles.scenePane}>
           {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas model={model} mode={state.mode} activeSkillId={state.activeSkill?.skillId ?? null} selectedRelationId={state.selectedRelationId} reducedMotion={state.reducedMotion} transitionToken={state.transitionToken} onSelect={selectSkill} onClearSelection={() => dispatch({ type: "clear-selection" })} onContextLost={() => setWebgl(false)} /></CanvasBoundary> : fallback}
           <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />球越大，岗位覆盖越高</span></div>
-          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint}><span>◎ 价值核心</span>越靠近这里，越值得优先关注<small>方向无业务意义</small></div>}
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint} data-testid="value-core-annotation"><span>◎ 价值核心</span>越靠近这里，越值得优先关注<small>只看远近，不看方向</small></div>}
           {sceneLimitations.map((item) => <p className={styles.sceneWarning} key={item}>{item}</p>)}
           {roleGate?.status === "insufficient" && <button className={styles.sceneAlternative} type="button" onClick={() => dispatch({ type: "clear-role" })}>查看全局{state.activeSkill ? "关系" : "星域"}</button>}
           <RelationRail key={state.activeSkill?.skillId ?? "none"} relations={relations.data?.records ?? []} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.activeSkill?.skillId ?? "", limit })} />

@@ -8,11 +8,17 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/lab/3d-skill-field");
   await expect(page.getByRole("link", { name: "返回 SkillWorth 2026" })).toContainText("SkillWorth 2026");
+  await expect(page.getByRole("link", { name: "SkillWorth Lab 首页" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "主导航" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "市场" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "我的技能组合" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "组合", exact: true })).toHaveCount(0);
   if (isMobile) await expect(page.getByText("3D 技能星域 · Lab")).toBeHidden();
   else await expect(page.getByText("3D 技能星域 · Lab")).toBeVisible();
   await expect(page.getByRole("heading", { name: /项技术，哪些更值得你先学/ })).toBeVisible();
   await expect(page.getByTestId("skill-field-canvas")).toBeVisible();
   await expect(page.getByText("◎ 价值核心")).toBeVisible();
+  await expect(page.getByTestId("value-core-annotation")).toContainText("只看远近，不看方向");
   await expect(page.getByTestId("skill-field-canvas")).toHaveAttribute("data-quality-profile", isMobile ? "LOW" : "BALANCED");
 
   const search = page.getByRole("combobox", { name: "搜索技能或职业" });
@@ -75,8 +81,12 @@ test("Real v6 保持冻结样本与关键排名迁移", async ({ page }) => {
   await search.fill("DevOps");
   await page.getByRole("option", { name: /DevOps/ }).last().click();
   await expect(page.getByText("21 个岗位样本", { exact: false }).first()).toBeVisible();
+  const roleShiftLabels = page.getByTestId("skill-field-canvas").locator('[data-kind="role"]');
+  await expect(roleShiftLabels).toHaveCount(3);
+  await expect(roleShiftLabels.first()).toHaveAttribute("data-presentation", "explain");
   await expect(page.getByTestId("skill-field-canvas")).toContainText("#18 → #1");
   await expect(page.getByTestId("skill-field-canvas")).toContainText("#33 → #3");
+  await expect(roleShiftLabels.first()).toHaveAttribute("data-presentation", "settled", { timeout: 2_200 });
   await search.fill("Kubernetes");
   await page.getByRole("option", { name: /Kubernetes/ }).first().click();
   await expect(page.getByLabel("技能详情")).toContainText("学习性价比第 1");
