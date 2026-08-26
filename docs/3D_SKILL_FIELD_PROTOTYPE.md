@@ -2,7 +2,7 @@
 
 ## Scope
 
-`/lab/3d-skill-field` 是与 `/lab/visual-v2` 和正式 `/` 隔离的人工评审原型。它不改动 Final 5、SkillWorth 公式、来源、taxonomy、去重、学习时长或冻结 Finding。
+`/lab/3d-skill-field` 是独立于 `/lab/visual-v2` 和正式 `/` 的人工评审探索路由。它不复制分析故事，也不替换候选首页；用户从 `/lab/visual-v2#analysis-results` 主动进入，并可通过统一页面导航返回同一结果锚点。3D runtime 与 bundle 仍只在该路由加载，且不改动 Final 5、SkillWorth 公式、来源、taxonomy、去重、学习时长或冻结 Finding。
 
 ## Compatibility and adopted dependencies
 

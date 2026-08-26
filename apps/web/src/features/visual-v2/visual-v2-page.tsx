@@ -5,7 +5,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { ExperienceSwitcher } from "@/components/experience-switcher/experience-switcher";
 import { deriveFinalFindings } from "@/features/skillworth-2026/findings";
 import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthResponse, RelatedSkills } from "@/lib/api/types";
@@ -33,6 +34,12 @@ export function VisualV2Page() {
   const findingError = findingRequests.some((request) => Boolean(request.error));
   const findingLoading = !findingError && findingRequests.some((request) => !request.data);
   const availableFindings = findingError ? null : findings;
+
+  useEffect(() => {
+    if (findingLoading || window.location.hash !== "#analysis-results") return;
+    const frame = window.requestAnimationFrame(() => document.getElementById("analysis-results")?.scrollIntoView({ block: "start" }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [findingLoading]);
 
   useGSAP(() => {
     const media = gsap.matchMedia();
@@ -137,6 +144,22 @@ export function VisualV2Page() {
           <div className={styles.momentCopy} data-cpp-copy><p>一个反直觉发现</p><h2>{availableFindings ? <>C++ 招聘需求排第 {availableFindings.cpp.demandRank}，<br />但学习性价比只排第 {availableFindings.cpp.skillworthRank}</> : findingError ? "当前数据暂时无法读取" : findingLoading ? "正在读取当前冻结发现……" : "当前样本暂不支持这项冻结发现"}</h2><p>同一项技能，招聘需求和学习性价比是两种不同排名。学习性价比（SkillWorth）会同时考虑市场支持和学习投入。</p>{findingError && <button type="button" onClick={retryFindings}>重试</button>}</div>
           {availableFindings && scopeSuccess ? <div data-cpp-ranks><CppMoment findings={availableFindings} metadata={scopeSuccess} /></div> : findingLoading ? <VisualLoading label="正在读取支持证据……" variant="panel" /> : <div className={styles.exploreState} role="status">{findingError ? "冻结发现所需证据暂时无法读取" : "当前样本没有足够证据展示该发现"}</div>}
         </article>
+      </section>
+
+      <section id="analysis-results" className={styles.analysisGateway} aria-labelledby="analysis-results-title">
+        <div className={styles.analysisGatewayHeading}>
+          <ExperienceSwitcher current="analysis" />
+          <div>
+            <p>数据分析结果</p>
+            <h2 id="analysis-results-title">从目标职业出发，找到更值得投入的技能</h2>
+          </div>
+        </div>
+        <div className={styles.fieldInvitation}>
+          <p>想自己探索这些技能？</p>
+          <strong>{scopeSuccess ? `在 ${scopeSuccess.skill_count} 项技能中自由探索，搜索你关心的技能或职业。` : "在当前市场样本中自由探索，搜索你关心的技能或职业。"}</strong>
+          <span>看学习优先级，也看技能之间的关联关系。</span>
+          <Link href="/lab/3d-skill-field">进入 3D 技能星域 <ArrowRight size={18} /></Link>
+        </div>
       </section>
 
       <RoleFirst />

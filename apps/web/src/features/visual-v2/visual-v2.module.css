@@ -631,6 +631,24 @@
 .cppFacts div + div { border-left-color: var(--night-line); }
 .chartSource { font-size: 13px; line-height: 1.6; }
 
+.analysisGateway {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(320px, 5fr);
+  gap: clamp(52px, 8vw, 128px);
+  border-top: 1px solid var(--line);
+  padding: 82px max(28px, 6vw) 88px;
+  background: #070c08;
+  scroll-margin-top: 80px;
+}
+.analysisGatewayHeading { display: grid; align-content: start; gap: 36px; }
+.analysisGatewayHeading > div > p { color: var(--accent); font: 11px/1.4 var(--font-geist-mono), monospace; letter-spacing: .08em; }
+.analysisGatewayHeading h2 { max-width: 16ch; margin-top: 18px; color: var(--ink); font-size: clamp(32px, 3vw, 46px); font-weight: 560; letter-spacing: -.018em; line-height: 1.16; }
+.fieldInvitation { align-self: end; border-top: 1px solid var(--accent); padding-top: 22px; }
+.fieldInvitation p { color: var(--accent); font-size: 13px; font-weight: 650; }
+.fieldInvitation strong { display: block; max-width: 30rem; margin-top: 14px; color: var(--ink); font-size: 20px; font-weight: 540; line-height: 1.55; }
+.fieldInvitation span { display: block; margin-top: 10px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.fieldInvitation a { display: inline-flex; min-height: 44px; align-items: center; gap: 18px; margin-top: 26px; border-bottom: 1px solid var(--accent); color: var(--accent); font-size: 14px; font-weight: 620; }
+
 .roleFirst { position: relative; max-width: 1600px; border-top: 1px solid rgba(111, 139, 116, .32); padding: 150px max(28px, 5vw) 170px; background: radial-gradient(ellipse 42% 32% at 70% 12%, rgba(129, 164, 122, .085), transparent 74%), linear-gradient(180deg, #0a100c, #0d150f 58%, #0a110c); }
 .roleFirst::before { position: absolute; inset: 4% 5% auto 45%; height: 420px; pointer-events: none; content: ""; background: radial-gradient(ellipse, rgba(111, 147, 113, .09), transparent 70%); }
 .roleIntro { position: relative; grid-template-columns: 2fr 5fr 5fr; }
@@ -776,6 +794,7 @@
   .heroMoment:has([data-cpp-ranks]) { min-height: auto; }
   .heroMoment > [data-cpp-ranks],
   .heroMoment > .visualLoading { margin-top: 0; }
+  .analysisGateway { grid-template-columns: 1fr; gap: 54px; scroll-margin-top: 132px; }
   .roleIntro,
   .exploreIntro { grid-template-columns: 1fr; align-items: start; gap: 16px; }
   .roleIntro h2,
@@ -810,10 +829,15 @@
   .heroActions { display: grid; grid-template-columns: 1fr; margin-top: 26px; }
   .heroSignalRail { bottom: 13px; }
   .heroMoment,
+  .analysisGateway,
   .roleFirst,
   .exploreMode,
   .limitations { padding: 104px 20px; }
   .momentCopy h2 { font-size: 35px; line-height: 1.16; }
+  .analysisGateway { gap: 42px; }
+  .analysisGatewayHeading { gap: 28px; }
+  .analysisGatewayHeading h2 { font-size: 32px; }
+  .fieldInvitation strong { font-size: 18px; }
   .cppRanks { grid-template-columns: 1fr 64px 1fr; }
   .cppRanks strong { font-size: clamp(64px, 22vw, 86px); }
   .cppTransition small { font-size: 9px; }

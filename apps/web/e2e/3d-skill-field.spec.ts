@@ -2,6 +2,38 @@ import { expect, test } from "@playwright/test";
 
 const realMode = process.env.SKILLWORTH_E2E_MODE === "real";
 
+test("分析结果与 3D 技能星域通过正常 history 双向切换", async ({ page, isMobile }) => {
+  await page.goto("/lab/visual-v2#analysis-results");
+
+  const analysisNavigation = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" });
+  await expect(analysisNavigation.getByRole("link", { name: "分析结果", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(analysisNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("href", "/lab/3d-skill-field");
+  await expect(page.getByRole("link", { name: "进入 3D 技能星域" })).toHaveAttribute("href", "/lab/3d-skill-field");
+  await expect(page.locator("#analysis-results")).toBeInViewport();
+
+  await analysisNavigation.getByRole("link", { name: "3D 技能星域", exact: true }).click();
+  await expect(page).toHaveURL(/\/lab\/3d-skill-field$/);
+  const fieldNavigation = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" });
+  await expect(fieldNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("aria-current", "page");
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
+  await expect(page.locator("#analysis-results")).toBeInViewport();
+  await page.goForward();
+  await expect(page).toHaveURL(/\/lab\/3d-skill-field$/);
+
+  const analysisLink = fieldNavigation.getByRole("link", { name: "分析结果", exact: true });
+  await analysisLink.focus();
+  await expect(analysisLink).toBeFocused();
+  await analysisLink.press("Enter");
+  await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
+  await expect(page.locator("#analysis-results")).toBeInViewport();
+
+  if (isMobile) {
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
+  }
+});
+
 test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced Motion", async ({ page, isMobile }) => {
   const consoleMessages: string[] = [];
   page.on("console", (message) => { if (["error", "warning"].includes(message.type())) consoleMessages.push(message.text()); });
@@ -13,8 +45,7 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
   await expect(page.getByRole("link", { name: "市场" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "我的技能组合" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "组合", exact: true })).toHaveCount(0);
-  if (isMobile) await expect(page.getByText("3D 技能星域 · Lab")).toBeHidden();
-  else await expect(page.getByText("3D 技能星域 · Lab")).toBeVisible();
+  await expect(page.getByText("3D 技能星域 · Lab")).toBeVisible();
   await expect(page.getByRole("heading", { name: /项技术，哪些更值得你先学/ })).toBeVisible();
   await expect(page.getByTestId("skill-field-canvas")).toBeVisible();
   await expect(page.getByText("◎ 价值核心")).toBeVisible();
@@ -43,10 +74,21 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
 
 test("WebGL 初始化失败时保留 2D 搜索与技能列表", async ({ page }) => {
   await page.goto("/lab/3d-skill-field?fallback=1");
+  await expect(page.getByRole("navigation", { name: "分析结果与 3D 技能星域" }).getByRole("link", { name: "分析结果", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "已切换到 2D 技能视图" })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "搜索技能或职业" })).toBeVisible();
   await expect(page.getByRole("region", { name: "2D 技能列表" })).toBeVisible();
   if (realMode) await expect(page.getByRole("region", { name: "2D 技能列表" })).toContainText("招聘需求 #3 → 学习性价比 #35");
+});
+
+test("3D 数据失败时仍可返回分析结果", async ({ page }) => {
+  await page.route("**/backend-api/market/china-skillworth**", (route) => route.abort());
+  await page.goto("/lab/3d-skill-field");
+
+  await expect(page.getByRole("heading", { name: "技能星域暂时无法加载" })).toBeVisible();
+  const analysisLink = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" }).getByRole("link", { name: "分析结果", exact: true });
+  await expect(analysisLink).toHaveAttribute("href", "/lab/visual-v2#analysis-results");
+  await expect(analysisLink).toBeVisible();
 });
 
 test("WebGL 运行中上下文丢失时自动转为 2D", async ({ page }) => {

@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:real": "node scripts/run-e2e.mjs --real",
-    "capture:3d-review": "node scripts/run-e2e.mjs --real --capture-3d-review"
+    "capture:3d-review": "node scripts/run-e2e.mjs --real --capture-3d-review",
+    "capture:analysis-3d-navigation": "node scripts/run-e2e.mjs --real --capture-analysis-3d-navigation"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

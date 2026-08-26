@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ExperienceSwitcher } from "@/components/experience-switcher/experience-switcher";
 import type { ChinaSkillWorthResponse, RolesResponse, SkillRelationsResponse } from "@/lib/api/types";
 import { useApi } from "@/hooks/use-api";
 import { buildSceneModel } from "./data/adapters";
@@ -94,15 +95,18 @@ function SkillFieldExperience() {
   const selectRole = (roleId: string, label: string, sampleSize: number) => dispatch({ type: "select-role", role: { roleId, label, sampleSize } });
   const fallback = <WebGLFallback skills={scopedRecords} relations={relations.data?.records ?? []} onSelect={(skillId) => selectSkill(skillId)} />;
 
-  if (global.isLoading || roles.isLoading) return <div className={styles.pageLoading}><span />正在读取技能世界…</div>;
-  if (global.error || roles.error || !global.data || !roles.data) return <div className={styles.pageError}><h1>技能星域暂时无法加载</h1><p>分析数据未就绪。你可以稍后重试，现有 Visual V2.3.1 不受影响。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div>;
+  const pageHeader = <header className={styles.localHeader}>
+    <Link href="/lab/visual-v2#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span><small>3D 技能星域 · Lab</small></Link>
+    <div className={styles.experienceNavigation}><ExperienceSwitcher current="field" /></div>
+    <nav className={styles.localAuxNavigation} aria-label="3D 技能星域辅助导航"><Link href="/methodology">方法与数据</Link><span>Signal Aperture Lab</span></nav>
+  </header>;
+
+  if (global.isLoading || roles.isLoading) return <main className={styles.page}>{pageHeader}<div className={styles.pageLoading}><span />正在读取技能世界…</div></main>;
+  if (global.error || roles.error || !global.data || !roles.data) return <main className={styles.page}>{pageHeader}<div className={styles.pageError}><h1>技能星域暂时无法加载</h1><p>分析数据未就绪。你可以稍后重试，现有 Visual V2.3.1 不受影响。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div></main>;
   const globalData = global.data;
 
   return <main className={styles.page}>
-    <header className={styles.localHeader}>
-      <Link href="/lab/visual-v2" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span><small>3D 技能星域 · Lab</small></Link>
-      <nav aria-label="3D 原型导航"><Link href="/methodology">方法与数据</Link><span>Signal Aperture Lab</span></nav>
-    </header>
+    {pageHeader}
     <section className={styles.stage} aria-labelledby="skill-field-title">
       <div className={styles.stageTop}>
         <SearchCommand skills={globalRecords} roles={roles.data.records} onSelectSkill={selectSkill} onSelectRole={selectRole} />
