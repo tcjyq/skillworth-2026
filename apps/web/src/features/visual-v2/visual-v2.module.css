@@ -610,7 +610,7 @@
     radial-gradient(ellipse 56% 34% at 82% 42%, rgba(169, 203, 98, .095), transparent 72%),
     linear-gradient(180deg, #050906, #0a100c 64%, #080d0a);
 }
-.heroMoment:has([data-cpp-ranks]) { min-height: 112vh; }
+.heroMoment:has([data-cpp-ranks]) { min-height: 100svh; }
 .heroMoment:not(:has([data-cpp-ranks])) { min-height: 680px; }
 .cppChapter { background-color: var(--night); }
 .momentCopy { align-self: start; padding-top: 8px; }

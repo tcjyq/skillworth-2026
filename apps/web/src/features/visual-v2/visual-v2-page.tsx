@@ -91,8 +91,7 @@ export function VisualV2Page() {
   useGSAP(() => {
     const ranks = root.current?.querySelector("[data-cpp-ranks]");
     const chapter = root.current?.querySelector("[data-cpp-moment]");
-    const copy = root.current?.querySelector("[data-cpp-copy]");
-    if (!ranks || !chapter || !copy) return;
+    if (!ranks || !chapter) return;
 
     const media = gsap.matchMedia();
     media.add("(min-width: 900px) and (prefers-reduced-motion: no-preference)", () => {
@@ -100,14 +99,34 @@ export function VisualV2Page() {
       const investment = ranks.querySelector("[data-cpp-sequence='investment']");
       const result = ranks.querySelector("[data-cpp-sequence='result']");
       const support = ranks.querySelectorAll("[data-cpp-support]");
+      const holdState = { progress: 0 };
       if (!demand || !investment || !result) return;
-      gsap.timeline({ scrollTrigger: { trigger: chapter, start: "top 76%", end: "bottom 32%", scrub: 0.72 } })
-        .fromTo(demand, { autoAlpha: 0.28, scale: 0.95, filter: "brightness(.58)" }, { autoAlpha: 1, scale: 1, filter: "brightness(1)", duration: 0.28 })
-        .fromTo(investment, { autoAlpha: 0.12, scaleX: 0.3, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.2 })
-        .to(demand, { opacity: 0.62, filter: "brightness(.72)", duration: 0.18 })
-        .fromTo(result, { autoAlpha: 0.18, x: -14, filter: "blur(7px) brightness(.72)" }, { autoAlpha: 1, x: 0, filter: "blur(0px) brightness(1)", duration: 0.24 })
-        .fromTo(support, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.16 });
-      ScrollTrigger.create({ trigger: chapter, start: "top top+=96", end: "bottom 72%", pin: copy, pinSpacing: false });
+      gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          id: "cpp-scroll-story",
+          trigger: chapter,
+          start: "top top",
+          end: "+=160%",
+          scrub: true,
+          pin: chapter,
+          pinSpacing: true,
+        },
+      })
+        .addLabel("scene", 0)
+        .fromTo(demand, { autoAlpha: 0.28, scale: 0.95, filter: "brightness(.58)" }, { autoAlpha: 1, scale: 1, filter: "brightness(1)", duration: 0.18 }, "scene")
+        .addLabel("demand", 0.18)
+        .addLabel("investment", 0.38)
+        .fromTo(investment, { autoAlpha: 0.12, scaleX: 0.3, transformOrigin: "left center" }, { autoAlpha: 1, scaleX: 1, duration: 0.2 }, "investment")
+        .addLabel("rank-shift", 0.58)
+        .to(demand, { opacity: 0.62, filter: "brightness(.72)", duration: 0.08 }, "rank-shift")
+        .addLabel("result", 0.66)
+        .fromTo(result, { autoAlpha: 0.18, x: -14, filter: "blur(7px) brightness(.72)" }, { autoAlpha: 1, x: 0, filter: "blur(0px) brightness(1)", duration: 0.11 }, "result")
+        .fromTo(support, { autoAlpha: 0.35 }, { autoAlpha: 1, duration: 0.12 }, 0.7)
+        .addLabel("result-complete", 0.77)
+        .to(holdState, { progress: 1, duration: 0.23 }, "result-complete")
+        .addLabel("hold", 0.82)
+        .addLabel("end", 1);
     });
     return () => media.revert();
   }, { scope: root, dependencies: [Boolean(availableFindings)], revertOnUpdate: true });
