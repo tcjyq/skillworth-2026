@@ -37,11 +37,11 @@ export function DetailPanel({
       { y: 0, opacity: 1, duration: 0.5, stagger: 0.045, ease: "power3.out", overwrite: true });
   }, { scope: panelRef, dependencies: [record?.skill_id, relation?.related_skill_id, state.reducedMotion] });
   useEffect(() => { panelRef.current?.scrollTo({ top: 0, behavior: state.reducedMotion ? "auto" : "smooth" }); }, [record?.skill_id, state.reducedMotion]);
-  if (!record) return <aside ref={panelRef} className={styles.detailPanel} aria-label="技能详情">
+  if (!record) return <aside ref={panelRef} className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情">
     <div className={styles.detailEmpty}><p>选择一个技能</p><span>点击节点或使用搜索，查看岗位证据和技能关系。</span></div>
   </aside>;
   const gate = state.activeRole ? roleEvidence(state.activeRole.sampleSize) : null;
-  return <aside ref={panelRef} className={styles.detailPanel} aria-label="技能详情">
+  return <aside ref={panelRef} className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情">
     <header data-evidence-block>
       <p>{state.activeRole ? state.activeRole.label : "当前公开样本"}</p>
       <h2>{record.skill}</h2>

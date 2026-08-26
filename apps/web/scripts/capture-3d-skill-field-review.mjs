@@ -14,6 +14,50 @@ let selectedRelationProbe = null;
 
 const wait = (page, milliseconds) => page.waitForTimeout(milliseconds);
 const screenshot = (page, name) => page.screenshot({ path: resolve(outputRoot, `${name}.png`), fullPage: false, scale: "css" });
+const ensure = (condition, message) => { if (!condition) throw new Error(message); };
+
+async function assertEmbeddedPageLayout(page, mobile = false) {
+  const layout = await page.evaluate(() => {
+    const rect = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+    };
+    return {
+      viewportWidth: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      scrollHeight: document.documentElement.scrollHeight,
+      search: rect('[role="combobox"]'),
+      results: rect('#skill-field-search-results'),
+      frame: rect('[data-testid="skill-field-frame"]'),
+      canvas: rect('[data-testid="skill-field-canvas"]'),
+      detail: rect('[data-testid="skill-field-detail"]'),
+      touchHint: Boolean(document.querySelector('[data-testid="skill-field-touch-hint"]')),
+    };
+  });
+  ensure(layout.search && layout.frame && layout.canvas && layout.detail, "3D page frame is missing a required document-flow region");
+  ensure(layout.search.bottom <= layout.frame.top, "search must stay above the visualization frame");
+  ensure(layout.canvas.top >= layout.frame.top && layout.canvas.bottom <= layout.frame.bottom, "canvas must stay inside its visualization frame");
+  ensure(layout.detail.top >= layout.frame.bottom, "skill detail must stay below the visualization frame");
+  ensure(layout.scrollWidth <= layout.viewportWidth, "page has horizontal overflow");
+  ensure(layout.scrollHeight > layout.viewportWidth / 2, "page must remain scrollable beyond the canvas");
+  if (layout.results) ensure(layout.results.bottom <= layout.frame.top, "search results must stay in normal flow above the canvas");
+  if (mobile) {
+    ensure(layout.canvas.height >= 420 && layout.canvas.height <= 500, `mobile canvas height ${layout.canvas.height} is outside the intended range`);
+    ensure(layout.touchHint, "mobile canvas is missing its touch hint");
+  }
+}
+
+async function assertCanvasResizes(page) {
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await wait(page, 450);
+    await assertEmbeddedPageLayout(page);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await wait(page, 450);
+}
 
 function trackConsole(page) {
   page.on("console", (message) => {
@@ -119,8 +163,11 @@ trackConsole(page);
 await page.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
 await page.getByTestId("skill-field-canvas").waitFor();
 await wait(page, 3200);
+await assertEmbeddedPageLayout(page);
+await assertCanvasResizes(page);
 const dataScope = await page.request.get(`${baseURL}/backend-api/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d`).then((response) => response.json());
 const defaultLabelCount = await page.getByTestId("skill-field-canvas").locator("button, [data-kind]").count();
+const originalCanvas = await page.getByTestId("skill-field-canvas").elementHandle();
 await screenshot(page, "01-global-value-desktop");
 await screenshot(page, "02-final-global-value");
 await page.screenshot({ path: resolve(outputRoot, "03-value-core-close-up.png"), clip: { x: 500, y: 360, width: 560, height: 410 }, scale: "css" });
@@ -161,6 +208,8 @@ await screenshot(page, "04-search-python");
 await screenshot(page, "16-search-python-focus");
 await page.getByRole("option", { name: /Python/ }).first().click();
 await wait(page, 3000);
+await assertEmbeddedPageLayout(page);
+ensure(await originalCanvas?.evaluate((element) => element.isConnected), "selection must not remount the WebGL canvas");
 await screenshot(page, "05-python-global-constellation");
 await screenshot(page, "12-python-constellation");
 const constellationBox = await page.getByTestId("skill-field-canvas").boundingBox();
@@ -288,6 +337,7 @@ trackConsole(mobilePage);
 await mobilePage.goto(`${baseURL}/lab/3d-skill-field?quality=low`, { waitUntil: "networkidle" });
 await wait(mobilePage, 2200);
 await waitForRenderIdle(mobilePage);
+await assertEmbeddedPageLayout(mobilePage, true);
 const mobileIdleStart = await readProbe(mobilePage);
 await wait(mobilePage, 1200);
 const mobileIdleEnd = await readProbe(mobilePage);
