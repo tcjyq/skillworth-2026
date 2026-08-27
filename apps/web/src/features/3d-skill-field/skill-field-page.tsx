@@ -34,10 +34,10 @@ function supportsWebGL() {
 }
 
 function sceneCopy(mode: string, role: string | null, skill: string | null, skillCount: number) {
-  if (mode === "GLOBAL_DEMAND") return { title: "如果只看招聘需求，答案会怎么变？", description: "越靠近中心，当前岗位样本中出现得越多。球的大小仍表示岗位覆盖。" };
+  if (mode === "GLOBAL_DEMAND") return { title: "如果只看招聘需求，答案会怎么变？", description: "越靠近中心，当前岗位样本中出现得越多。星点大小仍表示岗位覆盖。" };
   if (mode === "ROLE_VALUE") return { title: `做${role ?? "这个职业"}，答案会怎么变？`, description: "越靠近中心，越值得在这个职业方向优先关注。" };
   if (mode.startsWith("RELATION")) return { title: `${skill ?? "这个技能"}，通常和哪些技能一起出现？`, description: "越靠近中心，关联越紧密；线越明显，共同岗位证据越多。" };
-  return { title: `${skillCount} 项技术，哪些更值得你先学？`, description: "越靠近中心，越值得优先关注。球越大，在当前岗位样本中出现得越多。" };
+  return { title: `${skillCount} 项技术，哪些更值得你先学？`, description: "越靠近中心，越值得优先关注。星点略大，在当前岗位样本中出现得越多。" };
 }
 
 function SkillFieldExperience() {
@@ -127,8 +127,8 @@ function SkillFieldExperience() {
         <header className={styles.frameHeader}><span>交互式可视化窗口</span><small>{copy.title}</small></header>
         <div className={styles.scenePane}>
           {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas model={model} mode={state.mode} activeSkillId={state.activeSkill?.skillId ?? null} selectedRelationId={state.selectedRelationId} reducedMotion={state.reducedMotion} transitionToken={state.transitionToken} onSelect={selectSkill} onClearSelection={() => dispatch({ type: "clear-selection" })} onContextLost={() => setWebgl(false)} /></CanvasBoundary> : fallback}
-          <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />球越大，岗位覆盖越高</span></div>
-          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint} data-testid="value-core-annotation"><span>◎ 价值核心</span>越靠近这里，越值得优先关注<small>只看远近，不看方向</small></div>}
+          <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />星点略大，岗位覆盖越高</span></div>
+          {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint} data-testid="value-core-annotation"><span>价值核心</span>越靠近这里，越值得优先关注<small>只看远近，不看方向</small></div>}
           {sceneLimitations.map((item) => <p className={styles.sceneWarning} key={item}>{item}</p>)}
           {roleGate?.status === "insufficient" && <button className={styles.sceneAlternative} type="button" onClick={() => dispatch({ type: "clear-role" })}>查看全局{state.activeSkill ? "关系" : "星域"}</button>}
           {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && cpp?.demand_rank && cpp.skillworth_rank && <div key={state.mode} className={styles.rankShift} role="status"><span>C++</span><strong>{state.mode === "GLOBAL_DEMAND" ? `招聘需求 #${cpp.demand_rank}` : `#${cpp.demand_rank} → #${cpp.skillworth_rank} · 热门，不一定最值得先学。`}</strong></div>}

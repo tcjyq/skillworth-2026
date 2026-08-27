@@ -9,78 +9,85 @@ import { gsap } from "gsap";
 import * as THREE from "three";
 import type { SceneNode } from "../types";
 import type { QualityProfileName } from "./visual-system";
-import { QUALITY_PROFILES, skillColor } from "./visual-system";
+import { QUALITY_PROFILES, skillColor, skillStarMotion, starPointerShouldSelect, SKILL_STAR_MATERIAL } from "./visual-system";
 
-const NODE_VERTEX_SHADER = `
-  varying vec3 vInstanceColor;
-  varying vec3 vNormal;
-  varying vec3 vViewDirection;
-  varying float vViewDepth;
-  void main() {
-    vInstanceColor = instanceColor;
-    vec4 modelViewPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-    vNormal = normalize(mat3(modelViewMatrix * instanceMatrix) * normal);
-    vViewDirection = normalize(-modelViewPosition.xyz);
-    vViewDepth = -modelViewPosition.z;
-    gl_Position = projectionMatrix * modelViewPosition;
-  }
-`;
-
-const NODE_FRAGMENT_SHADER = `
-  varying vec3 vInstanceColor;
-  varying vec3 vNormal;
-  varying vec3 vViewDirection;
-  varying float vViewDepth;
-  void main() {
-    vec3 keyDirection = normalize(vec3(-0.42, 0.62, 0.65));
-    float diffuse = 0.26 + 0.54 * max(dot(vNormal, keyDirection), 0.0);
-    float facing = max(dot(vNormal, vViewDirection), 0.0);
-    float fresnel = pow(1.0 - facing, 3.4);
-    float highlight = pow(max(dot(normalize(keyDirection + vViewDirection), vNormal), 0.0), 18.0);
-    vec3 body = mix(vInstanceColor * 0.46, vInstanceColor * 0.96, diffuse);
-    vec3 color = body + vInstanceColor * fresnel * 0.42 + vec3(0.72, 0.80, 0.72) * highlight * 0.18;
-    color = max(color, max(vInstanceColor * 0.58, vec3(0.042, 0.056, 0.047)));
-    float depthFade = smoothstep(38.0, 18.0, vViewDepth);
-    color = mix(vec3(0.035, 0.051, 0.043), color, 0.62 + 0.38 * depthFade);
-    gl_FragColor = vec4(color, 1.0);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
-  }
-`;
-
-const HALO_VERTEX_SHADER = `
-  attribute vec3 color;
-  attribute float haloSize;
+const STAR_VERTEX_SHADER = `
+  attribute float starSize;
+  attribute float phase;
+  attribute float speed;
+  attribute float amplitude;
+  attribute float attention;
+  uniform float uTime;
+  uniform float uMotionEnabled;
+  uniform float uPixelRatio;
+  uniform float uPointScale;
+  uniform float uScreenFloorScale;
   varying vec3 vColor;
+  varying float vAttention;
+  varying float vBreath;
+  varying float vTwinkle;
   void main() {
     vColor = color;
+    vAttention = attention;
     vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = clamp(haloSize * 190.0 / max(-modelViewPosition.z, 1.0), 1.5, 46.0);
+    float breath = sin(uTime * speed + phase) * amplitude * uMotionEnabled;
+    float twinkleWave = sin(uTime * speed * 2.37 + phase * 1.73);
+    float twinkle = smoothstep(0.78, 0.99, twinkleWave) * (0.03 + attention * 0.05) * uMotionEnabled;
+    vBreath = breath;
+    vTwinkle = twinkle;
+    float visualScale = 1.0 + breath * 0.2 + attention * 0.24;
+    float depthSizedPoint = starSize * uPointScale * uPixelRatio * visualScale / max(-modelViewPosition.z, 1.0);
+    float screenMinimum = mix(6.25, 11.75, attention) * uScreenFloorScale * uPixelRatio;
+    float screenMaximum = mix(10.5, 14.0, attention) * uScreenFloorScale * uPixelRatio;
+    gl_PointSize = clamp(
+      depthSizedPoint,
+      screenMinimum,
+      screenMaximum
+    );
     gl_Position = projectionMatrix * modelViewPosition;
   }
 `;
 
-const HALO_FRAGMENT_SHADER = `
+const STAR_FRAGMENT_SHADER = `
+  uniform float uCoreRadius;
+  uniform float uHaloFalloff;
+  uniform float uHaloStrength;
+  uniform float uWhiteCore;
   varying vec3 vColor;
+  varying float vAttention;
+  varying float vBreath;
+  varying float vTwinkle;
   void main() {
-    float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
-    float outer = smoothstep(0.5, 0.12, distanceToCenter);
-    float innerControl = mix(0.48, 1.0, smoothstep(0.0, 0.22, distanceToCenter));
-    float alpha = outer * innerControl;
-    if (alpha < 0.01) discard;
-    gl_FragColor = vec4(vColor, alpha * 0.34);
+    float radial = length(gl_PointCoord - vec2(0.5)) * 2.0;
+    if (radial > 1.0) discard;
+    float core = 1.0 - smoothstep(uCoreRadius * 0.52, uCoreRadius, radial);
+    float halo = exp(-pow(radial * uHaloFalloff, 1.72));
+    float flare = pow(max(1.0 - radial, 0.0), 7.0) * vAttention;
+    float vitality = 1.0 + vBreath * 0.7 + vTwinkle;
+    float alpha = max(core * (1.0 + vTwinkle * 0.3), halo * uHaloStrength * vitality) * (0.8 + vAttention * 0.2);
+    if (alpha < 0.012) discard;
+    vec3 haloColor = vColor * (0.72 + halo * 0.86 + vAttention * 0.32);
+    vec3 color = mix(haloColor, vec3(1.0), core * uWhiteCore);
+    color += vColor * flare * 0.44 + vec3(vTwinkle * 0.08 + max(vBreath, 0.0) * 0.03);
+    gl_FragColor = vec4(color, alpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
 
 function nodeColor(node: SceneNode) {
-  if (node.visualState === "observed-only") return new THREE.Color("#6e7b71");
+  if (node.visualState === "observed-only") return new THREE.Color("#77837a");
   const color = new THREE.Color(skillColor(node.record.skill_id, node.record.skill_category).color);
-  if (node.visualState === "muted") return color.multiplyScalar(0.4);
-  if (node.visualState === "highlighted") return color.multiplyScalar(1.04);
-  if (node.visualState === "selected") return color.multiplyScalar(1.12);
-  return color.multiplyScalar(0.78);
+  if (node.visualState === "muted") return color.multiplyScalar(0.46);
+  return color.multiplyScalar(0.94);
+}
+
+function nodeAttention(node: SceneNode, selectedSkillId: string | null, hoveredSkillId: string | null, emphasis: Set<string>) {
+  if (node.record.skill_id === selectedSkillId) return 1;
+  if (node.record.skill_id === hoveredSkillId) return 0.68;
+  if (emphasis.has(node.record.skill_id) || node.visualState === "highlighted") return 0.42;
+  if (node.visualState === "muted") return 0.02;
+  return node.visualState === "observed-only" ? 0.06 : 0.14;
 }
 
 export function SkillNodes({
@@ -100,56 +107,83 @@ export function SkillNodes({
   onHover: (skillId: string | null) => void;
   onSelect: (skillId: string) => void;
 }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const previous = useRef(new Map<string, { position: THREE.Vector3; size: number }>());
-  const { invalidate } = useThree();
+  const hoveredSkillId = useRef<string | null>(null);
+  const { gl, invalidate } = useThree();
   const nodeIndex = useMemo(() => nodes.map((node) => node.record.skill_id), [nodes]);
-  const instanceColors = useMemo(() => new THREE.InstancedBufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
-  const haloPositions = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
-  const haloColors = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
-  const haloSizes = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const positions = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
+  const colors = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
+  const sizes = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const phases = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const speeds = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const amplitudes = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const attentions = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1)), 1), [nodes.length]);
+  const materialPreset = SKILL_STAR_MATERIAL;
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+    uMotionEnabled: { value: 0 },
+    uPixelRatio: { value: 1 },
+    uPointScale: { value: materialPreset.pointScale },
+    uScreenFloorScale: { value: quality === "LOW" ? 0.88 : 1 },
+    uCoreRadius: { value: materialPreset.coreRadius },
+    uHaloFalloff: { value: materialPreset.haloFalloff },
+    uHaloStrength: { value: materialPreset.haloStrength },
+    uWhiteCore: { value: materialPreset.whiteCore },
+  }), [materialPreset, quality]);
 
   useEffect(() => {
-    const mesh = meshRef.current;
+    const material = materialRef.current;
+    if (!material) return;
+    material.uniforms.uPixelRatio.value = gl.getPixelRatio();
+    material.uniforms.uMotionEnabled.value = reducedMotion || QUALITY_PROFILES[quality].ambientCadenceFps === 0 ? 0 : 1;
+    material.uniforms.uTime.value = performance.now() / 1000;
+    const cadence = QUALITY_PROFILES[quality].ambientCadenceFps;
+    if (!cadence || reducedMotion) {
+      invalidate();
+      return;
+    }
+    const timer = window.setInterval(() => {
+      material.uniforms.uTime.value = performance.now() / 1000;
+      invalidate();
+    }, 1000 / cadence);
+    return () => window.clearInterval(timer);
+  }, [gl, invalidate, quality, reducedMotion]);
+
+  useEffect(() => {
     const hit = hitRef.current;
-    if (!mesh || !hit) return;
+    if (!hit) return;
     const starts = nodes.map((node) => previous.current.get(node.record.skill_id) ?? {
       position: new THREE.Vector3(...node.position),
-      size: reducedMotion ? node.size : node.size * 0.82,
+      size: reducedMotion ? node.size : node.size * 0.86,
     });
     const ends = nodes.map((node) => ({ position: new THREE.Vector3(...node.position), size: node.size }));
-    const matrix = new THREE.Matrix4();
     const hitMatrix = new THREE.Matrix4();
     const quaternion = new THREE.Quaternion();
-    const scaleVector = new THREE.Vector3();
+    const hitScale = new THREE.Vector3();
     const emphasis = new Set(emphasisSkillIds);
     const progress = { value: reducedMotion ? 1 : 0 };
     const render = () => {
       nodes.forEach((node, index) => {
         const position = starts[index].position.clone().lerp(ends[index].position, progress.value);
-        const scale = THREE.MathUtils.lerp(starts[index].size, ends[index].size, progress.value);
-        scaleVector.setScalar(scale);
-        matrix.compose(position, quaternion, scaleVector);
-        hitMatrix.compose(position, quaternion, scaleVector.clone().multiplyScalar(2.15));
-        mesh.setMatrixAt(index, matrix);
-        hit.setMatrixAt(index, hitMatrix);
+        const size = THREE.MathUtils.lerp(starts[index].size, ends[index].size, progress.value);
         const color = nodeColor(node);
-        if (emphasis.size && !emphasis.has(node.record.skill_id) && progress.value < 0.72) color.multiplyScalar(0.82);
-        if (emphasis.has(node.record.skill_id) && progress.value < 0.86) color.multiplyScalar(1.22);
-        mesh.setColorAt(index, color);
-        haloPositions.setXYZ(index, position.x, position.y, position.z);
-        haloColors.setXYZ(index, color.r, color.g, color.b);
-        const selected = node.record.skill_id === selectedSkillId;
-        const stateIntensity = selected ? 2.35 : node.visualState === "highlighted" ? 1.25 : node.visualState === "muted" ? 0.12 : 0.42;
-        haloSizes.setX(index, Math.max(scale, 0.22) * stateIntensity * QUALITY_PROFILES[quality].haloIntensity);
+        const motion = skillStarMotion(node.record.skill_id);
+        positions.setXYZ(index, position.x, position.y, position.z);
+        colors.setXYZ(index, color.r, color.g, color.b);
+        sizes.setX(index, size);
+        phases.setX(index, motion.phase);
+        speeds.setX(index, motion.speed);
+        amplitudes.setX(index, motion.amplitude);
+        attentions.setX(index, nodeAttention(node, selectedSkillId, hoveredSkillId.current, emphasis));
+        const interactionRadius = Math.max(size * 2.45, quality === "LOW" ? 0.72 : 0.58);
+        hitScale.setScalar(interactionRadius);
+        hitMatrix.compose(position, quaternion, hitScale);
+        hit.setMatrixAt(index, hitMatrix);
       });
-      mesh.instanceMatrix.needsUpdate = true;
+      for (const attribute of [positions, colors, sizes, phases, speeds, amplitudes, attentions]) attribute.needsUpdate = true;
       hit.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      haloPositions.needsUpdate = true;
-      haloColors.needsUpdate = true;
-      haloSizes.needsUpdate = true;
       invalidate();
     };
     render();
@@ -162,34 +196,58 @@ export function SkillNodes({
     });
     previous.current = new Map(ends.map((entry, index) => [nodes[index].record.skill_id, entry]));
     return () => { tween?.kill(); };
-  }, [emphasisSkillIds, haloColors, haloPositions, haloSizes, instanceColors, invalidate, nodes, quality, reducedMotion, selectedSkillId]);
+  }, [amplitudes, attentions, colors, emphasisSkillIds, invalidate, nodes, phases, positions, quality, reducedMotion, selectedSkillId, sizes, speeds]);
 
-  const pointerNode = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation();
-    const skillId = event.instanceId === undefined ? null : nodeIndex[event.instanceId] ?? null;
+  const updateHover = (skillId: string | null) => {
+    hoveredSkillId.current = skillId;
+    const emphasis = new Set(emphasisSkillIds);
+    nodes.forEach((node, index) => attentions.setX(index, nodeAttention(node, selectedSkillId, skillId, emphasis)));
+    attentions.needsUpdate = true;
     onHover(skillId);
     document.body.style.cursor = skillId ? "pointer" : "default";
+    invalidate();
+  };
+  const pointerNode = (event: ThreeEvent<PointerEvent>) => {
+    updateHover(event.instanceId === undefined ? null : nodeIndex[event.instanceId] ?? null);
   };
   const selectNode = (event: ThreeEvent<MouseEvent>) => {
+    if (!starPointerShouldSelect(event.delta)) return;
     event.stopPropagation();
     if (event.instanceId !== undefined) onSelect(nodeIndex[event.instanceId]);
   };
+
   return <>
-    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} frustumCulled={false}>
-      <sphereGeometry args={[1, 12, 8]} />
-      <shaderMaterial vertexShader={NODE_VERTEX_SHADER} fragmentShader={NODE_FRAGMENT_SHADER} vertexColors toneMapped />
-      <primitive object={instanceColors} attach="instanceColor" />
-    </instancedMesh>
     <points frustumCulled={false} raycast={() => undefined}>
       <bufferGeometry>
-        <primitive object={haloPositions} attach="attributes-position" />
-        <primitive object={haloColors} attach="attributes-color" />
-        <primitive object={haloSizes} attach="attributes-haloSize" />
+        <primitive object={positions} attach="attributes-position" />
+        <primitive object={colors} attach="attributes-color" />
+        <primitive object={sizes} attach="attributes-starSize" />
+        <primitive object={phases} attach="attributes-phase" />
+        <primitive object={speeds} attach="attributes-speed" />
+        <primitive object={amplitudes} attach="attributes-amplitude" />
+        <primitive object={attentions} attach="attributes-attention" />
       </bufferGeometry>
-      <shaderMaterial vertexShader={HALO_VERTEX_SHADER} fragmentShader={HALO_FRAGMENT_SHADER} transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped />
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={STAR_VERTEX_SHADER}
+        fragmentShader={STAR_FRAGMENT_SHADER}
+        uniforms={uniforms}
+        vertexColors
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        toneMapped
+      />
     </points>
-    <instancedMesh ref={hitRef} args={[undefined, undefined, nodes.length]} frustumCulled={false} onPointerMove={pointerNode} onPointerOut={() => { onHover(null); document.body.style.cursor = "default"; }} onClick={selectNode}>
-      <sphereGeometry args={[1, 8, 8]} />
+    <instancedMesh
+      ref={hitRef}
+      args={[undefined, undefined, nodes.length]}
+      frustumCulled={false}
+      onPointerMove={pointerNode}
+      onPointerOut={() => updateHover(null)}
+      onClick={selectNode}
+    >
+      <sphereGeometry args={[1, 6, 4]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
     </instancedMesh>
   </>;

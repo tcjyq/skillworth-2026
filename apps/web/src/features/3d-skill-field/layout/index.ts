@@ -36,7 +36,7 @@ export type PositionedSkill = {
 export const LAYOUT_CONFIG = {
   ranked: { coreSafeRadius: 2.75, innerRadius: 3.7, outerRadius: 13.3, observedRadius: 15.2, gamma: 0.72 },
   relation: { primaryMin: 3.4, primaryMax: 6.2, secondaryMin: 7.6, secondaryMax: 10.8 },
-  node: { coverageCap: 0.5, scale: 1.45, maxVisualSize: 0.9 },
+  node: { coverageCap: 0.5, minVisualSize: 0.24, maxVisualSize: 0.436 },
 } as const;
 
 export function stableHash(value: string) {
@@ -62,10 +62,11 @@ function directionFor(skillId: string): [number, number, number] {
 }
 
 export function nodeSize(jobCoverage: number) {
-  return Math.min(
-    Math.sqrt(Math.min(Math.max(jobCoverage, 0), LAYOUT_CONFIG.node.coverageCap)) * LAYOUT_CONFIG.node.scale,
-    LAYOUT_CONFIG.node.maxVisualSize,
+  const normalizedCoverage = Math.sqrt(
+    Math.min(Math.max(jobCoverage, 0), LAYOUT_CONFIG.node.coverageCap) / LAYOUT_CONFIG.node.coverageCap,
   );
+  return LAYOUT_CONFIG.node.minVisualSize
+    + normalizedCoverage * (LAYOUT_CONFIG.node.maxVisualSize - LAYOUT_CONFIG.node.minVisualSize);
 }
 
 export function buildRankedLayout<T extends LayoutSkill>(skills: T[], rankField: RankField) {

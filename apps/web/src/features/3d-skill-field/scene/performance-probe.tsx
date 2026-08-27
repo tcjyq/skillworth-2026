@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 export function PerformanceProbe({ qualityProfile, environmentalParticleCount, relationParticleCount, visibleLabelCount, aaMode, bloomMode, postProcessingPassCount, onSustainedLowFps }: {
   qualityProfile: string;
@@ -19,7 +20,7 @@ export function PerformanceProbe({ qualityProfile, environmentalParticleCount, r
   const downgradeTriggered = useRef(false);
   const frameDurations = useRef<number[]>([]);
 
-  useFrame(({ gl }, delta) => {
+  useFrame(({ gl, camera }, delta) => {
     const now = performance.now();
     renderedFrames.current += 1;
     frameTimes.current = [...frameTimes.current.filter((time) => now - time <= 1000), now];
@@ -34,6 +35,9 @@ export function PerformanceProbe({ qualityProfile, environmentalParticleCount, r
     host.dataset.rendererDpr = gl.getPixelRatio().toFixed(2);
     host.dataset.lastRenderedAt = now.toFixed(1);
     host.dataset.qualityProfile = qualityProfile;
+    host.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(",");
+    host.dataset.cameraAzimuthDegrees = (Math.atan2(camera.position.x, camera.position.z) * 180 / Math.PI).toFixed(2);
+    host.dataset.cameraPolarDegrees = (Math.acos(THREE.MathUtils.clamp(camera.position.y / Math.max(camera.position.length(), 0.0001), -1, 1)) * 180 / Math.PI).toFixed(2);
     const rollingSeconds = frameDurations.current.reduce((total, item) => total + item, 0);
     host.dataset.actualFps = frameDurations.current.length >= 12 && rollingSeconds > 0
       ? (frameDurations.current.length / rollingSeconds).toFixed(1)
@@ -45,13 +49,14 @@ export function PerformanceProbe({ qualityProfile, environmentalParticleCount, r
     host.dataset.bloomMode = bloomMode;
     host.dataset.postProcessingPassCount = String(postProcessingPassCount);
     const sampleSpan = frameTimes.current.length > 1 ? now - frameTimes.current[0] : 0;
-    if (!downgradeTriggered.current && sampleSpan > 800 && frameTimes.current.length < 45) {
+    const samplingActive = host.dataset.cameraActive === "true";
+    if (samplingActive && !downgradeTriggered.current && sampleSpan > 800 && frameTimes.current.length < 45) {
       lowFpsStartedAt.current ??= now;
       if (now - lowFpsStartedAt.current > 1000) {
         downgradeTriggered.current = true;
         onSustainedLowFps();
       }
-    } else if (frameTimes.current.length >= 45) {
+    } else if (!samplingActive || frameTimes.current.length >= 45) {
       lowFpsStartedAt.current = null;
     }
   });

@@ -98,6 +98,8 @@ async function readProbe(page) {
       qualityProfile: element.dataset.qualityProfile ?? "unknown",
       aaMode: element.dataset.aaMode ?? "unknown",
       bloomMode: element.dataset.bloomMode ?? "unknown",
+      cameraAzimuthDegrees: Number(element.dataset.cameraAzimuthDegrees ?? 0),
+      cameraPolarDegrees: Number(element.dataset.cameraPolarDegrees ?? 0),
     };
   });
 }
@@ -121,21 +123,6 @@ async function measureInteraction(page, name, action, durationMs = 1800) {
   };
 }
 
-async function waitForRenderIdle(page, timeoutMs = 8000) {
-  const startedAt = Date.now();
-  let previousFrames = -1;
-  let stableChecks = 0;
-  while (Date.now() - startedAt < timeoutMs) {
-    const probe = await readProbe(page);
-    if (probe.renderedFrames === previousFrames) stableChecks += 1;
-    else stableChecks = 0;
-    if (stableChecks >= 3) return probe;
-    previousFrames = probe.renderedFrames;
-    await wait(page, 260);
-  }
-  throw new Error("3D canvas did not reach idle state before performance sampling");
-}
-
 async function touchRotate(page, session) {
   const box = await page.getByTestId("skill-field-canvas").boundingBox();
   if (!box) return;
@@ -148,6 +135,37 @@ async function touchRotate(page, session) {
   await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
 
+async function dragOrbitPass(page, fraction) {
+  const box = await page.getByTestId("skill-field-canvas").boundingBox();
+  if (!box) throw new Error("3D canvas is unavailable for orbit verification");
+  const viewport = page.viewportSize();
+  const visibleBottom = Math.min(box.y + box.height, viewport?.height ?? box.y + box.height);
+  const start = { x: box.x + box.width * 0.92, y: box.y + (visibleBottom - box.y) * 0.74 };
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x - box.width * fraction, start.y, { steps: 18 });
+  await page.mouse.up();
+  await wait(page, 260);
+}
+
+async function dragOrbit(page, targetDegrees = 90) {
+  const startAngle = (await readProbe(page)).cameraAzimuthDegrees;
+  let currentAngle = startAngle;
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const progress = angularDistance(startAngle, currentAngle);
+    if (progress >= targetDegrees - 8 && progress <= targetDegrees + 8) return currentAngle;
+    if (progress > targetDegrees + 8) throw new Error(`horizontal orbit overshot ${targetDegrees}° from ${startAngle}° to ${currentAngle}°`);
+    await dragOrbitPass(page, progress < 60 ? 0.1 : 0.015);
+    currentAngle = (await readProbe(page)).cameraAzimuthDegrees;
+  }
+  throw new Error(`could not calibrate horizontal orbit from ${startAngle}° toward ${targetDegrees}°; ended at ${currentAngle}°`);
+}
+
+function angularDistance(left, right) {
+  return Math.abs(((right - left + 540) % 360) - 180);
+}
+
+async function captureFullReview() {
 await rm(outputRoot, { recursive: true, force: true });
 await mkdir(videoRoot, { recursive: true });
 const browser = await chromium.launch({ channel: "msedge" });
@@ -160,7 +178,7 @@ const page = await context.newPage();
 const recordingStartedAt = Date.now();
 trackConsole(page);
 
-await page.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
+await page.goto(`${baseURL}/lab/3d-skill-field?quality=high`, { waitUntil: "networkidle" });
 await page.getByTestId("skill-field-canvas").waitFor();
 await wait(page, 3200);
 await assertEmbeddedPageLayout(page);
@@ -175,7 +193,28 @@ await screenshot(page, "04-default-label-avoidance");
 await screenshot(page, "17-signal-aperture-lab-header");
 await screenshot(page, "04-skill-color-palette");
 await page.screenshot({ path: resolve(outputRoot, "05-python-sql-git-cpp-material-close-ups.png"), clip: { x: 360, y: 280, width: 720, height: 500 }, scale: "css" });
-await waitForRenderIdle(page);
+const orbitAngles = [(await readProbe(page)).cameraAzimuthDegrees];
+for (let step = 1; step <= 4; step += 1) {
+  orbitAngles.push(await dragOrbit(page));
+  if (step === 1) await screenshot(page, "02-global-value-rotated-90deg");
+  if (step === 2) await screenshot(page, "03-global-value-rotated-180deg");
+}
+console.log(`Orbit azimuth samples: ${orbitAngles.join(", ")}`);
+for (let index = 1; index < orbitAngles.length; index += 1) {
+  const segment = angularDistance(orbitAngles[index - 1], orbitAngles[index]);
+  ensure(segment >= 82 && segment <= 98, `horizontal orbit step ${index} measured ${segment.toFixed(2)}° instead of approximately 90°`);
+}
+const orbitCanvas = await page.getByTestId("skill-field-canvas").boundingBox();
+if (orbitCanvas) {
+  await page.mouse.move(orbitCanvas.x + orbitCanvas.width * 0.5, orbitCanvas.y + orbitCanvas.height * 0.5);
+  await page.mouse.wheel(0, -480);
+  await wait(page, 700);
+}
+await page.getByRole("button", { name: "只看招聘需求" }).click();
+await wait(page, 650);
+await page.getByRole("button", { name: "学习优先" }).click();
+await wait(page, 1600);
+await wait(page, 5000);
 const idleStart = await readProbe(page);
 await wait(page, 1400);
 const idleEnd = await readProbe(page);
@@ -287,6 +326,35 @@ if (video) {
   await copyFile(await video.path(), resolve(outputRoot, "recording-a-full-walkthrough.webm"));
 }
 
+const idleContext = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+  recordVideo: { dir: videoRoot, size: { width: 1440, height: 900 } },
+});
+const idlePage = await idleContext.newPage();
+trackConsole(idlePage);
+await idlePage.goto(`${baseURL}/lab/3d-skill-field?quality=high`, { waitUntil: "networkidle" });
+await idlePage.getByTestId("skill-field-canvas").waitFor();
+await wait(idlePage, 5600);
+const idleRotationStart = (await readProbe(idlePage)).cameraAzimuthDegrees;
+await wait(idlePage, 1400);
+const idleRotationMoving = (await readProbe(idlePage)).cameraAzimuthDegrees;
+ensure(angularDistance(idleRotationStart, idleRotationMoving) >= 0.08, "desktop idle rotation did not begin");
+await dragOrbitPass(idlePage, 0.08);
+await wait(idlePage, 1200);
+const idleInterruptedAt = (await readProbe(idlePage)).cameraAzimuthDegrees;
+await wait(idlePage, 1400);
+const idleInterruptedEnd = (await readProbe(idlePage)).cameraAzimuthDegrees;
+ensure(angularDistance(idleInterruptedAt, idleInterruptedEnd) <= 0.08, "desktop idle rotation resumed before the post-interaction idle delay");
+const idleVideo = idlePage.video();
+await idleContext.close();
+if (idleVideo) await copyFile(await idleVideo.path(), resolve(outputRoot, "recording-b-idle-interruption.webm"));
+const idleInterruption = {
+  idleRotationStart,
+  idleRotationMoving,
+  idleInterruptedAt,
+  idleInterruptedEnd,
+};
+
 const cppContext = await browser.newContext({
   viewport: { width: 1440, height: 900 },
   deviceScaleFactor: 2,
@@ -304,7 +372,7 @@ const cppVideo = cppPage.video();
 await cppContext.close();
 if (cppVideo) {
   await copyFile(await cppVideo.path(), resolve(outputRoot, "03-cpp-demand-value-transition.webm"));
-  await copyFile(await cppVideo.path(), resolve(outputRoot, "recording-b-cpp-demand-value.webm"));
+  await copyFile(await cppVideo.path(), resolve(outputRoot, "recording-c-cpp-demand-value.webm"));
 }
 
 async function recordScenario(name, action) {
@@ -320,7 +388,7 @@ async function recordScenario(name, action) {
   if (scenarioVideo) await copyFile(await scenarioVideo.path(), resolve(outputRoot, name));
 }
 
-await recordScenario("recording-c-devops-transition.webm", async (scenarioPage) => { await choose(scenarioPage, "DevOps", /DevOps/, "last"); });
+await recordScenario("recording-d-devops-transition.webm", async (scenarioPage) => { await choose(scenarioPage, "DevOps", /DevOps/, "last"); });
 await recordScenario("recording-d-search-python-constellation.webm", async (scenarioPage) => { await choose(scenarioPage, "Python", /Python/); });
 await recordScenario("recording-e-python-sql-relation.webm", async (scenarioPage) => { await choose(scenarioPage, "Python", /Python/); await wait(scenarioPage, 1400); const sql = scenarioPage.getByLabel("一级技能关系").getByRole("button", { name: /SQL/ }).first(); if (await sql.count()) await sql.click(); });
 
@@ -336,7 +404,7 @@ const mobileSession = await mobileContext.newCDPSession(mobilePage);
 trackConsole(mobilePage);
 await mobilePage.goto(`${baseURL}/lab/3d-skill-field?quality=low`, { waitUntil: "networkidle" });
 await wait(mobilePage, 2200);
-await waitForRenderIdle(mobilePage);
+await wait(mobilePage, 4000);
 await assertEmbeddedPageLayout(mobilePage, true);
 const mobileIdleStart = await readProbe(mobilePage);
 await wait(mobilePage, 1200);
@@ -404,10 +472,6 @@ await fallbackContext.close();
 await browser.close();
 await rm(videoRoot, { recursive: true, force: true });
 
-for (const direction of ["a", "b", "c"]) {
-  try { await copyFile(resolve(outputRoot, `../3d-skill-field-research/material-${direction}.png`), resolve(outputRoot, `01-material-${direction}.png`)); } catch { /* Material studies are optional when the prior research output was cleaned. */ }
-}
-
 const packageJson = JSON.parse(await readFile(resolve(webRoot, "package.json"), "utf8"));
 const loadableManifest = JSON.parse(await readFile(resolve(webRoot, ".next/server/app/lab/3d-skill-field/page/react-loadable-manifest.json"), "utf8"));
 const lazyChunkFiles = [...new Set(Object.values(loadableManifest).flatMap((entry) => entry.files))];
@@ -429,16 +493,24 @@ const report = {
   bundle: { routeIsolation: "dynamic import on /lab/3d-skill-field only", lazyChunks },
   scene: {
     nodeCount: dataScope.skill_count,
-    instancing: "one visible InstancedMesh plus one transparent hit-target InstancedMesh",
+    renderer: "one visible THREE.Points batch plus one transparent hit-target InstancedMesh",
+    backgroundStars: { HIGH: 380, BALANCED: 260, LOW: 130, interactive: false },
+    winnerMaterial: "A · Soft Point Star",
     defaultDomLabelCount: defaultLabelCount,
     relationDomLabelCount: relationLabelCount,
   },
-  idle: { start: idleStart, end: idleEnd, renderedWhileIdle: idleEnd.renderedFrames - idleStart.renderedFrames },
+  idle: {
+    start: idleStart,
+    end: idleEnd,
+    renderedWhileIdle: idleEnd.renderedFrames - idleStart.renderedFrames,
+    interruption: idleInterruption,
+  },
   desktop: {
     idleFps: idleEnd.activeFps,
     demandTransition: demandProbe,
     relationTransition: activeProbe,
     selectedRelation: selectedRelationProbe,
+    orbitAngles,
     drawCallLimit: { global: 7, relation: 10 },
   },
   mobileLow: {
@@ -455,7 +527,8 @@ const report = {
   gpuWarnings,
   browserPreloadWarnings,
   notes: [
-    "renderedWhileIdle=0 证明 demand frameloop 在控制器休眠后没有持续渲染。",
+    "Desktop HIGH 以低频 invalidate 驱动克制呼吸与极慢旋转，不以 60fps 持续渲染。",
+    "Mobile LOW 保持 4Hz 技能星动效；Reduced Motion 在交互结束后恢复 demand-driven 静态渲染。",
     "activeFps 是画布探针在最近 1 秒内观测到的实际渲染帧数，不是显示器 rAF 估算。",
     "actualFps 使用最近 30 个有效渲染帧间隔计算；sustainedMinFps 忽略交互开始的两个预热采样。",
     "Three/R3F/Drei 仅在原型 route 进入动态分包，不进入正式首页 LCP critical path。",
@@ -464,3 +537,6 @@ const report = {
 await writeFile(resolve(outputRoot, "performance-report.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
 if (consoleIssues.length) throw new Error(`Browser console issues: ${consoleIssues.join(" | ")}`);
 console.log(`3D review artifacts: ${outputRoot}`);
+}
+
+await captureFullReview();

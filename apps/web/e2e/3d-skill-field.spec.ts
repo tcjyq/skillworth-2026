@@ -49,9 +49,19 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
   await expect(page.getByRole("heading", { name: "3D 技能星域" })).toBeVisible();
   await expect(page.getByTestId("skill-field-frame")).toBeVisible();
   await expect(page.getByTestId("skill-field-canvas")).toBeVisible();
-  await expect(page.getByText("◎ 价值核心")).toBeVisible();
+  await expect(page.getByText("价值核心", { exact: true })).toBeVisible();
   await expect(page.getByTestId("value-core-annotation")).toContainText("只看远近，不看方向");
-  await expect(page.getByTestId("skill-field-canvas")).toHaveAttribute("data-quality-profile", isMobile ? "LOW" : "BALANCED");
+  const canvasProbe = page.getByTestId("skill-field-canvas");
+  await expect(canvasProbe).toHaveAttribute("data-quality-profile", isMobile ? "LOW" : "HIGH");
+  await expect(canvasProbe).toHaveAttribute("data-background-star-count", isMobile ? "130" : "380");
+  await expect(canvasProbe).toHaveAttribute("data-atmosphere-variant", "B");
+  await expect(canvasProbe).toHaveAttribute("data-background-motion", "static");
+  await expect(canvasProbe).toHaveAttribute("data-skill-motion-enabled", "false");
+  await expect(canvasProbe).toHaveAttribute("data-star-material", "A");
+  await expect(canvasProbe).toHaveAttribute("data-reduced-motion", "true");
+  await expect(canvasProbe).toHaveAttribute("data-idle-rotation", "false");
+  await expect(canvasProbe).toHaveAttribute("data-camera-min-azimuth", "-Infinity");
+  await expect(canvasProbe).toHaveAttribute("data-camera-max-azimuth", "Infinity");
 
   const search = page.getByRole("combobox", { name: "搜索技能或职业" });
   await search.fill(realMode ? "Python" : "SQL");
@@ -134,6 +144,7 @@ test("Real v6 保持冻结样本与关键排名迁移", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "3D 技能星域" })).toBeVisible();
   await expect(page.getByLabel("数据范围")).toContainText("998 个岗位");
   await expect(page.getByLabel("数据范围")).toContainText("313 家公司");
+  await expect(page.getByTestId("skill-field-canvas")).toHaveAttribute("data-skill-star-count", "134");
   await page.getByRole("button", { name: "只看招聘需求" }).click();
   await expect(page.getByRole("status")).toContainText("招聘需求 #3");
   await page.getByRole("button", { name: "学习优先" }).click();

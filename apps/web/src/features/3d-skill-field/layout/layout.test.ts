@@ -57,8 +57,9 @@ describe("ranked radial layouts", () => {
     expect(Math.hypot(...layout.sql.position)).toBeCloseTo(layout.sql.radius, 8);
   });
 
-  it("uses a square-root node-size transform", () => {
-    expect(nodeSize(0.36) / nodeSize(0.09)).toBeCloseTo(2, 2);
+  it("compresses coverage into a visible star-size range", () => {
+    expect(nodeSize(0.36)).toBeGreaterThan(nodeSize(0.09));
+    expect(nodeSize(1) / nodeSize(0)).toBeLessThanOrEqual(1.9);
   });
 
   it("keeps every skill sphere outside the value-core safety zone", () => {
@@ -77,6 +78,7 @@ describe("ranked radial layouts", () => {
 
   it("caps visual size without changing coverage size order", () => {
     expect(nodeSize(1)).toBeLessThanOrEqual(LAYOUT_CONFIG.node.maxVisualSize);
+    expect(nodeSize(0)).toBeGreaterThanOrEqual(LAYOUT_CONFIG.node.minVisualSize);
     expect(nodeSize(0.36)).toBeGreaterThan(nodeSize(0.09));
   });
 });
