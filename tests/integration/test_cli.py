@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -206,11 +207,17 @@ def test_benchmark_all_cli_reports_insufficient_data_without_fake_metrics(tmp_pa
         }
     ).write_parquet(silver)
     report_dir = tmp_path / "reports"
+    benchmark_root = tmp_path / "benchmarks"
+    for kind, rows_key in (("roles", "records"), ("skills", "records"), ("dedup", "pairs")):
+        gold_path = benchmark_root / kind / "gold.yml"
+        gold_path.parent.mkdir(parents=True, exist_ok=True)
+        gold_path.write_text(json.dumps({"version": "fixture", rows_key: []}), encoding="utf-8")
 
     completed = subprocess.run(
         [
             sys.executable, "-m", "app.cli", "benchmark-all",
             "--silver", str(silver), "--report-dir", str(report_dir),
+            "--benchmark-root", str(benchmark_root),
         ],
         cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=False,
     )

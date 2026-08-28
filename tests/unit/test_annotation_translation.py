@@ -87,6 +87,8 @@ def test_first_real_role_translation_matches_immutable_sample() -> None:
     project_root = Path(__file__).resolve().parents[2]
     pending_path = project_root / "data" / "benchmarks" / "roles" / "pending" / "batch.yml"
     helper_root = project_root / "data" / "benchmarks" / "annotation_helpers"
+    if not pending_path.is_file() or not helper_root.is_dir():
+        pytest.skip("requires local human-reviewed annotation artifacts")
     pending = yaml.safe_load(pending_path.read_text(encoding="utf-8"))
     first = pending["records"][0]
 

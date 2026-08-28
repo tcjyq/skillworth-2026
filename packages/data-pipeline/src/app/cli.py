@@ -215,6 +215,7 @@ def _parser() -> argparse.ArgumentParser:
 
     benchmark_all = subparsers.add_parser("benchmark-all", help="Run all Gold benchmark evaluators without tuning rules")
     benchmark_all.add_argument("--silver", type=Path)
+    benchmark_all.add_argument("--benchmark-root", type=Path, default=REPOSITORY_ROOT / "data/benchmarks")
     benchmark_all.add_argument("--quality-config", type=Path, default=REPOSITORY_ROOT / "data/reference/benchmark_quality.v1.yml")
     benchmark_all.add_argument("--report-dir", type=Path, default=REPOSITORY_ROOT / "data/benchmarks/reports")
     benchmark_status = subparsers.add_parser(
@@ -470,17 +471,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         silver = args.silver or _latest_real_silver_jobs()
         args.report_dir.mkdir(parents=True, exist_ok=True)
         roles = evaluate_role_benchmark(
-            REPOSITORY_ROOT / "data/benchmarks/roles/gold.yml",
+            args.benchmark_root / "roles/gold.yml",
             load_role_taxonomy(REPOSITORY_ROOT / "data/reference/role_taxonomy.v1.json"),
             args.quality_config,
         )
         skills = evaluate_skill_gold_benchmark(
-            REPOSITORY_ROOT / "data/benchmarks/skills/gold.yml",
+            args.benchmark_root / "skills/gold.yml",
             RuleSkillExtractor(load_skill_taxonomy(REPOSITORY_ROOT / "data/taxonomy/skills.yml")),
             args.quality_config,
         )
         dedup = evaluate_dedup_benchmark(
-            REPOSITORY_ROOT / "data/benchmarks/dedup/gold.yml",
+            args.benchmark_root / "dedup/gold.yml",
             silver,
             args.quality_config,
         )

@@ -69,6 +69,6 @@ jobs:
       - name: Production build
         run: npm run build
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: PLAYWRIGHT_BROWSERS_PATH=../../.tmp/playwright-browsers npx playwright install --with-deps chromium
       - name: Run deterministic Demo E2E
         run: npm run test:e2e

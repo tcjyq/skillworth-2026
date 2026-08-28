@@ -83,7 +83,7 @@ def test_china_skillworth_endpoint_exposes_scope_and_unavailable_signals(tmp_pat
     connection = duckdb.connect(str(warehouse))
     try:
         connection.execute(
-            "CREATE TABLE china_skillworth_visual_ready AS SELECT "
+            "CREATE OR REPLACE TABLE china_skillworth_visual_ready AS SELECT "
             "'python' skill_id, 'Python' skill, 'programming_language' skill_type, "
             "'programming' skill_category, 'main' skillworth_eligibility, "
             "'specific technology' eligibility_reason, "
@@ -99,7 +99,7 @@ def test_china_skillworth_endpoint_exposes_scope_and_unavailable_signals(tmp_pat
             "'unavailable' salary_signal_status, 'unavailable' trend_signal_status"
         )
         connection.execute(
-            "CREATE TABLE china_skillworth_market_themes AS SELECT "
+            "CREATE OR REPLACE TABLE china_skillworth_market_themes AS SELECT "
             "'AI' market_theme, 1 job_count, 0.5 job_coverage, 1 company_count, "
             "0.5 company_coverage, 1 role_count, 'freehire_china_tech_2026_08' snapshot_id, "
             "'180d' recency_window"
