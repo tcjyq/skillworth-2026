@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ChinaSkillWorthRecord } from "@/lib/api/types";
 import { rankRange, scoreValue } from "./format";
 
@@ -11,13 +12,14 @@ type RobustPicksProps = {
 };
 
 export function RobustPicks({ records, focusedId, onFocus, onSelect }: RobustPicksProps) {
+  const [showAllMobile, setShowAllMobile] = useState(false);
   const rankingScale = Math.max(...records.flatMap((record) => [record.sensitivity_rank_max ?? 0, record.skillworth_rank ?? 0]), 1);
   return (
     <div className="market-board overflow-hidden border-y border-[var(--sw-line)]">
       <div className="market-board-header hidden grid-cols-[58px_1.35fr_repeat(3,minmax(100px,1fr))_1.25fr] border-b border-[var(--sw-line)] px-4 py-3 font-mono text-[9px] uppercase tracking-[.12em] text-[var(--sw-muted)] md:grid">
         <span>Rank</span><span>Skill</span><span>Market Signal</span><span>Effort</span><span>SkillWorth</span><span>Range</span>
       </div>
-      {records.map((record) => {
+      {records.map((record, index) => {
         const active = focusedId === record.skill_id;
         return (
           <button
@@ -27,7 +29,7 @@ export function RobustPicks({ records, focusedId, onFocus, onSelect }: RobustPic
             onMouseLeave={() => onFocus?.(null)}
             onFocus={() => onFocus?.(record.skill_id)}
             onBlur={() => onFocus?.(null)}
-            className={`market-board-row group grid w-full grid-cols-[44px_1fr_auto] items-center border-b border-[var(--sw-line)] px-4 py-[17px] text-left last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--sw-accent)] md:min-h-[58px] md:grid-cols-[58px_1.35fr_repeat(3,minmax(100px,1fr))_1.25fr] md:py-0 ${active ? "market-board-row-active" : ""}`}
+            className={`market-board-row group w-full grid-cols-[44px_1fr_auto] items-center border-b border-[var(--sw-line)] px-4 py-[17px] text-left last:border-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--sw-accent)] md:min-h-[58px] md:grid md:grid-cols-[58px_1.35fr_repeat(3,minmax(100px,1fr))_1.25fr] md:py-0 ${index < 4 || showAllMobile ? "grid" : "hidden"} ${active ? "market-board-row-active" : ""}`}
           >
             <span className="font-mono text-xs text-[var(--sw-muted)]">{String(record.skillworth_rank ?? "—").padStart(2, "0")}</span>
             <span className="market-board-skill text-sm font-medium text-[var(--sw-text)] group-hover:text-[var(--sw-accent)] group-focus:text-[var(--sw-accent)]">{record.skill}</span>
@@ -39,6 +41,7 @@ export function RobustPicks({ records, focusedId, onFocus, onSelect }: RobustPic
           </button>
         );
       })}
+      {records.length > 4 && <button type="button" aria-expanded={showAllMobile} onClick={() => setShowAllMobile((value) => !value)} className="sw-focus flex min-h-11 w-full items-center justify-center border-t border-[var(--sw-line)] px-4 text-sm text-[var(--sw-accent)] md:hidden">{showAllMobile ? "收起其余候选" : `查看其余 ${records.length - 4} 项稳健候选`}</button>}
     </div>
   );
 }

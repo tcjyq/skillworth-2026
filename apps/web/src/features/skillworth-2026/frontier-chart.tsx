@@ -283,6 +283,7 @@ export function FrontierChart({ records, selectedId, focusedId, highlightedTheme
       <div className="frontier-key" aria-hidden="true"><span /> EFFICIENCY FRONTIER</div>
       <EChartsChart
         option={option}
+        renderer="svg"
         className="h-[430px] w-full sm:h-[560px] lg:h-[650px]"
         ariaLabel="SkillWorth 技值前沿空间图，横轴为学习投入，纵轴为市场信号，气泡大小为岗位数量"
         onClick={(params) => {
@@ -297,9 +298,9 @@ export function FrontierChart({ records, selectedId, focusedId, highlightedTheme
         onMouseOut={() => onFocus?.(null)}
       />
       <details className="border-t border-[var(--sw-line)] px-1 py-3 text-xs text-[var(--sw-muted)]">
-        <summary className="w-fit cursor-pointer select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--sw-accent)]">使用键盘浏览图表数据</summary>
+        <summary className="flex min-h-11 w-fit cursor-pointer select-none items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--sw-accent)]">使用键盘浏览图表数据</summary>
         <div className="mt-3 flex flex-wrap gap-2" aria-label="图表数据键盘列表">
-          {records.map((record) => <button className="border border-[var(--sw-line-strong)] px-2.5 py-1.5 text-[var(--sw-text-secondary)] hover:border-[var(--sw-accent)] hover:text-[var(--sw-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sw-accent)]" key={record.skill_id} onFocus={() => onFocus?.(record.skill_id)} onBlur={() => onFocus?.(null)} onClick={() => onSelect(record)}>{record.skill} · {record.market_signal.toFixed(1)} · {record.learning_hours_expected}h</button>)}
+          {records.map((record) => <button className="min-h-11 border border-[var(--sw-line-strong)] px-2.5 py-1.5 text-[var(--sw-text-secondary)] hover:border-[var(--sw-accent)] hover:text-[var(--sw-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--sw-accent)]" key={record.skill_id} onFocus={() => onFocus?.(record.skill_id)} onBlur={() => onFocus?.(null)} onClick={() => onSelect(record)}>{record.skill} · {record.market_signal.toFixed(1)} · {record.learning_hours_expected}h</button>)}
         </div>
       </details>
     </div>

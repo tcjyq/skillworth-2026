@@ -7,8 +7,9 @@ import { skillWorthTheme, SKILLWORTH_THEME_NAME } from "./skillworth-theme";
 let registered = false;
 
 type ChartEventHandler = (params: Record<string, unknown>) => void;
+type ChartRenderer = "canvas" | "svg";
 
-export function EChartsChart({ option, className, ariaLabel, onClick, onMouseOver, onMouseOut }: { option: EChartsOption; className?: string; ariaLabel: string; onClick?: ChartEventHandler; onMouseOver?: ChartEventHandler; onMouseOut?: ChartEventHandler }) {
+export function EChartsChart({ option, className, ariaLabel, renderer = "canvas", onClick, onMouseOver, onMouseOut }: { option: EChartsOption; className?: string; ariaLabel: string; renderer?: ChartRenderer; onClick?: ChartEventHandler; onMouseOver?: ChartEventHandler; onMouseOut?: ChartEventHandler }) {
   const ref = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ECharts | null>(null);
   const optionRef = useRef(option);
@@ -23,7 +24,7 @@ export function EChartsChart({ option, className, ariaLabel, onClick, onMouseOve
     void import("echarts").then((echarts) => {
       if (disposed) return;
       if (!registered) { echarts.registerTheme(SKILLWORTH_THEME_NAME, skillWorthTheme); registered = true; }
-      const chart = echarts.init(node, SKILLWORTH_THEME_NAME, { renderer: "canvas" });
+      const chart = echarts.init(node, SKILLWORTH_THEME_NAME, { renderer });
       chartRef.current = chart;
       chart.setOption(optionRef.current, { notMerge: false, lazyUpdate: true });
       chart.on("click", (params) => onClickRef.current?.(params as unknown as Record<string, unknown>));
@@ -33,7 +34,7 @@ export function EChartsChart({ option, className, ariaLabel, onClick, onMouseOve
       observer.observe(node);
     });
     return () => { disposed = true; observer?.disconnect(); chartRef.current?.dispose(); chartRef.current = null; };
-  }, []);
+  }, [renderer]);
   useEffect(() => { optionRef.current = option; chartRef.current?.setOption(option, { notMerge: false, lazyUpdate: true }); }, [option]);
   useEffect(() => { onClickRef.current = onClick; }, [onClick]);
   useEffect(() => { onMouseOverRef.current = onMouseOver; }, [onMouseOver]);

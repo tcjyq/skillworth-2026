@@ -135,6 +135,45 @@ test("移动端 Bottom Sheet 不超出视口", async ({ page, isMobile }) => {
   })).toBe(true);
 });
 
+test("移动首页关键内容、触控目标与 SVG 图表在常见窄屏下保持完整", async ({ page, isMobile }) => {
+  test.skip(!isMobile);
+  for (const viewport of [
+    { width: 360, height: 800 },
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await expect(page.getByText("C++ 的需求很强，学习决策排序不同", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
+    await expect(page.locator("canvas")).toHaveCount(0);
+    await expect(page.locator('[role="img"] svg')).toHaveCount(1);
+
+    const headline = page.getByRole("heading", { name: "2026，学什么技术最值？" });
+    const headlineBox = await headline.boundingBox();
+    expect(headlineBox && headlineBox.x >= 0 && headlineBox.x + headlineBox.width <= viewport.width + 1).toBe(true);
+
+    for (const link of [
+      page.getByRole("link", { name: "方法与数据" }),
+      page.getByRole("link", { name: "样本范围" }),
+      page.getByRole("link", { name: "进入 3D 技能星域" }),
+    ]) {
+      await link.scrollIntoViewIfNeeded();
+      const box = await link.boundingBox();
+      expect(box && box.x >= 0 && box.x + box.width <= viewport.width + 1 && box.height >= 44).toBe(true);
+    }
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const more = page.getByRole("button", { name: /查看其余 \d+ 项稳健候选/ });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await more.click();
+  await expect(page.getByRole("button", { name: "收起其余候选" })).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("button", { name: /^34 TensorFlow/ })).toBeVisible();
+});
+
 test("公开主路径没有控制台告警、错误或失败 API 请求", async ({ page }) => {
   const browserMessages: string[] = [];
   const failedApiRequests: string[] = [];

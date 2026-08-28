@@ -86,9 +86,9 @@ export function SkillWorthPage() {
         <div className="cinematic-market-space">
           <CinematicHero robustPickCount={result.data ? robustCandidates.length : null} jobCount={result.data?.job_count ?? null} companyCount={result.data?.company_count ?? null} skillCount={result.data?.skill_count ?? null} windowLabel={windowLabel} sourceRole={sourceRole} />
 
-        <section id="data-scope" className="mx-auto max-w-[1560px] scroll-mt-20 px-5 py-10 sm:px-8 lg:px-12 lg:py-12" aria-labelledby="scope-title">
+        <section id="data-scope" className="mx-auto max-w-[1560px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-12" aria-labelledby="scope-title">
           <SectionHeading id="scope-title" title="EVIDENCE / SCOPE" description="Analysis Freeze V1：当前证据能支持什么，以及哪些信号仍不可用。" />
-          <div className="grid border-y border-[var(--sw-line)] md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 border-y border-[var(--sw-line)] lg:grid-cols-4">
             <ScopeItem label="SNAPSHOT" value={result.data?.snapshot ?? "—"} mono />
             <ScopeItem label="RECENCY WINDOW" value={windowLabel} />
             <ScopeItem label="OBSERVATIONS" value={result.data ? `${result.data.job_count} 岗位 · ${result.data.company_count} 公司 · ${result.data.skill_count} 技能` : "—"} />
@@ -103,7 +103,7 @@ export function SkillWorthPage() {
 
         <StoryPrelude />
 
-        <section className="relative mx-auto max-w-[1560px] px-5 py-10 sm:px-8 lg:px-12 lg:pb-14 lg:pt-12" aria-labelledby="frontier-title">
+        <section className="relative mx-auto max-w-[1560px] px-5 py-16 sm:px-8 lg:px-12 lg:pb-14 lg:pt-12" aria-labelledby="frontier-title">
           <div className="grid min-w-0 gap-6 border-b border-[var(--sw-line)] pb-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
             <div className="min-w-0">
               <h2 id="frontier-title" className="text-2xl font-semibold tracking-[-.025em] sm:text-[2rem]">SKILLWORTH FRONTIER <span className="ml-2 text-base font-normal text-[var(--sw-muted)]">技值前沿</span></h2>
@@ -153,28 +153,28 @@ export function SkillWorthPage() {
         </section>
 
         <section className="border-y border-[var(--sw-line)]" aria-labelledby="skill-field-entry-title">
-          <div className="mx-auto grid max-w-[1560px] gap-6 px-5 py-14 sm:px-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-12 lg:py-18">
+          <div className="mx-auto grid max-w-[1560px] gap-6 px-5 py-18 sm:px-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-12">
             <h2 id="skill-field-entry-title" className="text-xl font-semibold tracking-[-.025em] sm:text-2xl">自己探索其他技术</h2>
             <div className="max-w-[720px]">
               <p className="text-pretty text-sm leading-6 text-[var(--sw-muted)]">{result.data ? `在 ${result.data.skill_count} 项技术技能中查看学习优先级、招聘需求、职业差异和技能关系。` : "在当前市场样本中查看学习优先级、招聘需求、职业差异和技能关系。"}</p>
-              <Link href="/skill-field" className="sw-focus mt-5 inline-flex items-center gap-2 text-xs text-[var(--sw-accent)] hover:text-[#e0ed9b]">进入 3D 技能星域 <ArrowRight size={14} /></Link>
+              <Link href="/skill-field" className="sw-focus mt-5 inline-flex min-h-11 items-center gap-2 text-sm text-[var(--sw-accent)] hover:text-[#e0ed9b] lg:text-xs">进入 3D 技能星域 <ArrowRight size={14} /></Link>
             </div>
           </div>
         </section>
 
         <section className="border-y border-[var(--sw-line)]" aria-labelledby="method-title">
-          <div className="mx-auto max-w-[1560px] px-5 py-14 sm:px-8 lg:px-12 lg:py-18">
+          <div className="mx-auto max-w-[1560px] px-5 py-18 sm:px-8 lg:px-12">
             <SectionHeading id="method-title" title="HOW IT WORKS" description="所有信号由同一数据管道计算；学习时长是版本化估算，不是学习结果承诺。" />
-            <ol className="grid gap-px border border-[var(--sw-line)] bg-[var(--sw-line)] md:grid-cols-4 lg:grid-cols-7">
-              {["公开岗位", "技能标准化", "需求 / 公司 / 岗位广度 / 协同", "市场信号", "学习投入", "SkillWorth", "排名稳健性"].map((step, index) => <li key={step} className="relative bg-[var(--sw-canvas)] px-4 py-5 text-xs text-[var(--sw-text-secondary)]"><span className="mb-4 block font-mono text-[9px] text-[var(--sw-muted)]">{String(index + 1).padStart(2, "0")}</span>{step}{index < 6 && <ArrowRight aria-hidden="true" className="absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 text-[var(--sw-muted)] md:block" size={14} />}</li>)}
+            <ol className="grid grid-cols-2 gap-px border border-[var(--sw-line)] bg-[var(--sw-line)] md:grid-cols-4 lg:grid-cols-7">
+              {["公开岗位", "技能标准化", "需求 / 公司 / 岗位广度 / 协同", "市场信号", "学习投入", "SkillWorth", "排名稳健性"].map((step, index) => <li key={step} className={`relative bg-[var(--sw-canvas)] px-4 py-5 text-xs leading-5 text-[var(--sw-text-secondary)] ${index === 6 ? "col-span-2 md:col-span-1" : ""}`}><span className="mb-3 block font-mono text-[9px] text-[var(--sw-muted)]">{String(index + 1).padStart(2, "0")}</span>{step}{index < 6 && <ArrowRight aria-hidden="true" className="absolute -right-2 top-1/2 z-10 hidden -translate-y-1/2 text-[var(--sw-muted)] md:block" size={14} />}</li>)}
             </ol>
-            <Link href="/methodology" className="sw-focus mt-6 inline-flex items-center gap-2 text-xs text-[var(--sw-accent)] hover:text-[#e0ed9b]">阅读完整方法说明 <ArrowRight size={14} /></Link>
+            <Link href="/methodology" className="sw-focus mt-6 inline-flex min-h-11 items-center gap-2 text-sm text-[var(--sw-accent)] hover:text-[#e0ed9b] lg:text-xs">阅读完整方法说明 <ArrowRight size={14} /></Link>
           </div>
         </section>
 
       </main>
 
-      <footer className="border-t border-[var(--sw-line)]"><div className="mx-auto flex max-w-[1560px] flex-col gap-3 px-5 py-7 text-[10px] uppercase tracking-[.1em] text-[var(--sw-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12"><span>SKILLWORTH 2026 · Research Product</span><Link href="/lab" className="sw-focus normal-case tracking-normal hover:text-[var(--sw-text-secondary)]">研究工具与历史视图</Link></div></footer>
+      <footer className="border-t border-[var(--sw-line)]"><div className="mx-auto flex max-w-[1560px] flex-col gap-1 px-5 py-7 text-[10px] uppercase tracking-[.1em] text-[var(--sw-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12"><span>SKILLWORTH 2026 · Research Product</span><Link href="/lab" className="sw-focus inline-flex min-h-11 items-center normal-case tracking-normal hover:text-[var(--sw-text-secondary)] lg:min-h-0">研究工具与历史视图</Link></div></footer>
       <SkillDetailSheet record={selected} recencyWindow={recencyWindow} rankingScale={rankingScale} onClose={() => setSelected(null)} />
     </div>
   );
@@ -184,8 +184,8 @@ function byRank(left: ChinaSkillWorthRecord, right: ChinaSkillWorthRecord) { ret
 
 function FilterGroup({ label, value, options, onChange }: { label: string; value: string; options: readonly { value: string; label: string }[]; onChange: (value: string) => void }) { return <div className="editorial-filter flex max-w-full items-center gap-3 overflow-x-auto scrollbar-none"><span className="shrink-0 font-mono text-[9px] uppercase tracking-[.1em] text-[var(--sw-muted)]">{label}</span><div className="flex shrink-0 gap-4">{options.map((option) => <button key={option.value} aria-pressed={value === option.value} onClick={() => onChange(option.value)} className={`sw-focus relative min-h-8 whitespace-nowrap px-0.5 py-1.5 text-[10px] uppercase tracking-[.04em] ${value === option.value ? "text-[var(--sw-accent)] after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-[var(--sw-accent)]" : "text-[var(--sw-text-secondary)] hover:text-[var(--sw-text)]"}`}>{option.label}</button>)}</div></div>; }
 
-function SectionHeading({ id, title, description }: { id: string; title: string; description: string }) { return <div className="mb-7 grid gap-2 md:grid-cols-[260px_1fr] md:items-start"><h2 id={id} className="text-xl font-semibold tracking-[-.025em] sm:text-2xl">{title}</h2><p className="max-w-[720px] text-pretty text-xs leading-5 text-[var(--sw-muted)]">{description}</p></div>; }
+function SectionHeading({ id, title, description }: { id: string; title: string; description: string }) { return <div className="mb-7 grid gap-3 md:grid-cols-[260px_1fr] md:items-start"><h2 id={id} className="text-xl font-semibold tracking-[-.025em] sm:text-2xl">{title}</h2><p className="max-w-[720px] text-pretty text-[15px] leading-6 text-[var(--sw-muted)] lg:text-xs lg:leading-5">{description}</p></div>; }
 
-function ScopeItem({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) { return <div className="border-b border-[var(--sw-line)] px-4 py-5 md:border-r"><p className="font-mono text-[9px] tracking-[.1em] text-[var(--sw-muted)]">{label}</p><p className={`mt-3 break-words text-xs leading-5 text-[var(--sw-text-secondary)] ${mono ? "font-mono text-[10px]" : ""}`}>{value}</p></div>; }
+function ScopeItem({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) { return <div className="min-w-0 border-b border-r border-[var(--sw-line)] px-3 py-5 sm:px-4"><p className="font-mono text-[9px] tracking-[.1em] text-[var(--sw-muted)]">{label}</p><p className={`mt-3 break-words text-[13px] leading-5 text-[var(--sw-text-secondary)] lg:text-xs ${mono ? "font-mono text-[11px] lg:text-[10px]" : ""}`}>{value}</p></div>; }
 
 function FrontierSkeleton() { return <div className="h-[380px] px-8 py-10 sm:h-[520px] lg:h-[620px]"><div className="sw-skeleton h-px w-full" /><div className="relative h-full border-b border-l border-[var(--sw-line)]"><span className="sw-skeleton absolute left-[14%] top-[58%] h-9 w-9 rounded-full" /><span className="sw-skeleton absolute left-[38%] top-[38%] h-12 w-12 rounded-full" /><span className="sw-skeleton absolute left-[63%] top-[22%] h-16 w-16 rounded-full" /><span className="sw-skeleton absolute left-[78%] top-[52%] h-10 w-10 rounded-full" /></div></div>; }

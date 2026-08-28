@@ -776,12 +776,18 @@
 @keyframes loading-scan { to { transform: translateX(calc(100cqw - 2px)); } }
 
 @media (max-width: 899px) {
-  .publicHeader { inset: 10px 14px auto; height: auto; min-height: 66px; flex-wrap: wrap; gap: 4px 16px; padding: 10px 14px; }
-  .publicBrand { font-size: 15px; }
-  .publicHeader nav { width: 100%; overflow-x: auto; gap: 20px; scrollbar-width: none; }
+  .publicHeader { inset: 10px 14px auto; display: flex; height: auto; min-height: 58px; flex-wrap: nowrap; gap: 16px; padding: 8px 14px; }
+  .publicBrand { display: flex; min-height: 44px; align-items: center; font-size: 15px; }
+  .publicHeader nav { display: flex; width: auto; min-width: 0; flex: 1 1 auto; justify-content: flex-end; overflow-x: auto; gap: 20px; border-top: 0; scrollbar-width: none; }
   .publicHeader nav::-webkit-scrollbar { display: none; }
-  .publicHeader nav a { min-height: 28px; flex: 0 0 auto; font-size: 11px; }
+  .publicHeader nav a { display: flex; min-height: 44px; flex: 0 0 auto; align-items: center; font-size: 11px; }
   .publicHeader nav a[aria-current]::after { bottom: 1px; }
+  .story,
+  .heroMoment,
+  .analysisGateway,
+  .roleFirst,
+  .exploreMode,
+  .limitations { scroll-margin-top: 84px; }
   .hero { min-height: auto; padding: 132px 22px 84px; }
   .heroMeta { grid-column: 1 / -1; }
   .hero h1 { grid-column: 1 / -1; margin-top: 46px; font-size: clamp(52px, 11.5vw, 78px); }
@@ -812,6 +818,8 @@
 }
 
 @media (max-width: 560px) {
+  .publicHeader nav a:nth-child(2),
+  .publicHeader nav a:nth-child(3) { display: none; }
   .hero { display: block; padding-inline: 20px; }
   .heroMeta { gap: 12px; font-size: 10px; }
   .heroMeta span:last-child { text-align: right; }
@@ -833,17 +841,20 @@
   .roleFirst,
   .exploreMode,
   .limitations { padding: 104px 20px; }
-  .momentCopy h2 { font-size: 35px; line-height: 1.16; }
+  .heroMoment { gap: 40px; padding-block: 92px 76px; }
+  .momentCopy h2 { max-width: 15ch; font-size: 32px; line-height: 1.16; }
   .analysisGateway { gap: 42px; }
   .analysisGatewayHeading { gap: 28px; }
   .analysisGatewayHeading h2 { font-size: 32px; }
   .fieldInvitation strong { font-size: 18px; }
-  .cppRanks { grid-template-columns: 1fr 64px 1fr; }
-  .cppRanks strong { font-size: clamp(64px, 22vw, 86px); }
-  .cppTransition small { font-size: 9px; }
-  .cppTransition i { font-size: 30px; }
-  .cppFacts { grid-template-columns: 1fr; }
-  .cppFacts div + div { border-left: 0; border-top: 1px solid var(--night-line); padding-left: 0; }
+  .cppRanks { grid-template-columns: 1fr; align-items: start; gap: 18px; }
+  .cppRanks span { min-height: 0; }
+  .cppRanks strong { font-size: 64px; line-height: .88; }
+  .cppTransition { display: flex; align-items: center; gap: 12px; text-align: left; }
+  .cppTransition small { font-size: 10px; }
+  .cppTransition i { margin-top: 0; font-size: 24px; transform: rotate(90deg); }
+  .cppFacts { grid-template-columns: 1fr 1fr; margin-top: 24px; }
+  .cppFacts div + div { border-top: 0; border-left: 1px solid var(--night-line); padding-left: 14px; }
   .roleChoices button { font-size: 12px; }
   .roleResultHeader { grid-template-columns: 1fr; padding: 24px 20px; }
   .roleResultHeader dl { border-left: 0; border-top: 1px solid var(--line); padding-top: 18px; }

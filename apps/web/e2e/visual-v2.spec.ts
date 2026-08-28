@@ -66,13 +66,18 @@ test("角色样本不足时展示主排名层、已观察技能和分级证据�
   await expect(page.getByRole("button", { name: /Machine Learning/ })).toBeVisible();
 });
 
-test("统一公共导航不暴露内部版本并可进入方法页返回首页", async ({ page }) => {
+test("统一公共导航不暴露内部版本并可进入方法页返回首页", async ({ page, isMobile }) => {
   await page.goto("/lab/visual-v2");
   const nav = page.getByRole("navigation", { name: "公开产品导航" });
   await expect(nav.getByRole("link", { name: "研究结论" })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "选职业方向" })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "查技术技能" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "方法与数据" })).toBeVisible();
+  if (isMobile) {
+    await expect(nav.getByRole("link", { name: "选职业方向" })).toBeHidden();
+    await expect(nav.getByRole("link", { name: "查技术技能" })).toBeHidden();
+  } else {
+    await expect(nav.getByRole("link", { name: "选职业方向" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "查技术技能" })).toBeVisible();
+  }
   await expect(page.getByText(/返回旧版|退出实验|Production Candidate|Visual V2|\bV1\b|\bV2\b/)).toHaveCount(0);
   await expect(page.getByRole("link", { name: "SkillWorth 2026 首页" })).toHaveAttribute("href", "#top");
   await nav.getByRole("link", { name: "方法与数据" }).click();
@@ -128,7 +133,11 @@ test("移动端、Reduced Motion、控制台与请求保持可用", async ({ pag
   await page.goto("/lab/visual-v2");
   await expect(page.getByRole("heading", { name: /2026，学什么/ })).toBeVisible();
   if (isMobile) {
-    await expect(page.getByRole("navigation", { name: "公开产品导航" }).getByRole("link", { name: "查技术技能" })).toBeVisible();
+    const nav = page.getByRole("navigation", { name: "公开产品导航" });
+    await expect(nav.getByRole("link", { name: "研究结论" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "方法与数据" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "查技术技能" })).toBeHidden();
+    await expect(page.getByRole("link", { name: "进入 3D 技能星域" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
     await page.goto("/methodology");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
