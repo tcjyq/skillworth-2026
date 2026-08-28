@@ -286,7 +286,7 @@ test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", as
       await page.mouse.move(box!.x + box!.width * 0.7, box!.y + box!.height * 0.46, { steps: 6 });
       await page.mouse.up();
     } else {
-      await page.mouse.wheel(0, -420);
+      await webglCanvas.dispatchEvent("wheel", { deltaY: -420 });
     }
     await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
     await page.waitForTimeout(650);
