@@ -280,11 +280,12 @@ test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", as
     const webglCanvas = canvas.locator("canvas");
     const box = await webglCanvas.boundingBox();
     expect(box).toBeTruthy();
-    await webglCanvas.hover();
+    const x = box!.x + box!.width * 0.5;
+    const y = box!.y + box!.height * 0.5;
     if (kind === "drag") {
-      await page.mouse.down();
-      await page.mouse.move(box!.x + box!.width * 0.7, box!.y + box!.height * 0.46, { steps: 6 });
-      await page.mouse.up();
+      await webglCanvas.dispatchEvent("pointerdown", { button: 0, buttons: 1, clientX: x, clientY: y, pointerId: 1 });
+      await webglCanvas.dispatchEvent("pointermove", { button: 0, buttons: 1, clientX: box!.x + box!.width * 0.7, clientY: box!.y + box!.height * 0.46, pointerId: 1 });
+      await webglCanvas.dispatchEvent("pointerup", { button: 0, clientX: box!.x + box!.width * 0.7, clientY: box!.y + box!.height * 0.46, pointerId: 1 });
     } else {
       await webglCanvas.dispatchEvent("wheel", { deltaY: -420 });
     }
