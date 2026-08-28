@@ -287,7 +287,7 @@ test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", as
       await webglCanvas.dispatchEvent("pointermove", { button: 0, buttons: 1, clientX: box!.x + box!.width * 0.7, clientY: box!.y + box!.height * 0.46, pointerId: 1 });
       await webglCanvas.dispatchEvent("pointerup", { button: 0, clientX: box!.x + box!.width * 0.7, clientY: box!.y + box!.height * 0.46, pointerId: 1 });
     } else {
-      await webglCanvas.dispatchEvent("wheel", { deltaY: -420 });
+      await webglCanvas.evaluate((node) => node.dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -420 })));
     }
     await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
     await page.waitForTimeout(650);
