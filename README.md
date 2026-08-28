@@ -1,5 +1,7 @@
 # SkillWorth 2026
 
+[![CI](https://github.com/tcjyq/skillworth-2026/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tcjyq/skillworth-2026/actions/workflows/ci.yml)
+
 > 2026，学什么技术最值？
 
 *Interactive research on technical skill value, learning effort and role fit using 2026 China tech job samples.*
