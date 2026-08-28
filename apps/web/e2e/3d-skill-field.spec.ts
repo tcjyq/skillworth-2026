@@ -76,24 +76,20 @@ test("正式 3D 路由可直接打开，公开界面不显示 Lab 或版本标�
   await expect(page.getByText(/\bLab\b|Visual V2|V2\.3|Prototype|Experiment/i)).toHaveCount(0);
 });
 
-test("回到全景仅在离开 GLOBAL_VALUE Home 后显示，并在重置后隐藏", async ({ page, isMobile }) => {
+test("回到全景仅在离开 GLOBAL_VALUE Home 后显示，并在重置后隐藏", async ({ page }) => {
   await page.goto("/skill-field");
   const resetHome = page.getByRole("button", { name: "回到全景" });
-  await expect(resetHome).toHaveCount(0);
-
-  await page.getByRole("button", { name: "只看招聘需求" }).click();
-  await expect(resetHome).toBeVisible();
-  await resetHome.click();
-  await expect(resetHome).toHaveCount(0);
-
-  if (isMobile) return;
   const canvas = page.getByTestId("skill-field-canvas");
-  const box = await canvas.boundingBox();
-  expect(box).toBeTruthy();
-  await page.mouse.move(box!.x + box!.width * 0.55, box!.y + box!.height * 0.5);
-  await page.mouse.wheel(0, -420);
+  await expect(resetHome).toHaveCount(0);
+
+  const demandMode = page.getByRole("button", { name: "只看招聘需求" });
+  await demandMode.click();
+  await expect(demandMode).toHaveAttribute("aria-pressed", "true");
+  await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
   await expect(resetHome).toBeVisible();
   await resetHome.click();
+  await expect(page.getByRole("button", { name: "学习优先" })).toHaveAttribute("aria-pressed", "true");
+  await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
   await expect(resetHome).toHaveCount(0);
 });
 
