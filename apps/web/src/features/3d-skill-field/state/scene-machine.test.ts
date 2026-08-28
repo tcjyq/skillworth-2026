@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialSceneState, sceneReducer } from "./scene-machine";
+import { initialSceneState, sceneReducer, shouldShowResetToGlobalHome } from "./scene-machine";
 
 describe("scene director state machine", () => {
   it("searching a skill preserves active role context", () => {
@@ -108,5 +108,21 @@ describe("scene director state machine", () => {
     expect(home).toMatchObject({ mode: "GLOBAL_VALUE", activeRole: null, activeSkill: null, relationSkill: null, selectedRelationId: null, explorationPath: [], transitionPhase: "IDLE", focusSource: null, returnMode: "GLOBAL_VALUE", relationOriginMode: "GLOBAL_VALUE" });
     expect(home.homeResetToken).toBe(initialSceneState.homeResetToken + 1);
     expect(home.transitionToken).toBeGreaterThan(selected.transitionToken);
+  });
+
+  it("shows the home reset only after the user leaves the global value home", () => {
+    expect(shouldShowResetToGlobalHome(initialSceneState)).toBe(false);
+
+    const adjustedCamera = sceneReducer(initialSceneState, { type: "mark-camera-departure" });
+    expect(shouldShowResetToGlobalHome(adjustedCamera)).toBe(true);
+    expect(shouldShowResetToGlobalHome(sceneReducer(adjustedCamera, { type: "reset-to-global-home" }))).toBe(false);
+
+    const demand = sceneReducer(initialSceneState, { type: "show-global-demand" });
+    const role = sceneReducer(initialSceneState, {
+      type: "select-role",
+      role: { roleId: "devops_engineer", label: "DevOps", sampleSize: 21 },
+    });
+    expect(shouldShowResetToGlobalHome(demand)).toBe(true);
+    expect(shouldShowResetToGlobalHome(role)).toBe(true);
   });
 });

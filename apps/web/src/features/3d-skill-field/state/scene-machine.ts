@@ -29,6 +29,7 @@ export type SceneState = {
   returnMode: BaseSceneMode;
   relationOriginMode: BaseSceneMode;
   homeResetToken: number;
+  hasDepartedGlobalHome: boolean;
 };
 
 export const initialSceneState: SceneState = {
@@ -45,6 +46,7 @@ export const initialSceneState: SceneState = {
   returnMode: "GLOBAL_VALUE",
   relationOriginMode: "GLOBAL_VALUE",
   homeResetToken: 0,
+  hasDepartedGlobalHome: false,
 };
 
 export type SceneAction =
@@ -57,6 +59,7 @@ export type SceneAction =
   | { type: "clear-relation-selection" }
   | { type: "start-return" }
   | { type: "reset-to-global-home" }
+  | { type: "mark-camera-departure" }
   | { type: "advance-transition"; token: number; phase: Exclude<TransitionPhase, "HIGHLIGHT" | "IDLE" | "RETURN_LINES"> }
   | { type: "finish-return"; token: number }
   | { type: "interrupt-focus"; token: number }
@@ -67,15 +70,28 @@ function appendPath(path: ExplorationItem[], item: ExplorationItem) {
   return [...withoutDuplicate, item].slice(-5);
 }
 
+function isGlobalValueHome(state: SceneState) {
+  return state.mode === "GLOBAL_VALUE"
+    && !state.activeRole
+    && !state.activeSkill
+    && !state.relationSkill
+    && !state.selectedRelationId
+    && state.transitionPhase === "IDLE";
+}
+
+export function shouldShowResetToGlobalHome(state: SceneState) {
+  return state.hasDepartedGlobalHome || !isGlobalValueHome(state);
+}
+
 export function sceneReducer(state: SceneState, action: SceneAction): SceneState {
   const transitionToken = state.transitionToken + 1;
   switch (action.type) {
     case "show-global-value":
-      return { ...state, mode: "GLOBAL_VALUE", returnMode: "GLOBAL_VALUE", relationOriginMode: "GLOBAL_VALUE", activeRole: null, activeSkill: null, relationSkill: null, selectedRelationId: null, transitionPhase: "IDLE", focusSource: null, transitionToken };
+      return { ...state, mode: "GLOBAL_VALUE", returnMode: "GLOBAL_VALUE", relationOriginMode: "GLOBAL_VALUE", activeRole: null, activeSkill: null, relationSkill: null, selectedRelationId: null, transitionPhase: "IDLE", focusSource: null, hasDepartedGlobalHome: state.hasDepartedGlobalHome || !isGlobalValueHome(state), transitionToken };
     case "show-global-demand":
-      return { ...state, mode: "GLOBAL_DEMAND", returnMode: "GLOBAL_DEMAND", relationOriginMode: "GLOBAL_DEMAND", activeRole: null, activeSkill: null, relationSkill: null, selectedRelationId: null, transitionPhase: "IDLE", focusSource: null, transitionToken };
+      return { ...state, mode: "GLOBAL_DEMAND", returnMode: "GLOBAL_DEMAND", relationOriginMode: "GLOBAL_DEMAND", activeRole: null, activeSkill: null, relationSkill: null, selectedRelationId: null, transitionPhase: "IDLE", focusSource: null, hasDepartedGlobalHome: true, transitionToken };
     case "select-role":
-      return { ...state, mode: "ROLE_VALUE", returnMode: "ROLE_VALUE", relationOriginMode: "ROLE_VALUE", activeRole: action.role, activeSkill: null, relationSkill: null, selectedRelationId: null, explorationPath: [], transitionPhase: "IDLE", focusSource: null, transitionToken };
+      return { ...state, mode: "ROLE_VALUE", returnMode: "ROLE_VALUE", relationOriginMode: "ROLE_VALUE", activeRole: action.role, activeSkill: null, relationSkill: null, selectedRelationId: null, explorationPath: [], transitionPhase: "IDLE", focusSource: null, hasDepartedGlobalHome: true, transitionToken };
     case "focus-skill": {
       const activeSkill = { skillId: action.skillId, label: action.skillLabel };
       const interruptsReturn = state.transitionPhase.startsWith("RETURN_");
@@ -98,11 +114,12 @@ export function sceneReducer(state: SceneState, action: SceneAction): SceneState
         explorationPath: appendPath(state.explorationPath, { id: action.skillId, label: action.skillLabel, entity: "skill" }),
         transitionPhase: state.reducedMotion ? "CONSTELLATION_MORPH" : "HIGHLIGHT",
         focusSource: action.source,
+        hasDepartedGlobalHome: true,
         transitionToken,
       };
     }
     case "select-relation":
-      return { ...state, selectedRelationId: action.skillId };
+      return { ...state, selectedRelationId: action.skillId, hasDepartedGlobalHome: true };
     case "clear-role":
       return {
         ...state,
@@ -120,6 +137,8 @@ export function sceneReducer(state: SceneState, action: SceneAction): SceneState
       return { ...state, mode: state.reducedMotion ? "GLOBAL_VALUE" : state.mode, returnMode: "GLOBAL_VALUE", activeRole: state.reducedMotion ? null : state.activeRole, transitionPhase: state.reducedMotion ? "RETURN_MORPH" : "RETURN_LINES", selectedRelationId: null, focusSource: null, transitionToken };
     case "reset-to-global-home":
       return { ...initialSceneState, reducedMotion: state.reducedMotion, transitionToken, homeResetToken: state.homeResetToken + 1 };
+    case "mark-camera-departure":
+      return state.hasDepartedGlobalHome ? state : { ...state, hasDepartedGlobalHome: true };
     case "advance-transition": {
       if (action.token !== state.transitionToken) return state;
       if (action.phase === "CONSTELLATION_MORPH") {

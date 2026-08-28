@@ -47,6 +47,7 @@ export default function SkillFieldCanvas({
   onCameraFlyStart,
   onConstellationMorphStart,
   onFocusInterrupted,
+  onCameraDeparture,
   onMorphComplete,
   onReturnComplete,
   onContextLost,
@@ -65,6 +66,7 @@ export default function SkillFieldCanvas({
   onCameraFlyStart: (token: number) => void;
   onConstellationMorphStart: (token: number) => void;
   onFocusInterrupted: (token: number) => void;
+  onCameraDeparture: () => void;
   onMorphComplete: (token: number, returning: boolean) => void;
   onReturnComplete: (token: number) => void;
   onContextLost: () => void;
@@ -150,6 +152,7 @@ export default function SkillFieldCanvas({
           onCameraFlyStart={onCameraFlyStart}
           onConstellationMorphStart={onConstellationMorphStart}
           onFocusInterrupted={onFocusInterrupted}
+          onCameraDeparture={onCameraDeparture}
           onReturnComplete={onReturnComplete}
         />
       </RenderedPositionProvider>

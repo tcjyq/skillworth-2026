@@ -31,36 +31,87 @@ async function chooseSkill(page: Page, label: string) {
   await page.getByRole("option", { name: new RegExp(escaped) }).first().click();
 }
 
+async function expectAnalysisHashNavigation(page: Page) {
+  await expect(page.locator("#analysis-results")).toBeInViewport({ timeout: realMode ? 10_000 : 5_000 });
+}
+
 test("分析结果与 3D 技能星域通过正常 history 双向切换", async ({ page, isMobile }) => {
   await page.goto("/lab/visual-v2#analysis-results");
 
   const analysisNavigation = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" });
   await expect(analysisNavigation.getByRole("link", { name: "分析结果", exact: true })).toHaveAttribute("aria-current", "page");
-  await expect(analysisNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("href", "/lab/3d-skill-field");
-  await expect(page.getByRole("link", { name: "进入 3D 技能星域" })).toHaveAttribute("href", "/lab/3d-skill-field");
-  await expect(page.locator("#analysis-results")).toBeInViewport();
+  await expect(analysisNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("href", "/skill-field");
+  await expect(page.getByRole("link", { name: "进入 3D 技能星域" })).toHaveAttribute("href", "/skill-field");
+  await expectAnalysisHashNavigation(page);
 
   await analysisNavigation.getByRole("link", { name: "3D 技能星域", exact: true }).click();
-  await expect(page).toHaveURL(/\/lab\/3d-skill-field$/);
+  await expect(page).toHaveURL(/\/skill-field$/);
   const fieldNavigation = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" });
   await expect(fieldNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("aria-current", "page");
 
   await page.goBack();
   await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
-  await expect(page.locator("#analysis-results")).toBeInViewport();
+  await expectAnalysisHashNavigation(page);
   await page.goForward();
-  await expect(page).toHaveURL(/\/lab\/3d-skill-field$/);
+  await expect(page).toHaveURL(/\/skill-field$/);
 
   const analysisLink = fieldNavigation.getByRole("link", { name: "分析结果", exact: true });
   await analysisLink.focus();
   await expect(analysisLink).toBeFocused();
   await analysisLink.press("Enter");
   await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
-  await expect(page.locator("#analysis-results")).toBeInViewport();
+  await expectAnalysisHashNavigation(page);
 
   if (isMobile) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
   }
+});
+
+test("正式 3D 路由可直接打开，公开界面不显示 Lab 或版本标记", async ({ page }) => {
+  await page.goto("/skill-field");
+
+  await expect(page).toHaveTitle(/3D 技能星域/);
+  await expect(page.getByRole("heading", { name: "3D 技能星域" })).toBeVisible();
+  await expect(page.getByTestId("skill-field-frame")).toBeVisible();
+  await expect(page.getByText(/\bLab\b|Visual V2|V2\.3|Prototype|Experiment/i)).toHaveCount(0);
+});
+
+test("回到全景仅在离开 GLOBAL_VALUE Home 后显示，并在重置后隐藏", async ({ page, isMobile }) => {
+  await page.goto("/skill-field");
+  const resetHome = page.getByRole("button", { name: "回到全景" });
+  await expect(resetHome).toHaveCount(0);
+
+  await page.getByRole("button", { name: "只看招聘需求" }).click();
+  await expect(resetHome).toBeVisible();
+  await resetHome.click();
+  await expect(resetHome).toHaveCount(0);
+
+  if (isMobile) return;
+  const canvas = page.getByTestId("skill-field-canvas");
+  const box = await canvas.boundingBox();
+  expect(box).toBeTruthy();
+  await page.mouse.move(box!.x + box!.width * 0.55, box!.y + box!.height * 0.5);
+  await page.mouse.wheel(0, -420);
+  await expect(resetHome).toBeVisible();
+  await resetHome.click();
+  await expect(resetHome).toHaveCount(0);
+});
+
+test("分析首页入口不创建 WebGL context，也不挂载 3D Canvas", async ({ page }) => {
+  await page.addInitScript(() => {
+    let webglContexts = 0;
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextId: string, options?: unknown) {
+      if (contextId === "webgl" || contextId === "webgl2" || contextId === "experimental-webgl") webglContexts += 1;
+      return original.call(this, contextId as never, options as never);
+    } as typeof HTMLCanvasElement.prototype.getContext;
+    Object.defineProperty(window, "__skillworthWebglContextCount", { get: () => webglContexts });
+  });
+  await page.goto("/");
+
+  await expect(page.getByRole("link", { name: "进入 3D 技能星域" })).toHaveAttribute("href", "/skill-field");
+  await expect(page.locator('[data-testid="skill-field-canvas"]')).toHaveCount(0);
+  expect(await page.evaluate(() => Reflect.get(window, "__skillworthWebglContextCount") as number)).toBe(0);
 });
 
 test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced Motion", async ({ page, isMobile }) => {
@@ -74,7 +125,7 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
   await expect(page.getByRole("link", { name: "市场" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "我的技能组合" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "组合", exact: true })).toHaveCount(0);
-  await expect(page.getByText("3D 技能星域 · Lab")).toBeVisible();
+  await expect(page.getByText(/\bLab\b|Visual V2|V2\.3|Prototype|Experiment/i)).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "3D 技能星域" })).toBeVisible();
   await expect(page.getByTestId("skill-field-frame")).toBeVisible();
   await expect(page.getByTestId("skill-field-canvas")).toBeVisible();

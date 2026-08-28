@@ -70,6 +70,7 @@ export function CameraDirector({
   onCameraFlyStart,
   onConstellationMorphStart,
   onFocusInterrupted,
+  onCameraDeparture,
   onReturnComplete,
 }: {
   mode: SceneMode;
@@ -85,6 +86,7 @@ export function CameraDirector({
   onCameraFlyStart: (token: number) => void;
   onConstellationMorphStart: (token: number) => void;
   onFocusInterrupted: (token: number) => void;
+  onCameraDeparture: () => void;
   onReturnComplete: (token: number) => void;
 }) {
   const { ACTION } = CameraControlsImpl;
@@ -93,17 +95,18 @@ export function CameraDirector({
   const autoTween = useRef<gsap.core.Tween | null>(null);
   const focusProgress = useRef(0);
   const morphStarted = useRef(false);
+  const userControlling = useRef(false);
   const phase = useRef(transitionPhase);
-  const callbacks = useRef({ onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onReturnComplete });
+  const callbacks = useRef({ onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onCameraDeparture, onReturnComplete });
   const relationReadyRef = useRef(relationReady);
   const seenHomeResetToken = useRef(homeResetToken);
   const { gl, invalidate } = useThree();
   const { currentRenderedSkillPosition } = useRenderedSkillPositions();
   useEffect(() => {
     phase.current = transitionPhase;
-    callbacks.current = { onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onReturnComplete };
+    callbacks.current = { onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onCameraDeparture, onReturnComplete };
     relationReadyRef.current = relationReady;
-  }, [onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onReturnComplete, relationReady, transitionPhase]);
+  }, [onCameraDeparture, onCameraFlyStart, onConstellationMorphStart, onFocusInterrupted, onReturnComplete, relationReady, transitionPhase]);
   const markInteraction = useCallback(() => { lastInteractionAt.current = performance.now(); }, []);
   const setCameraActive = useCallback((active: boolean) => {
     const host = gl.domElement.closest<HTMLElement>('[data-testid="skill-field-canvas"]');
@@ -132,15 +135,27 @@ export function CameraDirector({
     }
   }, [markInteraction, setCameraActive, transitionToken]);
   const beginUserInteraction = useCallback(() => {
+    userControlling.current = true;
     interruptAutomation();
     beginInteraction();
   }, [beginInteraction, interruptAutomation]);
   useEffect(() => {
     const canvas = gl.domElement;
-    const interruptWheel = () => interruptAutomation();
+    const interruptWheel = () => {
+      callbacks.current.onCameraDeparture();
+      interruptAutomation();
+    };
     canvas.addEventListener("wheel", interruptWheel, { capture: true, passive: true });
     return () => canvas.removeEventListener("wheel", interruptWheel, { capture: true });
   }, [gl, interruptAutomation]);
+  const handleCameraControl = useCallback(() => {
+    interruptAutomation();
+    if (userControlling.current) callbacks.current.onCameraDeparture();
+  }, [interruptAutomation]);
+  const endUserInteraction = useCallback(() => {
+    userControlling.current = false;
+    endInteraction();
+  }, [endInteraction]);
   useEffect(() => {
     const instance = controls.current;
     const rendered = activeSkillId ? currentRenderedSkillPosition(activeSkillId) : null;
@@ -287,8 +302,8 @@ export function CameraDirector({
       three: ACTION.TOUCH_ROTATE,
     }}
     onControlStart={beginUserInteraction}
-    onControl={interruptAutomation}
-    onControlEnd={endInteraction}
+    onControl={handleCameraControl}
+    onControlEnd={endUserInteraction}
     onRest={() => setCameraActive(false)}
   />;
 }

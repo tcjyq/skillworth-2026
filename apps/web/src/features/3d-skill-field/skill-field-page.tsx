@@ -115,20 +115,20 @@ function SkillFieldExperience() {
   const fallback = <WebGLFallback skills={scopedRecords} relations={displayedRelations} onSelect={(skillId) => selectSkill(skillId, undefined, "search")} />;
 
   const pageHeader = <header className={styles.localHeader}>
-    <Link href="/lab/visual-v2#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span><small>3D 技能星域 · Lab</small></Link>
+    <Link href="/lab/visual-v2#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span></Link>
     <div className={styles.experienceNavigation}><ExperienceSwitcher current="field" /></div>
-    <nav className={styles.localAuxNavigation} aria-label="3D 技能星域辅助导航"><Link href="/methodology">方法与数据</Link><span>Signal Aperture Lab</span></nav>
+    <nav className={styles.localAuxNavigation} aria-label="3D 技能星域辅助导航"><Link href="/methodology">方法与数据</Link></nav>
   </header>;
 
-  if (global.isLoading || roles.isLoading) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>Signal Aperture Lab</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasLoading} aria-label="正在读取技能星域"><span /></div></section></section></main>;
-  if (global.error || roles.error || !global.data || !roles.data) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>Signal Aperture Lab</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasError}><h2>技能星域暂时无法加载</h2><p>分析数据未就绪。你可以稍后重试，现有 Visual V2.3.1 不受影响。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div></section><footer className={styles.footer}><Link href="/lab/visual-v2#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer></section></main>;
+  if (global.isLoading || roles.isLoading) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>查技术技能</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasLoading} aria-label="正在读取技能星域"><span /></div></section></section></main>;
+  if (global.error || roles.error || !global.data || !roles.data) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>查技术技能</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasError}><h2>技能星域暂时无法加载</h2><p>分析数据未就绪。你可以稍后重试，稍后再查看分析结果。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div></section><footer className={styles.footer}><Link href="/lab/visual-v2#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer></section></main>;
   const globalData = global.data;
 
   return <main className={styles.page}>
     {pageHeader}
     <section className={styles.pageContent} aria-labelledby="skill-field-title">
       <div className={styles.pageIntro}>
-        <p>Signal Aperture Lab</p>
+        <p>查技术技能</p>
         <h1 id="skill-field-title">3D 技能星域</h1>
         <span>在 {globalData.skill_count} 项技术中探索学习优先级与技能关系。</span>
       </div>
@@ -160,6 +160,7 @@ function SkillFieldExperience() {
             onCameraFlyStart={(token) => dispatch({ type: "advance-transition", token, phase: "CAMERA_FLY" })}
             onConstellationMorphStart={(token) => dispatch({ type: "advance-transition", token, phase: "CONSTELLATION_MORPH" })}
             onFocusInterrupted={(token) => dispatch({ type: "interrupt-focus", token })}
+            onCameraDeparture={() => dispatch({ type: "mark-camera-departure" })}
             onMorphComplete={(token, returning) => dispatch({ type: "advance-transition", token, phase: returning ? "RETURN_CAMERA" : "SETTLED" })}
             onReturnComplete={(token) => dispatch({ type: "finish-return", token })}
             onContextLost={() => setWebgl(false)}

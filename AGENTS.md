@@ -14,7 +14,7 @@
 - Salary 与 Trend 均为 `unavailable`；空值表示证据不可用，不是 0。
 - Final 5、公式、技能 taxonomy、角色 taxonomy、去重、学习时长、来源集合和稳健性方法已冻结。
 - Production Homepage Candidate 位于 `/lab/visual-v2`；正式 `/` 尚未替换。Public Surface 已统一，Methodology 已面向学生表达；是否提升候选页仍待人工产品决定。
-- 独立 3D 技能场原型位于 `/lab/3d-skill-field`；它只消费现有排名与只读关系证据，不替换 `/lab/visual-v2` 或正式 `/`。
+- 正式 3D 技能星域位于 `/skill-field`；旧 `/lab/3d-skill-field` 只作兼容入口，二者共享同一页面与场景实现。它只消费现有排名与只读关系证据，不替换 `/lab/visual-v2` 或正式 `/`。
 - 默认 `npm run test:e2e` 使用确定性 Demo 数据；`npm run test:e2e:real` 使用本地、不进入 Git 的 Freehire v6 artifact。
 - Git 历史从 2026-08-24 reconstructed baseline 开始；此前开发历史未能恢复。
 
@@ -50,7 +50,7 @@ Raw → Bronze → Silver → Gold Data Layer → DuckDB → Analytics → API �
 - `packages/analytics`：承载可测试的指标、统计、图网络和优化；不得读取 HTTP 请求、页面状态或 Raw 数据。
 - `apps/api`：只做 FastAPI 路由、Pydantic schema、参数验证和服务编排；不得复制 analytics formula。
 - `apps/web`：只展示 API / analytics 输出；不得重新计算后端指标或硬编码排名、图表数字和推荐结果。
-- `/market/china-skill-relations` 是面向探索性可视化的只读关系契约；排序、门槛和样本警示必须在 analytics / API 层完成，Web 不得重算。
+- `/market/china-skill-relations` 是面向探索性可视化的只读关系契约；排序、门槛和样本警示必须在 analytics / API 层完成，Web 不得重算。`/skill-field` 必须保持 route-isolated dynamic import，不得让 Three.js / R3F / Drei 进入 `/` 的初始关键包或创建 WebGL context。
 - `backend/app/sql`：DuckDB Warehouse 的核心表、视图和分析 SQL。
 - `packages/connectors`、`packages/contracts`、`packages/ui`、`infra`、`scripts`：当前为空，属于 reserved / planned；不得把预留目录描述为已实现能力。
 - `data/raw`、`data/bronze`、`data/silver`、`data/gold`、`data/modes`、`data/warehouse`：只保存本地或受控数据；真实数据和私有 artifact 不进入 Git。

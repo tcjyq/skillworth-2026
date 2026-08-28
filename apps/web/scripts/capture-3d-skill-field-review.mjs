@@ -182,7 +182,7 @@ const page = await context.newPage();
 const recordingStartedAt = Date.now();
 trackConsole(page);
 
-await page.goto(`${baseURL}/lab/3d-skill-field?quality=high`, { waitUntil: "networkidle" });
+await page.goto(`${baseURL}/skill-field?quality=high`, { waitUntil: "networkidle" });
 await page.getByTestId("skill-field-canvas").waitFor();
 await wait(page, 3200);
 await assertEmbeddedPageLayout(page);
@@ -344,7 +344,7 @@ const idleContext = await browser.newContext({
 });
 const idlePage = await idleContext.newPage();
 trackConsole(idlePage);
-await idlePage.goto(`${baseURL}/lab/3d-skill-field?quality=high`, { waitUntil: "networkidle" });
+await idlePage.goto(`${baseURL}/skill-field?quality=high`, { waitUntil: "networkidle" });
 await idlePage.getByTestId("skill-field-canvas").waitFor();
 await wait(idlePage, 5600);
 const idleRotationStart = (await readProbe(idlePage)).cameraAzimuthDegrees;
@@ -374,7 +374,7 @@ const cppContext = await browser.newContext({
 });
 const cppPage = await cppContext.newPage();
 trackConsole(cppPage);
-await cppPage.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
+await cppPage.goto(`${baseURL}/skill-field`, { waitUntil: "networkidle" });
 await wait(cppPage, 1800);
 await cppPage.getByRole("button", { name: "只看招聘需求" }).click();
 await wait(cppPage, 2600);
@@ -391,7 +391,7 @@ async function recordScenario(name, action) {
   const scenarioContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, recordVideo: { dir: videoRoot, size: { width: 1440, height: 900 } } });
   const scenarioPage = await scenarioContext.newPage();
   trackConsole(scenarioPage);
-  await scenarioPage.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
+  await scenarioPage.goto(`${baseURL}/skill-field`, { waitUntil: "networkidle" });
   await wait(scenarioPage, 1200);
   await action(scenarioPage);
   await wait(scenarioPage, 1800);
@@ -434,7 +434,7 @@ const mobileContext = await browser.newContext({
 const mobilePage = await mobileContext.newPage();
 const mobileSession = await mobileContext.newCDPSession(mobilePage);
 trackConsole(mobilePage);
-await mobilePage.goto(`${baseURL}/lab/3d-skill-field?quality=low`, { waitUntil: "networkidle" });
+await mobilePage.goto(`${baseURL}/skill-field?quality=low`, { waitUntil: "networkidle" });
 await wait(mobilePage, 2200);
 await wait(mobilePage, 4000);
 await assertEmbeddedPageLayout(mobilePage, true);
@@ -481,7 +481,7 @@ const reducedContext = await browser.newContext({
 });
 const reducedPage = await reducedContext.newPage();
 trackConsole(reducedPage);
-await reducedPage.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
+await reducedPage.goto(`${baseURL}/skill-field`, { waitUntil: "networkidle" });
 await wait(reducedPage, 700);
 await choose(reducedPage, "Python", /Python/);
 await wait(reducedPage, 700);
@@ -494,7 +494,7 @@ if (reducedVideo) await copyFile(await reducedVideo.path(), resolve(outputRoot, 
 const lowContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const lowPage = await lowContext.newPage();
 trackConsole(lowPage);
-await lowPage.goto(`${baseURL}/lab/3d-skill-field?quality=low`, { waitUntil: "networkidle" });
+await lowPage.goto(`${baseURL}/skill-field?quality=low`, { waitUntil: "networkidle" });
 await wait(lowPage, 1600);
 await screenshot(lowPage, "21-low-quality-profile");
 await lowContext.close();
@@ -502,7 +502,7 @@ await lowContext.close();
 const fallbackContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const fallbackPage = await fallbackContext.newPage();
 trackConsole(fallbackPage);
-await fallbackPage.goto(`${baseURL}/lab/3d-skill-field?fallback=1`, { waitUntil: "networkidle" });
+await fallbackPage.goto(`${baseURL}/skill-field?fallback=1`, { waitUntil: "networkidle" });
 await screenshot(fallbackPage, "16-webgl-fallback");
 await screenshot(fallbackPage, "22-webgl-fallback");
 await fallbackContext.close();
@@ -510,7 +510,7 @@ await browser.close();
 await rm(videoRoot, { recursive: true, force: true });
 
 const packageJson = JSON.parse(await readFile(resolve(webRoot, "package.json"), "utf8"));
-const loadableManifest = JSON.parse(await readFile(resolve(webRoot, ".next/server/app/lab/3d-skill-field/page/react-loadable-manifest.json"), "utf8"));
+const loadableManifest = JSON.parse(await readFile(resolve(webRoot, ".next/server/app/skill-field/page/react-loadable-manifest.json"), "utf8"));
 const lazyChunkFiles = [...new Set(Object.values(loadableManifest).flatMap((entry) => entry.files))];
 const lazyChunks = await Promise.all(lazyChunkFiles.map(async (file) => {
   const contents = await readFile(resolve(webRoot, ".next", file));
@@ -527,7 +527,7 @@ const report = {
     drei: packageJson.dependencies["@react-three/drei"],
     three: packageJson.dependencies.three,
   },
-  bundle: { routeIsolation: "dynamic import on /lab/3d-skill-field only", lazyChunks },
+  bundle: { routeIsolation: "dynamic import on /skill-field only", lazyChunks },
   scene: {
     nodeCount: dataScope.skill_count,
     renderer: "one visible THREE.Points batch plus one transparent hit-target InstancedMesh",

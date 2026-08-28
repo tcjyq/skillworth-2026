@@ -8,7 +8,7 @@ SkillWorth 不只看招聘需求。它把 **Market Signal（市场信号）** �
 
 ## 当前产品状态
 
-V1 Data / Analysis / Story 已冻结。Production Homepage Candidate 当前仍位于 `/lab/visual-v2`，正式 `/` 尚未切换；Public Surface 与面向学生的方法说明已经统一，但是否将候选页提升为正式首页仍待人工产品决定。候选页不是 final homepage。
+V1 Data / Analysis / Story 已冻结。Production Homepage Candidate 当前仍位于 `/lab/visual-v2`，正式 `/` 尚未切换；Public Surface 与面向学生的方法说明已经统一，正式 3D 技能探索路由为 `/skill-field`。是否将候选页提升为正式首页仍待人工产品决定。候选页不是 final homepage。
 
 ## 为什么做这个项目
 

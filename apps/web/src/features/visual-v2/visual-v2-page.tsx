@@ -174,10 +174,10 @@ export function VisualV2Page() {
           </div>
         </div>
         <div className={styles.fieldInvitation}>
-          <p>想自己探索这些技能？</p>
+          <p>自己探索其他技术</p>
           <strong>{scopeSuccess ? `在 ${scopeSuccess.skill_count} 项技能中自由探索，搜索你关心的技能或职业。` : "在当前市场样本中自由探索，搜索你关心的技能或职业。"}</strong>
           <span>看学习优先级，也看技能之间的关联关系。</span>
-          <Link href="/lab/3d-skill-field">进入 3D 技能星域 <ArrowRight size={18} /></Link>
+          <Link href="/skill-field">进入 3D 技能星域 <ArrowRight size={18} /></Link>
         </div>
       </section>
 

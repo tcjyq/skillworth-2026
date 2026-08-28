@@ -152,6 +152,16 @@ export function SkillWorthPage() {
           {marketThemes.length ? <MarketThemes themes={marketThemes} selected={selectedTheme} onSelect={setSelectedTheme} /> : <p className="border-y border-[var(--sw-line)] py-10 text-sm text-[var(--sw-muted)]">当前窗口暂无可用主题聚合。</p>}
         </section>
 
+        <section className="border-y border-[var(--sw-line)]" aria-labelledby="skill-field-entry-title">
+          <div className="mx-auto grid max-w-[1560px] gap-6 px-5 py-14 sm:px-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-12 lg:py-18">
+            <h2 id="skill-field-entry-title" className="text-xl font-semibold tracking-[-.025em] sm:text-2xl">自己探索其他技术</h2>
+            <div className="max-w-[720px]">
+              <p className="text-pretty text-sm leading-6 text-[var(--sw-muted)]">{result.data ? `在 ${result.data.skill_count} 项技术技能中查看学习优先级、招聘需求、职业差异和技能关系。` : "在当前市场样本中查看学习优先级、招聘需求、职业差异和技能关系。"}</p>
+              <Link href="/skill-field" className="sw-focus mt-5 inline-flex items-center gap-2 text-xs text-[var(--sw-accent)] hover:text-[#e0ed9b]">进入 3D 技能星域 <ArrowRight size={14} /></Link>
+            </div>
+          </div>
+        </section>
+
         <section className="border-y border-[var(--sw-line)]" aria-labelledby="method-title">
           <div className="mx-auto max-w-[1560px] px-5 py-14 sm:px-8 lg:px-12 lg:py-18">
             <SectionHeading id="method-title" title="HOW IT WORKS" description="所有信号由同一数据管道计算；学习时长是版本化估算，不是学习结果承诺。" />

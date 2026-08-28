@@ -57,14 +57,15 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 当前正式公开入口（**Current**）为：
 
 1. `/`：当前正式 V1 首页 SkillWorth 2026，按 Hero → Frontier → Skill Market Board → Market Themes → Methodology / Data Scope 叙事回答“2026，学什么技术最值？”；
-2. `/methodology`：完整方法、证据边界和限制；
-3. Data Scope：作为首页锚点展示 snapshot、窗口、样本量、来源角色与不可用信号。
+2. `/skill-field`：3D 技能星域。它在分析结论之后提供 134 项技术技能的搜索、职业切片和只读关系探索；Three.js 仅在该路由动态加载；
+3. `/methodology`：完整方法、证据边界和限制；
+4. Data Scope：作为首页锚点展示 snapshot、窗口、样本量、来源角色与不可用信号。
 
 历史 Market、Skills、Roles、Graph、Portfolio、Optimizer 与 Data Quality 能力保留在 `/lab/*`，不属于公开主导航。旧路径仅兼容重定向至对应 Lab 路由。
 
 当前公开默认口径为 `market_scope=china_open_tech_sample`、`source_role=china_supplementary`、`recency_window=180d`。界面采用 Cinematic Data Intelligence 视觉语言，但视觉不得替代解释；任意数字、图表点位或推荐文本必须能追溯到 API 与方法论。
 
-候选入口（**Candidate**）为 `/lab/visual-v2`。它已统一 Public Surface 与面向学生的方法表达，但不是当前正式首页、尚未替换 `/`，也不应称为 final homepage。是否提升以及提升后的最终产品截图属于人工发布决策。
+候选入口（**Candidate**）为 `/lab/visual-v2`。它已统一 Public Surface 与面向学生的方法表达，但不是当前正式首页、尚未替换 `/`，也不应称为 final homepage。它在 Final 5 之后提供通往 `/skill-field` 的克制入口，并与 3D 技能星域双向切换；是否提升以及提升后的最终产品截图属于人工发布决策。
 
 ## 6. 约束与工程原则
 

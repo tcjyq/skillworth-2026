@@ -7,7 +7,7 @@ type ExperienceSwitcherProps = {
 
 const destinations = [
   { id: "analysis", href: "/lab/visual-v2#analysis-results", label: "分析结果" },
-  { id: "field", href: "/lab/3d-skill-field", label: "3D 技能星域" },
+  { id: "field", href: "/skill-field", label: "3D 技能星域" },
 ] as const;
 
 export function ExperienceSwitcher({ current }: ExperienceSwitcherProps) {

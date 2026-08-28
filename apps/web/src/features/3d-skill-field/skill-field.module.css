@@ -60,6 +60,8 @@
 .modeControl button[aria-pressed="true"] { flex: 1.22; background: rgba(200, 220, 98, .09); color: var(--field-accent); }
 .textControl { display: inline-flex; min-height: 42px; align-items: center; gap: 7px; border: 1px solid #3a443c; border-radius: 8px; background: #111713; padding: 0 12px; color: var(--field-secondary); font-size: 11px; }
 .textControl:hover { border-color: #647064; color: var(--field-text); }
+.homeReset { transition: opacity 160ms ease; }
+.homeReset[data-visible="false"] { opacity: 0; pointer-events: none; }
 
 .scopeRail { margin-top: 18px; border-block: 1px solid rgba(163, 170, 161, .12); color: var(--field-muted); font: 10px/1.5 var(--font-geist-mono), monospace; }
 .scopeRail span { display: block; padding: 10px 0; }
