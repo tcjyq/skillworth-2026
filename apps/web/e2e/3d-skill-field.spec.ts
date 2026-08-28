@@ -112,7 +112,11 @@ test("分析首页入口不创建 WebGL context，也不挂载 3D Canvas", async
 
 test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced Motion", async ({ page, isMobile }) => {
   const consoleMessages: string[] = [];
-  page.on("console", (message) => { if (["error", "warning"].includes(message.type())) consoleMessages.push(message.text()); });
+  page.on("console", (message) => {
+    if (!["error", "warning"].includes(message.type())) return;
+    const text = message.text();
+    if (!text.includes("Automatic fallback to software WebGL has been deprecated")) consoleMessages.push(text);
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/lab/3d-skill-field");
   await expect(page.getByRole("link", { name: "返回 SkillWorth 2026" })).toContainText("SkillWorth 2026");
@@ -273,9 +277,10 @@ test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", as
     await chooseSkill(page, realMode ? "Python" : "SQL");
     const canvas = page.getByTestId("skill-field-canvas");
     await expect(canvas).toHaveAttribute("data-transition-phase", "CAMERA_FLY", { timeout: 1_500 });
-    const box = await canvas.boundingBox();
+    const webglCanvas = canvas.locator("canvas");
+    const box = await webglCanvas.boundingBox();
     expect(box).toBeTruthy();
-    await page.mouse.move(box!.x + box!.width * 0.55, box!.y + box!.height * 0.5);
+    await webglCanvas.hover();
     if (kind === "drag") {
       await page.mouse.down();
       await page.mouse.move(box!.x + box!.width * 0.7, box!.y + box!.height * 0.46, { steps: 6 });
