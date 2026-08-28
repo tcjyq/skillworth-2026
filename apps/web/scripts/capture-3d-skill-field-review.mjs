@@ -100,6 +100,10 @@ async function readProbe(page) {
       bloomMode: element.dataset.bloomMode ?? "unknown",
       cameraAzimuthDegrees: Number(element.dataset.cameraAzimuthDegrees ?? 0),
       cameraPolarDegrees: Number(element.dataset.cameraPolarDegrees ?? 0),
+      transitionPhase: element.dataset.transitionPhase ?? "unknown",
+      transitionToken: Number(element.dataset.transitionToken ?? 0),
+      activeSkill: element.dataset.activeSkill ?? "",
+      cameraTarget: element.dataset.cameraTarget ?? "",
     };
   });
 }
@@ -186,6 +190,7 @@ await assertCanvasResizes(page);
 const dataScope = await page.request.get(`${baseURL}/backend-api/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d`).then((response) => response.json());
 const defaultLabelCount = await page.getByTestId("skill-field-canvas").locator("button, [data-kind]").count();
 const originalCanvas = await page.getByTestId("skill-field-canvas").elementHandle();
+const originalWebglCanvas = await page.getByTestId("skill-field-canvas").locator("canvas").elementHandle();
 await screenshot(page, "01-global-value-desktop");
 await screenshot(page, "02-final-global-value");
 await page.screenshot({ path: resolve(outputRoot, "03-value-core-close-up.png"), clip: { x: 500, y: 360, width: 560, height: 410 }, scale: "css" });
@@ -311,12 +316,19 @@ await choose(page, "Spark", /Apache Spark|Spark/);
 await wait(page, 450);
 const activeProbe = await readProbe(page);
 await wait(page, 1950);
+const settledProbe = await readProbe(page);
 await screenshot(page, "12-continuous-python-sql-spark");
 const relationLabelCount = await page.getByTestId("skill-field-canvas").locator("button, [data-kind]").count();
 const memory = await page.evaluate(() => {
   const value = performance.memory;
   return value ? { usedJsHeapBytes: value.usedJSHeapSize, totalJsHeapBytes: value.totalJSHeapSize } : null;
 }).catch(() => null);
+const canvasContinuity = {
+  wrapperConnected: await originalCanvas?.evaluate((element) => element.isConnected),
+  sameWebglCanvas: await originalWebglCanvas?.evaluate((element) => element === document.querySelector('[data-testid="skill-field-canvas"] canvas')),
+  canvasElementCount: await page.getByTestId("skill-field-canvas").locator("canvas").count(),
+  webglContextAvailable: await originalWebglCanvas?.evaluate((element) => Boolean(element.getContext("webgl2"))),
+};
 
 await wait(page, Math.max(3000, 62_000 - (Date.now() - recordingStartedAt)));
 const video = page.video();
@@ -388,9 +400,29 @@ async function recordScenario(name, action) {
   if (scenarioVideo) await copyFile(await scenarioVideo.path(), resolve(outputRoot, name));
 }
 
-await recordScenario("recording-d-devops-transition.webm", async (scenarioPage) => { await choose(scenarioPage, "DevOps", /DevOps/, "last"); });
-await recordScenario("recording-d-search-python-constellation.webm", async (scenarioPage) => { await choose(scenarioPage, "Python", /Python/); });
-await recordScenario("recording-e-python-sql-relation.webm", async (scenarioPage) => { await choose(scenarioPage, "Python", /Python/); await wait(scenarioPage, 1400); const sql = scenarioPage.getByLabel("一级技能关系").getByRole("button", { name: /SQL/ }).first(); if (await sql.count()) await sql.click(); });
+await recordScenario("recording-a-search-python-fly-relation.webm", async (scenarioPage) => {
+  await choose(scenarioPage, "Python", /Python/);
+});
+await recordScenario("recording-b-python-to-sql-interrupt.webm", async (scenarioPage) => {
+  await choose(scenarioPage, "Python", /Python/);
+  await wait(scenarioPage, 200);
+  await choose(scenarioPage, "SQL", /^SQL/);
+});
+await recordScenario("recording-c-camera-drag-interrupt.webm", async (scenarioPage) => {
+  await choose(scenarioPage, "Python", /Python/);
+  await wait(scenarioPage, 220);
+  await dragOrbitPass(scenarioPage, 0.08);
+});
+await recordScenario("recording-d-settled-return-global.webm", async (scenarioPage) => {
+  await choose(scenarioPage, "Python", /Python/);
+  await wait(scenarioPage, 1700);
+  await scenarioPage.getByRole("button", { name: "回到全局" }).click();
+});
+await recordScenario("recording-e-devops-kubernetes.webm", async (scenarioPage) => {
+  await choose(scenarioPage, "DevOps", /DevOps/, "last");
+  await wait(scenarioPage, 1200);
+  await choose(scenarioPage, "Kubernetes", /Kubernetes/);
+});
 
 const mobileContext = await browser.newContext({
   viewport: { width: 390, height: 844 },
@@ -440,19 +472,24 @@ const mobileMemory = await mobilePage.evaluate(() => {
 }).catch(() => null);
 const mobileVideo = mobilePage.video();
 await mobileContext.close();
-if (mobileVideo) await copyFile(await mobileVideo.path(), resolve(outputRoot, "recording-f-mobile-active-interaction.webm"));
+if (mobileVideo) await copyFile(await mobileVideo.path(), resolve(outputRoot, "recording-f-mobile-focus-touch-return.webm"));
 
-const reducedContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+const reducedContext = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+  reducedMotion: "reduce",
+  recordVideo: { dir: videoRoot, size: { width: 1440, height: 900 } },
+});
 const reducedPage = await reducedContext.newPage();
 trackConsole(reducedPage);
 await reducedPage.goto(`${baseURL}/lab/3d-skill-field`, { waitUntil: "networkidle" });
-await reducedPage.getByRole("button", { name: "只看招聘需求" }).click();
 await wait(reducedPage, 700);
-await reducedPage.getByRole("button", { name: "学习优先" }).click();
-await wait(reducedPage, 120);
+await choose(reducedPage, "Python", /Python/);
+await wait(reducedPage, 700);
 await screenshot(reducedPage, "15-reduced-motion");
 await screenshot(reducedPage, "20-reduced-motion");
+const reducedVideo = reducedPage.video();
 await reducedContext.close();
+if (reducedVideo) await copyFile(await reducedVideo.path(), resolve(outputRoot, "recording-g-reduced-motion.webm"));
 
 const lowContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const lowPage = await lowContext.newPage();
@@ -509,9 +546,11 @@ const report = {
     idleFps: idleEnd.activeFps,
     demandTransition: demandProbe,
     relationTransition: activeProbe,
+    settledRelation: settledProbe,
     selectedRelation: selectedRelationProbe,
     orbitAngles,
     drawCallLimit: { global: 7, relation: 10 },
+    canvasContinuity,
   },
   mobileLow: {
     viewport: { width: 390, height: 844 },

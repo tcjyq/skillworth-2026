@@ -50,7 +50,10 @@ describe("adaptive rendering profiles", () => {
     expect(QUALITY_PROFILES.HIGH.particleCount).toBe(380);
     expect(QUALITY_PROFILES.BALANCED.particleCount).toBe(260);
     expect(QUALITY_PROFILES.LOW.particleCount).toBe(130);
-    expect(QUALITY_PROFILES.LOW.visibleLabelCount).toBeLessThanOrEqual(4);
+    expect(QUALITY_PROFILES.HIGH.visibleLabelCount).toBeGreaterThanOrEqual(7);
+    expect(QUALITY_PROFILES.HIGH.visibleLabelCount).toBeLessThanOrEqual(9);
+    expect(QUALITY_PROFILES.LOW.visibleLabelCount).toBeGreaterThanOrEqual(4);
+    expect(QUALITY_PROFILES.LOW.visibleLabelCount).toBeLessThanOrEqual(5);
     expect(QUALITY_PROFILES.LOW.bloomMode).toBe("off");
     expect(QUALITY_PROFILES.HIGH.ambientCadenceFps).toBeGreaterThanOrEqual(8);
     expect(QUALITY_PROFILES.HIGH.ambientCadenceFps).toBeLessThanOrEqual(15);
@@ -58,10 +61,10 @@ describe("adaptive rendering profiles", () => {
     expect(QUALITY_PROFILES.LOW.ambientCadenceFps).toBeLessThanOrEqual(4);
   });
 
-  it("disables relation flow particles for reduced motion", () => {
+  it("keeps relation evidence non-directional without moving particles", () => {
     expect(relationFlowParticleCount("HIGH", true, true)).toBe(0);
     expect(relationFlowParticleCount("BALANCED", false, false)).toBe(0);
-    expect(relationFlowParticleCount("BALANCED", false, true)).toBeGreaterThan(0);
+    expect(relationFlowParticleCount("BALANCED", false, true)).toBe(0);
   });
 
   it("only downgrades one quality level and never bounces upward", () => {

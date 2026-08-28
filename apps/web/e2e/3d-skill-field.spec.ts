@@ -1,6 +1,35 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const realMode = process.env.SKILLWORTH_E2E_MODE === "real";
+
+type TransitionProbe = {
+  camera: number[];
+  target: number[];
+  nodes: Record<string, number[]>;
+  phase: string;
+  morph: number;
+};
+
+async function readTransitionProbe(page: Page): Promise<TransitionProbe> {
+  return page.getByTestId("skill-field-canvas").evaluate((element) => ({
+    camera: (element.getAttribute("data-camera-position") ?? "").split(",").map(Number),
+    target: (element.getAttribute("data-camera-target") ?? "").split(",").map(Number),
+    nodes: JSON.parse(element.getAttribute("data-node-probe") ?? "{}") as Record<string, number[]>,
+    phase: element.getAttribute("data-transition-phase") ?? "",
+    morph: Number(element.getAttribute("data-node-morph-progress") ?? "0"),
+  }));
+}
+
+function distance(left: number[], right: number[]) {
+  return Math.hypot(...left.map((value, index) => value - right[index]));
+}
+
+async function chooseSkill(page: Page, label: string) {
+  const search = page.getByRole("combobox", { name: "搜索技能或职业" });
+  await search.fill(label);
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  await page.getByRole("option", { name: new RegExp(escaped) }).first().click();
+}
 
 test("分析结果与 3D 技能星域通过正常 history 双向切换", async ({ page, isMobile }) => {
   await page.goto("/lab/visual-v2#analysis-results");
@@ -100,6 +129,120 @@ test("3D 技能星域支持搜索、职业、需求模式、移动端与 Reduced
   if (isMobile) expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true);
   await expect(page.getByTestId("skill-field-canvas")).toHaveAttribute("data-relation-particle-count", "0");
   expect(consoleMessages).toEqual([]);
+});
+
+test("相机可见技能驱动有限且会变化的浏览标签", async ({ page, isMobile }) => {
+  await page.goto("/lab/3d-skill-field");
+  const canvas = page.getByTestId("skill-field-canvas");
+  await expect(canvas).toHaveAttribute("data-label-refresh-cadence-hz", "8");
+  await expect(canvas).toHaveAttribute("data-dynamic-label-count", /[1-9]/);
+  const budget = isMobile ? 5 : 8;
+  expect(Number(await canvas.getAttribute("data-dynamic-label-count"))).toBeLessThanOrEqual(budget);
+  expect(await canvas.getByTestId("skill-field-label").count()).toBeLessThanOrEqual(budget);
+  if (isMobile) return;
+
+  const first = await canvas.getAttribute("data-dynamic-label-ids");
+  const box = await canvas.boundingBox();
+  expect(box).toBeTruthy();
+  await page.mouse.move(box!.x + box!.width * 0.82, box!.y + box!.height * 0.56);
+  await page.mouse.down();
+  await page.mouse.move(box!.x + box!.width * 0.22, box!.y + box!.height * 0.56, { steps: 18 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  const second = await canvas.getAttribute("data-dynamic-label-ids");
+  if (realMode) expect(second).not.toBe(first);
+  expect((second ?? "").split(",").filter(Boolean).length).toBeLessThanOrEqual(budget);
+});
+
+test("技能聚焦保持节点身份、原位识别、相机连续与丝滑返回", async ({ page, isMobile }) => {
+  test.skip(isMobile);
+  await page.goto("/lab/3d-skill-field");
+  const canvas = page.getByTestId("skill-field-canvas");
+  await expect(canvas).toHaveAttribute("data-node-probe", /database_sql/);
+  const originalCanvas = await canvas.elementHandle();
+  const initial = await readTransitionProbe(page);
+  const coreLabel = realMode ? "Python" : "SQL";
+  const coreId = realMode ? "programming_python" : "database_sql";
+  const neighborId = realMode ? "database_sql" : "programming_python";
+
+  await chooseSkill(page, coreLabel);
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  const recognized = await readTransitionProbe(page);
+  expect(distance(recognized.nodes[coreId], initial.nodes[coreId])).toBeLessThan(0.02);
+  await expect(canvas).toHaveAttribute("data-transition-phase", /CAMERA_FLY|CONSTELLATION_MORPH/);
+
+  const cameraSamples: number[][] = [];
+  for (let index = 0; index < 5; index += 1) {
+    cameraSamples.push((await readTransitionProbe(page)).camera);
+    await page.waitForTimeout(110);
+  }
+  await expect(canvas).toHaveAttribute("data-transition-phase", "SETTLED", { timeout: 3_000 });
+  const settled = await readTransitionProbe(page);
+  await expect(canvas).toHaveAttribute("data-node-morph-observed-intermediate", "true");
+  const midwayNodes = JSON.parse(await canvas.getAttribute("data-node-morph-intermediate-probe") ?? "{}") as Record<string, number[]>;
+  expect(distance(settled.nodes[coreId], initial.nodes[coreId])).toBeLessThan(0.02);
+  if (realMode) {
+    expect(distance(midwayNodes[neighborId], initial.nodes[neighborId])).toBeGreaterThan(0.02);
+    expect(distance(midwayNodes[neighborId], settled.nodes[neighborId])).toBeGreaterThan(0.02);
+  }
+  expect(await originalCanvas?.evaluate((element) => element.isConnected)).toBe(true);
+  await expect(canvas).toHaveAttribute("data-unique-skill-count", await canvas.getAttribute("data-skill-star-count") ?? "");
+  const finalCamera = settled.camera;
+  const pathDistances = cameraSamples.map((sample) => distance(sample, finalCamera));
+  expect(pathDistances.at(-1)!).toBeLessThan(pathDistances[0]);
+  expect(pathDistances.slice(1).every((value, index) => value <= pathDistances[index] + 0.08)).toBe(true);
+
+  await page.getByRole("button", { name: "回到全局" }).click();
+  await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE", { timeout: 3_000 });
+  const returned = await readTransitionProbe(page);
+  expect(distance(returned.nodes[coreId], initial.nodes[coreId])).toBeLessThan(0.02);
+  if (realMode) expect(distance(returned.nodes[neighborId], initial.nodes[neighborId])).toBeLessThan(0.02);
+  expect(await originalCanvas?.evaluate((element) => element.isConnected)).toBe(true);
+});
+
+test("快速换目标只允许最新 generation 完成", async ({ page, isMobile }) => {
+  test.skip(isMobile);
+  const response = await page.request.get("/backend-api/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d");
+  const payload = await response.json() as { records: Array<{ skill_id: string; skill: string }> };
+  const first = realMode ? { skill_id: "programming_python", skill: "Python" } : payload.records[0];
+  const second = realMode ? { skill_id: "database_sql", skill: "SQL" } : payload.records[1];
+  expect(first && second).toBeTruthy();
+  await page.goto("/lab/3d-skill-field");
+  await chooseSkill(page, first.skill);
+  await page.waitForTimeout(190);
+  await chooseSkill(page, second.skill);
+  const canvas = page.getByTestId("skill-field-canvas");
+  await expect(canvas).toHaveAttribute("data-transition-phase", "SETTLED", { timeout: 3_000 });
+  await expect(canvas).toHaveAttribute("data-active-skill", second.skill_id);
+  await expect(page.getByRole("heading", { name: second.skill, exact: true })).toBeVisible();
+  const probe = await readTransitionProbe(page);
+  expect(distance(probe.target, probe.nodes[second.skill_id])).toBeLessThan(0.05);
+});
+
+test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", async ({ page, isMobile }) => {
+  test.skip(isMobile);
+  const interrupt = async (kind: "drag" | "wheel") => {
+    await page.goto("/lab/3d-skill-field");
+    await chooseSkill(page, realMode ? "Python" : "SQL");
+    const canvas = page.getByTestId("skill-field-canvas");
+    await expect(canvas).toHaveAttribute("data-transition-phase", "CAMERA_FLY", { timeout: 1_500 });
+    const box = await canvas.boundingBox();
+    expect(box).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width * 0.55, box!.y + box!.height * 0.5);
+    if (kind === "drag") {
+      await page.mouse.down();
+      await page.mouse.move(box!.x + box!.width * 0.7, box!.y + box!.height * 0.46, { steps: 6 });
+      await page.mouse.up();
+    } else {
+      await page.mouse.wheel(0, -420);
+    }
+    await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
+    await page.waitForTimeout(650);
+    await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
+    await expect(page.getByLabel("一级技能关系")).toHaveCount(0);
+  };
+  await interrupt("drag");
+  await interrupt("wheel");
 });
 
 test("WebGL 初始化失败时保留 2D 搜索与技能列表", async ({ page }) => {

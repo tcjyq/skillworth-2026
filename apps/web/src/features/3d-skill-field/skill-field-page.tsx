@@ -41,7 +41,7 @@ function sceneCopy(mode: string, role: string | null, skill: string | null, skil
 }
 
 function SkillFieldExperience() {
-  const { state, dispatch } = useSceneDirector();
+  const { state, dispatch, focusSkill } = useSceneDirector();
   const global = useApi<ChinaSkillWorthResponse>(GLOBAL_PATH);
   const roles = useApi<RolesResponse>("/roles");
   const rolePath = state.activeRole ? `${GLOBAL_PATH}&role=${state.activeRole.roleId}` : null;
@@ -52,12 +52,17 @@ function SkillFieldExperience() {
     ...(state.activeRole ? { role_id: state.activeRole.roleId } : {}),
   }) : null;
   const relations = useApi<SkillRelationsResponse>(relationParams ? `/market/china-skill-relations?${relationParams}` : null);
+  const [previousRelationResponse, setPreviousRelationResponse] = useState<SkillRelationsResponse | null>(null);
   const [webgl, setWebgl] = useState<boolean | null>(null);
   const [relationExpansion, setRelationExpansion] = useState<{ skillId: string; limit: number } | null>(null);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setWebgl(supportsWebGL()));
     return () => window.cancelAnimationFrame(frame);
   }, []);
+  useEffect(() => {
+    if (webgl !== false || state.transitionPhase !== "HIGHLIGHT") return;
+    dispatch({ type: "advance-transition", token: state.transitionToken, phase: "CONSTELLATION_MORPH" });
+  }, [dispatch, state.transitionPhase, state.transitionToken, webgl]);
 
   const globalRecords = useMemo(() => global.data?.records ?? [], [global.data?.records]);
   const effectiveState = useMemo(() => state.activeRole && role.data
@@ -67,33 +72,47 @@ function SkillFieldExperience() {
   const scopedRecords = useMemo(() => state.activeRole
     ? roleGate?.canRank ? role.data?.records ?? [] : globalRecords.map((record) => ({ ...record, skillworth_rank: null, demand_rank: null }))
     : globalRecords, [globalRecords, role.data?.records, roleGate?.canRank, state.activeRole]);
-  const relationPrimaryLimit = relationExpansion && relationExpansion.skillId === state.activeSkill?.skillId ? relationExpansion.limit : 5;
+  const activeRelationReady = Boolean(relations.data
+    && relations.data.core_skill_id === state.activeSkill?.skillId
+    && (relations.data.role_id ?? null) === (state.activeRole?.roleId ?? null));
+  const displayedRelationResponse = state.relationSkill
+    ? relations.data?.core_skill_id === state.relationSkill.skillId
+      ? relations.data
+      : previousRelationResponse?.core_skill_id === state.relationSkill.skillId
+        ? previousRelationResponse
+        : null
+    : null;
+  const displayedRelations = useMemo(() => displayedRelationResponse?.records ?? [], [displayedRelationResponse]);
+  const relationPrimaryLimit = relationExpansion && relationExpansion.skillId === state.relationSkill?.skillId ? relationExpansion.limit : 5;
   const model = useMemo(() => buildSceneModel({
     mode: state.mode,
     records: scopedRecords,
     globalRecords,
-    activeSkillId: state.activeSkill?.skillId ?? null,
+    activeSkillId: state.relationSkill?.skillId ?? null,
+    focusSkillId: state.activeSkill?.skillId ?? null,
     selectedRelationId: state.selectedRelationId,
-    relations: relations.data?.records ?? [],
+    relations: displayedRelations,
     relationPrimaryLimit,
-  }), [globalRecords, relationPrimaryLimit, relations.data?.records, scopedRecords, state.activeSkill?.skillId, state.mode, state.selectedRelationId]);
+    relationOriginMode: state.relationOriginMode,
+  }), [displayedRelations, globalRecords, relationPrimaryLimit, scopedRecords, state.activeSkill?.skillId, state.mode, state.relationOriginMode, state.relationSkill?.skillId, state.selectedRelationId]);
   const selectedRecord = (state.activeSkill
     ? scopedRecords.find((record) => record.skill_id === state.activeSkill?.skillId) ?? globalRecords.find((record) => record.skill_id === state.activeSkill?.skillId)
     : null) ?? null;
-  const selectedRelation = relations.data?.records.find((item) => item.related_skill_id === state.selectedRelationId) ?? null;
+  const selectedRelation = displayedRelations.find((item) => item.related_skill_id === state.selectedRelationId) ?? null;
   const sceneLimitations = [...new Set([
     ...(roleGate?.warning ? [roleGate.warning] : []),
-    ...(relations.data?.limitations ?? []),
+    ...(displayedRelationResponse?.limitations ?? []),
   ])];
   const cpp = globalRecords.find((record) => record.skill_id === "programming_cpp");
   const copy = sceneCopy(state.mode, effectiveState.activeRole?.label ?? null, state.activeSkill?.label ?? null, global.data?.skill_count ?? 0);
 
-  const selectSkill = (skillId: string, label?: string) => {
+  const selectSkill = (skillId: string, label?: string, source: "search" | "pointer" | "relation" = "pointer") => {
     const record = globalRecords.find((item) => item.skill_id === skillId);
-    dispatch({ type: "select-skill", skillId, skillLabel: label ?? record?.skill ?? skillId });
+    if (displayedRelationResponse) setPreviousRelationResponse(displayedRelationResponse);
+    focusSkill(skillId, label ?? record?.skill ?? skillId, source);
   };
   const selectRole = (roleId: string, label: string, sampleSize: number) => dispatch({ type: "select-role", role: { roleId, label, sampleSize } });
-  const fallback = <WebGLFallback skills={scopedRecords} relations={relations.data?.records ?? []} onSelect={(skillId) => selectSkill(skillId)} />;
+  const fallback = <WebGLFallback skills={scopedRecords} relations={displayedRelations} onSelect={(skillId) => selectSkill(skillId, undefined, "search")} />;
 
   const pageHeader = <header className={styles.localHeader}>
     <Link href="/lab/visual-v2#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span><small>3D 技能星域 · Lab</small></Link>
@@ -114,19 +133,37 @@ function SkillFieldExperience() {
         <span>在 {globalData.skill_count} 项技术中探索学习优先级与技能关系。</span>
       </div>
       <div className={styles.stageTop}>
-        <SearchCommand skills={globalRecords} roles={roles.data.records} onSelectSkill={selectSkill} onSelectRole={selectRole} />
-        <SceneModeControl state={effectiveState} onValue={() => dispatch({ type: "show-global-value" })} onDemand={() => dispatch({ type: "show-global-demand" })} onReturnGlobal={() => dispatch({ type: "return-global" })} onClearRole={() => dispatch({ type: "clear-role" })} />
+        <SearchCommand skills={globalRecords} roles={roles.data.records} onSelectSkill={(skillId, label) => selectSkill(skillId, label, "search")} onSelectRole={selectRole} />
+        <SceneModeControl state={effectiveState} onValue={() => dispatch({ type: "show-global-value" })} onDemand={() => dispatch({ type: "show-global-demand" })} onReturnGlobal={() => dispatch({ type: "start-return" })} onResetHome={() => dispatch({ type: "reset-to-global-home" })} onClearRole={() => dispatch({ type: "clear-role" })} />
       </div>
       <div className={styles.scopeRail} aria-label="数据范围"><span>{globalData.job_count} 个岗位 · {globalData.company_count} 家公司 · {globalData.skill_count} 项观测技能 · 近 180 天 · {globalData.source_role === "china_supplementary" ? "中国公开技术岗位补充样本" : globalData.source_role}</span></div>
       <div className={styles.sceneContext}>
         <p>{copy.description}<small>只看远近，不看方向。</small></p>
         {effectiveState.activeRole && <strong>{effectiveState.activeRole.label} · {effectiveState.activeRole.sampleSize} 个岗位样本</strong>}
       </div>
-      <ExplorationPath state={effectiveState} onSelect={selectSkill} />
+      <ExplorationPath state={effectiveState} onSelect={(skillId, label) => selectSkill(skillId, label, "relation")} />
       <section className={styles.visualizationFrame} data-testid="skill-field-frame" aria-label="3D 技能星域可视化窗口">
         <header className={styles.frameHeader}><span>交互式可视化窗口</span><small>{copy.title}</small></header>
         <div className={styles.scenePane}>
-          {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas model={model} mode={state.mode} activeSkillId={state.activeSkill?.skillId ?? null} selectedRelationId={state.selectedRelationId} reducedMotion={state.reducedMotion} transitionToken={state.transitionToken} onSelect={selectSkill} onClearSelection={() => dispatch({ type: "clear-selection" })} onContextLost={() => setWebgl(false)} /></CanvasBoundary> : fallback}
+          {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas
+            model={model}
+            mode={state.mode}
+            activeSkillId={state.activeSkill?.skillId ?? null}
+            homeResetToken={state.homeResetToken}
+            selectedRelationId={state.selectedRelationId}
+            reducedMotion={state.reducedMotion}
+            transitionToken={state.transitionToken}
+            transitionPhase={state.transitionPhase}
+            relationReady={activeRelationReady}
+            onSelect={(skillId) => selectSkill(skillId, undefined, "pointer")}
+            onClearSelection={() => dispatch({ type: "clear-relation-selection" })}
+            onCameraFlyStart={(token) => dispatch({ type: "advance-transition", token, phase: "CAMERA_FLY" })}
+            onConstellationMorphStart={(token) => dispatch({ type: "advance-transition", token, phase: "CONSTELLATION_MORPH" })}
+            onFocusInterrupted={(token) => dispatch({ type: "interrupt-focus", token })}
+            onMorphComplete={(token, returning) => dispatch({ type: "advance-transition", token, phase: returning ? "RETURN_CAMERA" : "SETTLED" })}
+            onReturnComplete={(token) => dispatch({ type: "finish-return", token })}
+            onContextLost={() => setWebgl(false)}
+          /></CanvasBoundary> : fallback}
           <div className={styles.legend} aria-label="图例"><span><i />越近，优先级越高</span><span><i />星点略大，岗位覆盖越高</span></div>
           {(state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND") && <div className={styles.valueCoreHint} data-testid="value-core-annotation"><span>价值核心</span>越靠近这里，越值得优先关注<small>只看远近，不看方向</small></div>}
           {sceneLimitations.map((item) => <p className={styles.sceneWarning} key={item}>{item}</p>)}
@@ -135,8 +172,8 @@ function SkillFieldExperience() {
           <p className={styles.touchHint} data-testid="skill-field-touch-hint">单指旋转 · 双指缩放</p>
         </div>
       </section>
-      <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} onSelectRelation={selectSkill} />
-      <RelationRail key={state.activeSkill?.skillId ?? "none"} relations={relations.data?.records ?? []} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.activeSkill?.skillId ?? "", limit })} />
+      <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} settled={state.transitionPhase === "SETTLED"} onSelectRelation={(skillId) => selectSkill(skillId, undefined, "relation")} />
+      {state.transitionPhase === "SETTLED" && <RelationRail key={state.relationSkill?.skillId ?? "none"} relations={displayedRelations} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.relationSkill?.skillId ?? "", limit })} />}
       <footer className={styles.footer}><p>{globalData.disclaimer}</p><Link href="/lab/visual-v2#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer>
     </section>
   </main>;

@@ -14,6 +14,11 @@ export type LabelPlacement = {
   rect: ScreenRect;
 };
 
+export type BrowsableLabelCandidate = Omit<LabelCandidate, "priority"> & {
+  score: number;
+  locked?: boolean;
+};
+
 type LabelLayoutOptions = {
   width: number;
   height: number;
@@ -74,4 +79,31 @@ export function resolveLabelPlacements(candidates: LabelCandidate[], options: La
     });
   }
   return placements;
+}
+
+export function rankBrowsableLabelCandidates(
+  candidates: BrowsableLabelCandidate[],
+  previousIds: ReadonlySet<string>,
+  width: number,
+  height: number,
+) {
+  const cellWidth = Math.max(width / 3, 1);
+  const cellHeight = Math.max(height / 3, 1);
+  const bestInCell = new Map<string, string>();
+  for (const candidate of candidates.toSorted((left, right) => right.score - left.score || left.id.localeCompare(right.id))) {
+    const cell = `${Math.min(2, Math.floor(candidate.anchor[0] / cellWidth))}:${Math.min(2, Math.floor(candidate.anchor[1] / cellHeight))}`;
+    bestInCell.set(cell, bestInCell.get(cell) ?? candidate.id);
+  }
+  return candidates
+    .map((candidate) => ({
+      ...candidate,
+      // Retaining a viable label needs roughly a 15% advantage to be displaced.
+      // The small cell bonus makes the normal budget read as a field, not a ranking.
+      priority: candidate.locked
+        ? 10_000 + candidate.score
+        : candidate.score
+          + (bestInCell.get(`${Math.min(2, Math.floor(candidate.anchor[0] / cellWidth))}:${Math.min(2, Math.floor(candidate.anchor[1] / cellHeight))}`) === candidate.id ? 12 : 0)
+          + (previousIds.has(candidate.id) ? candidate.score * 0.15 + 12 : 0),
+    }))
+    .toSorted((left, right) => right.priority - left.priority || left.id.localeCompare(right.id));
 }

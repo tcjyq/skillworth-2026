@@ -16,7 +16,7 @@ export const QUALITY_PROFILES = {
   HIGH: {
     dpr: [1, 1.7] as const,
     particleCount: 380,
-    visibleLabelCount: 6,
+    visibleLabelCount: 8,
     bloomMode: "off" as const,
     aaMode: "msaa" as const,
     haloIntensity: 1,
@@ -27,7 +27,7 @@ export const QUALITY_PROFILES = {
   BALANCED: {
     dpr: [1, 1.45] as const,
     particleCount: 260,
-    visibleLabelCount: 6,
+    visibleLabelCount: 8,
     bloomMode: "off" as const,
     aaMode: "msaa" as const,
     haloIntensity: 0.72,
@@ -38,7 +38,7 @@ export const QUALITY_PROFILES = {
   LOW: {
     dpr: [1, 1.1] as const,
     particleCount: 130,
-    visibleLabelCount: 3,
+    visibleLabelCount: 5,
     bloomMode: "off" as const,
     aaMode: "msaa" as const,
     haloIntensity: 0.42,
@@ -141,12 +141,14 @@ export function skillColor(skillId: string, category: string) {
 }
 
 export function relationFlowParticleCount(
-  quality: QualityProfileName,
-  reducedMotion: boolean,
-  relationSelected: boolean,
+  _quality: QualityProfileName,
+  _reducedMotion: boolean,
+  _relationSelected: boolean,
 ) {
-  if (reducedMotion || !relationSelected || quality === "LOW") return 0;
-  return quality === "HIGH" ? 6 : 4;
+  void _quality;
+  void _reducedMotion;
+  void _relationSelected;
+  return 0;
 }
 
 export function formatRelationEvidence(count: number, recencyWindow: string) {

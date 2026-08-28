@@ -8,8 +8,10 @@ import { useThree, type ThreeEvent } from "@react-three/fiber";
 import { gsap } from "gsap";
 import * as THREE from "three";
 import type { SceneNode } from "../types";
+import type { TransitionPhase } from "../state/scene-machine";
 import type { QualityProfileName } from "./visual-system";
 import { QUALITY_PROFILES, skillColor, skillStarMotion, starPointerShouldSelect, SKILL_STAR_MATERIAL } from "./visual-system";
+import { useRenderedSkillPositions } from "./rendered-positions";
 
 const STAR_VERTEX_SHADER = `
   attribute float starSize;
@@ -37,8 +39,8 @@ const STAR_VERTEX_SHADER = `
     vTwinkle = twinkle;
     float visualScale = 1.0 + breath * 0.2 + attention * 0.24;
     float depthSizedPoint = starSize * uPointScale * uPixelRatio * visualScale / max(-modelViewPosition.z, 1.0);
-    float screenMinimum = mix(6.25, 11.75, attention) * uScreenFloorScale * uPixelRatio;
-    float screenMaximum = mix(10.5, 14.0, attention) * uScreenFloorScale * uPixelRatio;
+    float screenMinimum = mix(7.6, 12.7, attention) * uScreenFloorScale * uPixelRatio;
+    float screenMaximum = mix(11.3, 15.2, attention) * uScreenFloorScale * uPixelRatio;
     gl_PointSize = clamp(
       depthSizedPoint,
       screenMinimum,
@@ -75,11 +77,11 @@ const STAR_FRAGMENT_SHADER = `
   }
 `;
 
-function nodeColor(node: SceneNode) {
+function nodeColor(node: SceneNode, focusSkillId: string | null, focusActive: boolean) {
   if (node.visualState === "observed-only") return new THREE.Color("#77837a");
   const color = new THREE.Color(skillColor(node.record.skill_id, node.record.skill_category).color);
   if (node.visualState === "muted") return color.multiplyScalar(0.46);
-  return color.multiplyScalar(0.94);
+  return color.multiplyScalar(focusActive && node.record.skill_id !== focusSkillId ? 0.68 : 0.94);
 }
 
 function nodeAttention(node: SceneNode, selectedSkillId: string | null, hoveredSkillId: string | null, emphasis: Set<string>) {
@@ -96,22 +98,32 @@ export function SkillNodes({
   selectedSkillId,
   emphasisSkillIds,
   quality,
+  transitionPhase,
+  transitionToken,
+  mobile,
+  homeResetToken,
   onHover,
   onSelect,
+  onMorphComplete,
 }: {
   nodes: SceneNode[];
   reducedMotion: boolean;
   selectedSkillId: string | null;
   emphasisSkillIds: string[];
   quality: QualityProfileName;
+  transitionPhase: TransitionPhase;
+  transitionToken: number;
+  mobile: boolean;
+  homeResetToken: number;
   onHover: (skillId: string | null) => void;
   onSelect: (skillId: string) => void;
+  onMorphComplete: (token: number, returning: boolean) => void;
 }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const hitRef = useRef<THREE.InstancedMesh>(null);
-  const previous = useRef(new Map<string, { position: THREE.Vector3; size: number }>());
   const hoveredSkillId = useRef<string | null>(null);
   const { gl, invalidate } = useThree();
+  const { currentRenderedSkillPosition, currentRenderedSkillSize, setRenderedSkillPosition } = useRenderedSkillPositions();
   const nodeIndex = useMemo(() => nodes.map((node) => node.record.skill_id), [nodes]);
   const positions = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
   const colors = useMemo(() => new THREE.BufferAttribute(new Float32Array(Math.max(nodes.length, 1) * 3), 3), [nodes.length]);
@@ -154,9 +166,13 @@ export function SkillNodes({
   useEffect(() => {
     const hit = hitRef.current;
     if (!hit) return;
-    const starts = nodes.map((node) => previous.current.get(node.record.skill_id) ?? {
-      position: new THREE.Vector3(...node.position),
-      size: reducedMotion ? node.size : node.size * 0.86,
+    const starts = nodes.map((node) => {
+      const position = currentRenderedSkillPosition(node.record.skill_id);
+      const size = currentRenderedSkillSize(node.record.skill_id);
+      return position && size !== null ? { position, size } : {
+        position: new THREE.Vector3(...node.position),
+        size: reducedMotion ? node.size : node.size * 0.86,
+      };
     });
     const ends = nodes.map((node) => ({ position: new THREE.Vector3(...node.position), size: node.size }));
     const hitMatrix = new THREE.Matrix4();
@@ -164,11 +180,19 @@ export function SkillNodes({
     const hitScale = new THREE.Vector3();
     const emphasis = new Set(emphasisSkillIds);
     const progress = { value: reducedMotion ? 1 : 0 };
+    const focusActive = transitionPhase === "HIGHLIGHT" || transitionPhase === "CAMERA_FLY";
+    const morphing = transitionPhase === "CONSTELLATION_MORPH" || transitionPhase === "RETURN_MORPH";
+    const host = gl.domElement.closest<HTMLElement>('[data-testid="skill-field-canvas"]');
+    if (host && morphing) {
+      host.dataset.nodeMorphObservedIntermediate = "false";
+      delete host.dataset.nodeMorphIntermediateProbe;
+    }
     const render = () => {
       nodes.forEach((node, index) => {
         const position = starts[index].position.clone().lerp(ends[index].position, progress.value);
         const size = THREE.MathUtils.lerp(starts[index].size, ends[index].size, progress.value);
-        const color = nodeColor(node);
+        setRenderedSkillPosition(node.record.skill_id, position, size);
+        const color = nodeColor(node, selectedSkillId, focusActive);
         const motion = skillStarMotion(node.record.skill_id);
         positions.setXYZ(index, position.x, position.y, position.z);
         colors.setXYZ(index, color.r, color.g, color.b);
@@ -176,7 +200,11 @@ export function SkillNodes({
         phases.setX(index, motion.phase);
         speeds.setX(index, motion.speed);
         amplitudes.setX(index, motion.amplitude);
-        attentions.setX(index, nodeAttention(node, selectedSkillId, hoveredSkillId.current, emphasis));
+        const attention = nodeAttention(node, selectedSkillId, hoveredSkillId.current, emphasis);
+        const recognitionPulse = focusActive && node.record.skill_id === selectedSkillId
+          ? 1 + Math.sin(Math.min(progress.value / 0.32, 1) * Math.PI) * 0.18
+          : 1;
+        attentions.setX(index, attention * recognitionPulse);
         const interactionRadius = Math.max(size * 2.45, quality === "LOW" ? 0.72 : 0.58);
         hitScale.setScalar(interactionRadius);
         hitMatrix.compose(position, quaternion, hitScale);
@@ -184,21 +212,48 @@ export function SkillNodes({
       });
       for (const attribute of [positions, colors, sizes, phases, speeds, amplitudes, attentions]) attribute.needsUpdate = true;
       hit.instanceMatrix.needsUpdate = true;
+      if (host) {
+        const probes = [...(nodes.length <= 8 ? nodes.map((node) => node.record.skill_id) : []), selectedSkillId, "programming_python", "database_sql", "devops_kubernetes"]
+          .filter((skillId): skillId is string => Boolean(skillId));
+        const nodeProbe = Object.fromEntries(probes.flatMap((skillId) => {
+          const rendered = currentRenderedSkillPosition(skillId);
+          return rendered ? [[skillId, rendered.toArray().map((value) => Number(value.toFixed(3)))]] : [];
+        }));
+        host.dataset.nodeProbe = JSON.stringify(nodeProbe);
+        host.dataset.nodeMorphProgress = progress.value.toFixed(3);
+        if (morphing && progress.value > 0.08 && progress.value < 0.92) {
+          host.dataset.nodeMorphObservedIntermediate = "true";
+          host.dataset.nodeMorphIntermediateProbe = JSON.stringify(nodeProbe);
+        }
+      }
       invalidate();
     };
     render();
+    const duration = morphing
+      ? reducedMotion ? 0 : mobile ? 0.3 : transitionPhase === "RETURN_MORPH" ? 0.42 : 0.46
+      : 1.45;
     const tween = reducedMotion ? null : gsap.to(progress, {
       value: 1,
-      duration: 1.45,
+      duration,
       ease: "power3.inOut",
       overwrite: true,
       onUpdate: render,
+      onComplete: () => {
+        if (morphing) onMorphComplete(transitionToken, transitionPhase === "RETURN_MORPH");
+      },
     });
-    previous.current = new Map(ends.map((entry, index) => [nodes[index].record.skill_id, entry]));
+    if (reducedMotion && morphing) onMorphComplete(transitionToken, transitionPhase === "RETURN_MORPH");
     return () => { tween?.kill(); };
-  }, [amplitudes, attentions, colors, emphasisSkillIds, invalidate, nodes, phases, positions, quality, reducedMotion, selectedSkillId, sizes, speeds]);
+  }, [amplitudes, attentions, colors, currentRenderedSkillPosition, currentRenderedSkillSize, emphasisSkillIds, gl, invalidate, mobile, nodes, onMorphComplete, phases, positions, quality, reducedMotion, selectedSkillId, setRenderedSkillPosition, sizes, speeds, transitionPhase, transitionToken]);
+
+  useEffect(() => {
+    hoveredSkillId.current = null;
+    onHover(null);
+    document.body.style.cursor = "default";
+  }, [homeResetToken, onHover]);
 
   const updateHover = (skillId: string | null) => {
+    if (hoveredSkillId.current === skillId) return;
     hoveredSkillId.current = skillId;
     const emphasis = new Set(emphasisSkillIds);
     nodes.forEach((node, index) => attentions.setX(index, nodeAttention(node, selectedSkillId, skillId, emphasis)));

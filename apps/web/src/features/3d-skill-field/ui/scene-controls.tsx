@@ -4,11 +4,12 @@ import { ArrowCounterClockwise, Crosshair, X } from "@phosphor-icons/react";
 import type { SceneState } from "../state/scene-machine";
 import styles from "../skill-field.module.css";
 
-export function SceneModeControl({ state, onValue, onDemand, onReturnGlobal, onClearRole }: {
+export function SceneModeControl({ state, onValue, onDemand, onReturnGlobal, onResetHome, onClearRole }: {
   state: SceneState;
   onValue: () => void;
   onDemand: () => void;
   onReturnGlobal: () => void;
+  onResetHome: () => void;
   onClearRole: () => void;
 }) {
   const globalMode = state.mode === "GLOBAL_VALUE" || state.mode === "GLOBAL_DEMAND";
@@ -18,6 +19,7 @@ export function SceneModeControl({ state, onValue, onDemand, onReturnGlobal, onC
       <button type="button" aria-pressed={state.mode === "GLOBAL_DEMAND"} onClick={onDemand}>只看招聘需求</button>
     </div>}
     {!globalMode && <button type="button" className={styles.textControl} onClick={onReturnGlobal}><ArrowCounterClockwise size={15} />回到全局</button>}
+    <button type="button" className={styles.textControl} onClick={onResetHome}><ArrowCounterClockwise size={15} />回到全景</button>
     {state.activeRole && <button type="button" className={styles.textControl} onClick={onClearRole}><X size={15} />清除职业范围</button>}
   </div>;
 }

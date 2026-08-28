@@ -1,6 +1,6 @@
 import type { ChinaSkillWorthRecord, SkillRelationRecord } from "@/lib/api/types";
 import { buildConstellationLayout, buildRankedLayout, selectRoleRankShifts } from "../layout";
-import type { SceneMode } from "../state/scene-machine";
+import type { BaseSceneMode, SceneMode } from "../state/scene-machine";
 import type { SceneModel, SceneNode } from "../types";
 import { skillColor } from "../scene/visual-system";
 
@@ -11,21 +11,25 @@ export function buildSceneModel({
   records,
   globalRecords,
   activeSkillId,
+  focusSkillId = null,
   selectedRelationId,
   relations,
   relationPrimaryLimit = 5,
+  relationOriginMode = "GLOBAL_VALUE",
 }: {
   mode: SceneMode;
   records: ChinaSkillWorthRecord[];
   globalRecords: ChinaSkillWorthRecord[];
   activeSkillId: string | null;
+  focusSkillId?: string | null;
   selectedRelationId: string | null;
   relations: SkillRelationRecord[];
   relationPrimaryLimit?: number;
+  relationOriginMode?: BaseSceneMode;
 }): SceneModel {
   const relationMode = mode === "RELATION_GLOBAL" || mode === "RELATION_ROLE";
   if (relationMode && activeSkillId) {
-    return relationScene(globalRecords, records, activeSkillId, selectedRelationId, relations, relationPrimaryLimit);
+    return relationScene(globalRecords, records, activeSkillId, selectedRelationId, relations, relationPrimaryLimit, relationOriginMode);
   }
   const rankField = mode === "GLOBAL_DEMAND" ? "demand_rank" : "skillworth_rank";
   const layout = buildRankedLayout(records, rankField);
@@ -63,14 +67,19 @@ export function buildSceneModel({
     const position = layout[record.skill_id];
     const topRanked = position.rank !== null && position.rank <= 5;
     const isCpp = record.skill_id === "programming_cpp";
-    const visualState = position.observedOnly
+    const isFocus = record.skill_id === focusSkillId;
+    const visualState = isFocus
+      ? "selected"
+      : position.observedOnly
       ? "observed-only"
       : mode === "GLOBAL_DEMAND"
         ? isCpp ? "selected" : "muted"
         : mode === "ROLE_VALUE"
           ? roleShiftIds.has(record.skill_id) ? "selected" : topRanked ? "highlighted" : "muted"
           : "default";
-    const labelPriority = roleShiftIds.has(record.skill_id)
+    const labelPriority = isFocus
+      ? 1_000
+      : roleShiftIds.has(record.skill_id)
       ? 0
       : mode === "GLOBAL_DEMAND"
         ? topRanked ? 400 - (position.rank ?? 40) : 0
@@ -96,11 +105,18 @@ function relationScene(
   selectedRelationId: string | null,
   relations: SkillRelationRecord[],
   primaryLimit: number,
+  originMode: BaseSceneMode,
 ): SceneModel {
   const constellation = buildConstellationLayout(activeSkillId, relations, primaryLimit);
-  const positions = new Map(constellation.nodes.map((node) => [node.skillId, node]));
   const scoped = new Map(scopedRecords.map((record) => [record.skill_id, record]));
   const globalLayout = buildRankedLayout(globalRecords, "skillworth_rank");
+  const originRecords = originMode === "ROLE_VALUE" ? scopedRecords : globalRecords;
+  const originLayout = buildRankedLayout(originRecords, originMode === "GLOBAL_DEMAND" ? "demand_rank" : "skillworth_rank");
+  const anchor = originLayout[activeSkillId]?.position ?? globalLayout[activeSkillId]?.position ?? [0, 0, 0];
+  const positions = new Map(constellation.nodes.map((node) => [node.skillId, {
+    ...node,
+    position: node.position.map((value, index) => value + anchor[index]) as [number, number, number],
+  }]));
   const relationBySkill = new Map(relations.map((relation) => [relation.related_skill_id, relation]));
   const nodes = globalRecords.map((globalRecord) => {
     const record = scoped.get(globalRecord.skill_id) ?? globalRecord;
@@ -108,7 +124,7 @@ function relationScene(
     const isCore = record.skill_id === activeSkillId;
     const relation = relationBySkill.get(record.skill_id) ?? null;
     const isSelectedRelation = record.skill_id === selectedRelationId;
-    const backgroundPosition = globalLayout[record.skill_id].position.map((value) => value * 1.25) as [number, number, number];
+    const backgroundPosition = originLayout[record.skill_id]?.position ?? globalLayout[record.skill_id].position;
     return {
       record,
       position: constellationNode?.position ?? backgroundPosition,
@@ -132,5 +148,5 @@ function relationScene(
       targetColor: skillColor(node.skillId, node.relation.related_skill_category).color,
     }];
   });
-  return { nodes, lines, roleShifts: [], focus: [0, 0, 0] };
+  return { nodes, lines, roleShifts: [], focus: anchor };
 }

@@ -20,11 +20,13 @@ export function DetailPanel({
   state,
   record,
   relation,
+  settled,
   onSelectRelation,
 }: {
   state: SceneState;
   record: ChinaSkillWorthRecord | null;
   relation: SkillRelationRecord | null;
+  settled: boolean;
   onSelectRelation: (skillId: string) => void;
 }) {
   const panelRef = useRef<HTMLElement>(null);
@@ -39,6 +41,9 @@ export function DetailPanel({
   useEffect(() => { panelRef.current?.scrollTo({ top: 0, behavior: state.reducedMotion ? "auto" : "smooth" }); }, [record?.skill_id, state.reducedMotion]);
   if (!record) return <aside ref={panelRef} className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情">
     <div className={styles.detailEmpty}><p>选择一个技能</p><span>点击节点或使用搜索，查看岗位证据和技能关系。</span></div>
+  </aside>;
+  if (!settled) return <aside ref={panelRef} className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情">
+    <div className={styles.detailEmpty} role="status"><p>{state.transitionPhase.startsWith("RETURN") ? "正在返回星域" : state.transitionPhase === "IDLE" ? `已选择 ${record.skill}` : `正在聚焦 ${record.skill}`}</p><span>{state.transitionPhase === "IDLE" ? "再次点击或搜索这个技能，可继续进入关联星座。" : "技能仍在原星域中，关系证据会在聚焦完成后展开。"}</span></div>
   </aside>;
   const gate = state.activeRole ? roleEvidence(state.activeRole.sampleSize) : null;
   return <aside ref={panelRef} className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情">

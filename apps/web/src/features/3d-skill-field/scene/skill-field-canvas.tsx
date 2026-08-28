@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import type { SceneMode } from "../state/scene-machine";
+import type { SceneMode, TransitionPhase } from "../state/scene-machine";
 import type { SceneModel } from "../types";
-import { CAMERA_LIMITS, CameraDirector, idleRotationEnabled } from "./camera-director";
+import { CAMERA_LIMITS, CameraDirector, cameraMinDistance, idleRotationEnabled } from "./camera-director";
 import { Labels } from "./labels";
 import { PerformanceProbe } from "./performance-probe";
 import { RelationLines } from "./relation-lines";
@@ -12,7 +12,8 @@ import { RoleShiftLines } from "./role-shift-lines";
 import { SkillNodes } from "./skill-nodes";
 import { Atmosphere } from "./atmosphere";
 import { ValueCore } from "./value-core";
-import { atmosphereParticleCount, nextQualityProfile, QUALITY_PROFILES, relationFlowParticleCount, resolveAtmosphereVariant, type QualityProfileName } from "./visual-system";
+import { RenderedPositionProvider } from "./rendered-positions";
+import { atmosphereParticleCount, nextQualityProfile, QUALITY_PROFILES, resolveAtmosphereVariant, type QualityProfileName } from "./visual-system";
 import * as THREE from "three";
 import styles from "../skill-field.module.css";
 
@@ -35,21 +36,37 @@ export default function SkillFieldCanvas({
   model,
   mode,
   activeSkillId,
+  homeResetToken,
   selectedRelationId,
   reducedMotion,
   transitionToken,
+  transitionPhase,
+  relationReady,
   onSelect,
   onClearSelection,
+  onCameraFlyStart,
+  onConstellationMorphStart,
+  onFocusInterrupted,
+  onMorphComplete,
+  onReturnComplete,
   onContextLost,
 }: {
   model: SceneModel;
   mode: SceneMode;
   activeSkillId: string | null;
+  homeResetToken: number;
   selectedRelationId: string | null;
   reducedMotion: boolean;
   transitionToken: number;
+  transitionPhase: TransitionPhase;
+  relationReady: boolean;
   onSelect: (skillId: string) => void;
   onClearSelection: () => void;
+  onCameraFlyStart: (token: number) => void;
+  onConstellationMorphStart: (token: number) => void;
+  onFocusInterrupted: (token: number) => void;
+  onMorphComplete: (token: number, returning: boolean) => void;
+  onReturnComplete: (token: number) => void;
   onContextLost: () => void;
 }) {
   const [hoveredSkillId, setHoveredSkillId] = useState<string | null>(null);
@@ -79,7 +96,13 @@ export default function SkillFieldCanvas({
     data-camera-max-azimuth={String(CAMERA_LIMITS.maxAzimuthAngle)}
     data-camera-min-polar={CAMERA_LIMITS.minPolarAngle.toFixed(4)}
     data-camera-max-polar={CAMERA_LIMITS.maxPolarAngle.toFixed(4)}
+    data-camera-min-distance={String(cameraMinDistance(mobile))}
+    data-camera-max-distance={String(CAMERA_LIMITS.maxDistance)}
     data-idle-rotation={String(idleRotationEnabled(quality, mobile, reducedMotion))}
+    data-transition-phase={transitionPhase}
+    data-transition-token={transitionToken}
+    data-active-skill={activeSkillId ?? ""}
+    data-unique-skill-count={new Set(model.nodes.map((node) => node.record.skill_id)).size}
     aria-label="交互式 3D 技能星域"
   >
     <Canvas
@@ -92,22 +115,44 @@ export default function SkillFieldCanvas({
       <color attach="background" args={["#090d0b"]} />
       <fog attach="fog" args={["#090d0b", 24, 52]} />
       <WebGLContextGuard onContextLost={onContextLost} />
-      <PerformanceProbe qualityProfile={quality} environmentalParticleCount={backgroundParticleCount} relationParticleCount={relationFlowParticleCount(quality, reducedMotion, Boolean(selectedRelationId))} visibleLabelCount={profile.visibleLabelCount} aaMode={profile.aaMode} bloomMode={profile.bloomMode} postProcessingPassCount={0} onSustainedLowFps={downgradeQuality} />
+      <PerformanceProbe qualityProfile={quality} environmentalParticleCount={backgroundParticleCount} relationParticleCount={0} visibleLabelCount={profile.visibleLabelCount} aaMode={profile.aaMode} bloomMode={profile.bloomMode} postProcessingPassCount={0} onSustainedLowFps={downgradeQuality} />
       <Atmosphere particleCount={backgroundParticleCount} />
       <ValueCore visible={valueMode} />
-      <RoleShiftLines shifts={model.roleShifts} reducedMotion={reducedMotion} transitionToken={transitionToken} />
-      <RelationLines lines={model.lines} selectedRelationId={selectedRelationId} reducedMotion={reducedMotion} quality={quality} />
-      <SkillNodes
-        nodes={model.nodes}
-        reducedMotion={reducedMotion}
-        selectedSkillId={selectedRelationId ?? activeSkillId}
-        emphasisSkillIds={model.roleShifts.map((shift) => shift.skillId)}
-        quality={quality}
-        onHover={setHoveredSkillId}
-        onSelect={onSelect}
-      />
-      <Labels nodes={model.nodes} hoveredSkillId={hoveredSkillId} visibleLabelCount={profile.visibleLabelCount} protectValueCore={valueMode} onSelect={onSelect} />
-      <CameraDirector mode={mode} focus={model.focus} reducedMotion={reducedMotion} transitionToken={transitionToken} quality={quality} mobile={mobile} />
+      <RenderedPositionProvider nodes={model.nodes}>
+        <RoleShiftLines shifts={model.roleShifts} reducedMotion={reducedMotion} transitionToken={transitionToken} />
+        <RelationLines lines={model.lines} selectedRelationId={selectedRelationId} hoveredSkillId={hoveredSkillId} reducedMotion={reducedMotion} transitionPhase={transitionPhase} transitionToken={transitionToken} />
+        <SkillNodes
+          nodes={model.nodes}
+          reducedMotion={reducedMotion}
+          selectedSkillId={selectedRelationId ?? activeSkillId}
+          emphasisSkillIds={model.roleShifts.map((shift) => shift.skillId)}
+          quality={quality}
+          transitionPhase={transitionPhase}
+          transitionToken={transitionToken}
+          mobile={mobile}
+          homeResetToken={homeResetToken}
+          onHover={setHoveredSkillId}
+          onSelect={onSelect}
+          onMorphComplete={onMorphComplete}
+        />
+        <Labels nodes={model.nodes} lines={model.lines} relationMode={mode === "RELATION_GLOBAL" || mode === "RELATION_ROLE"} selectedRelationId={selectedRelationId} hoveredSkillId={hoveredSkillId} visibleLabelCount={profile.visibleLabelCount} protectValueCore={valueMode} transitionPhase={transitionPhase} activeSkillId={activeSkillId} onSelect={onSelect} />
+        <CameraDirector
+          mode={mode}
+          focus={model.focus}
+          activeSkillId={activeSkillId}
+          homeResetToken={homeResetToken}
+          reducedMotion={reducedMotion}
+          transitionToken={transitionToken}
+          transitionPhase={transitionPhase}
+          relationReady={relationReady}
+          quality={quality}
+          mobile={mobile}
+          onCameraFlyStart={onCameraFlyStart}
+          onConstellationMorphStart={onConstellationMorphStart}
+          onFocusInterrupted={onFocusInterrupted}
+          onReturnComplete={onReturnComplete}
+        />
+      </RenderedPositionProvider>
     </Canvas>
   </div>;
 }

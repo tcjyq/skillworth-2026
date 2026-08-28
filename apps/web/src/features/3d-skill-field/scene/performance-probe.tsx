@@ -20,7 +20,7 @@ export function PerformanceProbe({ qualityProfile, environmentalParticleCount, r
   const downgradeTriggered = useRef(false);
   const frameDurations = useRef<number[]>([]);
 
-  useFrame(({ gl, camera }, delta) => {
+  useFrame(({ gl, camera, controls }, delta) => {
     const now = performance.now();
     renderedFrames.current += 1;
     frameTimes.current = [...frameTimes.current.filter((time) => now - time <= 1000), now];
@@ -36,6 +36,8 @@ export function PerformanceProbe({ qualityProfile, environmentalParticleCount, r
     host.dataset.lastRenderedAt = now.toFixed(1);
     host.dataset.qualityProfile = qualityProfile;
     host.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(",");
+    const cameraControls = controls as { getTarget?: (out: THREE.Vector3) => THREE.Vector3 } | null;
+    if (cameraControls?.getTarget) host.dataset.cameraTarget = cameraControls.getTarget(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(",");
     host.dataset.cameraAzimuthDegrees = (Math.atan2(camera.position.x, camera.position.z) * 180 / Math.PI).toFixed(2);
     host.dataset.cameraPolarDegrees = (Math.acos(THREE.MathUtils.clamp(camera.position.y / Math.max(camera.position.length(), 0.0001), -1, 1)) * 180 / Math.PI).toFixed(2);
     const rollingSeconds = frameDurations.current.reduce((total, item) => total + item, 0);

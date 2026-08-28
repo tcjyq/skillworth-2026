@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rectanglesOverlap, resolveLabelPlacements } from "./label-layout";
+import { rankBrowsableLabelCandidates, rectanglesOverlap, resolveLabelPlacements } from "./label-layout";
 
 const candidates = [
   { id: "selected", anchor: [500, 300] as const, width: 92, height: 34, priority: 600 },
@@ -11,6 +11,27 @@ const candidates = [
 ];
 
 describe("screen-space label avoidance", () => {
+  it("keeps the browsing order deterministic while distributing initial picks across screen cells", () => {
+    const browsing = [
+      { id: "north-west", anchor: [160, 120] as const, width: 80, height: 30, score: 80 },
+      { id: "north-east", anchor: [840, 120] as const, width: 80, height: 30, score: 79 },
+      { id: "south-west", anchor: [160, 520] as const, width: 80, height: 30, score: 78 },
+      { id: "south-east", anchor: [840, 520] as const, width: 80, height: 30, score: 77 },
+    ];
+    const first = rankBrowsableLabelCandidates(browsing, new Set(), 1000, 640);
+    expect(first).toEqual(rankBrowsableLabelCandidates(browsing, new Set(), 1000, 640));
+    expect(new Set(first.slice(0, 4).map((item) => item.id))).toEqual(new Set(browsing.map((item) => item.id)));
+  });
+
+  it("gives a safe existing label a modest hysteresis advantage without locking the candidate pool", () => {
+    const browsing = [
+      { id: "existing", anchor: [200, 180] as const, width: 80, height: 30, score: 80 },
+      { id: "new", anchor: [210, 180] as const, width: 80, height: 30, score: 90 },
+    ];
+    expect(rankBrowsableLabelCandidates(browsing, new Set(["existing"]), 1000, 640)[0]?.id).toBe("existing");
+    expect(rankBrowsableLabelCandidates([{ ...browsing[0], score: 70 }, browsing[1]], new Set(["existing"]), 1000, 640)[0]?.id).toBe("new");
+  });
+
   it("is deterministic for the same state and camera projection", () => {
     expect(resolveLabelPlacements(candidates, { width: 1000, height: 640, maxVisible: 5 }))
       .toEqual(resolveLabelPlacements(candidates, { width: 1000, height: 640, maxVisible: 5 }));

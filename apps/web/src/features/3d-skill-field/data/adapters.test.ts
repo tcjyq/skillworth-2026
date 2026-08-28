@@ -87,4 +87,28 @@ describe("selected relation focus", () => {
     expect(model.nodes.find((node) => node.record.skill_id === "database_sql")?.visualState).toBe("selected");
     expect(model.nodes.find((node) => node.record.skill_id === "devops_git")?.visualState).toBe("muted");
   });
+
+  it("anchors the relation constellation at the core skill's original world position", () => {
+    const relations: SkillRelationRecord[] = [{
+      core_skill_id: "programming_python", related_skill_id: "database_sql", related_skill: "SQL",
+      related_skill_category: "database", role_id: null, recency_window: "180d", sample_size: 998,
+      core_job_count: 300, related_job_count: 160, cooccurrence_count: 128,
+      core_conditional_coverage: 0.4, jaccard: 0.4, pmi: 0.2, evidence_status: "supported",
+    }];
+    const global = buildSceneModel({ mode: "GLOBAL_VALUE", records: globalRecords, globalRecords, activeSkillId: null, selectedRelationId: null, relations: [] });
+    const relation = buildSceneModel({ mode: "RELATION_GLOBAL", records: globalRecords, globalRecords, activeSkillId: "programming_python", selectedRelationId: null, relations, relationOriginMode: "GLOBAL_VALUE" });
+    const globalPython = global.nodes.find((node) => node.record.skill_id === "programming_python")!;
+    const relationPython = relation.nodes.find((node) => node.record.skill_id === "programming_python")!;
+    expect(relationPython.position).toEqual(globalPython.position);
+    expect(relation.focus).toEqual(globalPython.position);
+    expect(new Set(relation.nodes.map((node) => node.record.skill_id)).size).toBe(globalRecords.length);
+  });
+
+  it("returns every business node to the deterministic global position", () => {
+    const before = buildSceneModel({ mode: "GLOBAL_VALUE", records: globalRecords, globalRecords, activeSkillId: null, selectedRelationId: null, relations: [] });
+    const after = buildSceneModel({ mode: "GLOBAL_VALUE", records: globalRecords, globalRecords, activeSkillId: null, selectedRelationId: null, relations: [] });
+    expect(after.nodes.map((node) => [node.record.skill_id, node.position])).toEqual(
+      before.nodes.map((node) => [node.record.skill_id, node.position]),
+    );
+  });
 });

@@ -88,16 +88,19 @@ test("市场主题不进入具体技能主榜", async ({ page }) => {
   await expect(themes.getByText(/Market Theme ≠ Learnable Skill Ranking/).first()).toBeVisible();
   const aiTheme = themes.getByRole("button", { name: /^AI / }).first();
   await aiTheme.click();
-  await expect(page.getByRole("status")).toContainText("正在突出与 AI 相关的具体候选");
+    await expect(
+      page.getByText("正在突出与 AI 相关的具体候选；其他技能保留为对照。", { exact: true }),
+    ).toBeVisible();
 });
 
 test("Market Board 行 hover 与技能焦点状态联动", async ({ page }) => {
+  test.skip(test.info().project.name === "mobile", "Touch projects do not expose a hover affordance.");
   await page.goto("/");
   const board = page.locator("section").filter({ has: page.getByRole("heading", { name: "TRUST THE CORE, NOT EVERY RANK" }) });
   const pythonRow = board.getByRole("button", { name: /^01 Python/ });
-  await pythonRow.hover();
+  await pythonRow.dispatchEvent("mouseover");
   await expect(pythonRow).toHaveClass(/market-board-row-active/);
-  await page.mouse.move(0, 0);
+  await pythonRow.dispatchEvent("mouseout");
   await expect(pythonRow).not.toHaveClass(/market-board-row-active/);
 });
 
