@@ -1,5 +1,5 @@
 import { Noto_Sans_SC } from "next/font/google";
-import { SkillFieldClientEntry } from "@/features/3d-skill-field/skill-field-client-entry";
+import { VisualV2ClientEntry } from "./visual-v2-client-entry";
 
 const notoSansSC = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
@@ -10,6 +10,6 @@ const notoSansSC = Noto_Sans_SC({
   fallback: ["Microsoft YaHei UI", "PingFang SC", "Microsoft YaHei"],
 });
 
-export default function SkillFieldRoute() {
-  return <div className={notoSansSC.variable}><SkillFieldClientEntry /></div>;
+export function VisualV2Route() {
+  return <div className={notoSansSC.variable}><VisualV2ClientEntry /></div>;
 }

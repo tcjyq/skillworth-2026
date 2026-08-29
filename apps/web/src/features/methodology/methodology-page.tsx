@@ -39,7 +39,7 @@ export function MethodologyPage() {
     <PublicNavigation />
     <main id="main-content" className={styles.methodologyMain}>
       <header className={styles.methodologyHero}>
-        <nav aria-label="面包屑" className={styles.breadcrumb}><Link href="/lab/visual-v2#top">首页</Link><span aria-hidden="true">›</span><span>方法与数据</span></nav>
+        <nav aria-label="面包屑" className={styles.breadcrumb}><Link href="/#top">首页</Link><span aria-hidden="true">›</span><span>方法与数据</span></nav>
         <h1>这个排名是怎么算出来的？</h1>
         <p>先说容易理解的版本：我们比较技能在招聘市场中的支持度，再把学习时间考虑进去。它是学习决策参考，不是就业结果预测。</p>
       </header>

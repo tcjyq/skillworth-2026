@@ -115,13 +115,13 @@ function SkillFieldExperience() {
   const fallback = <WebGLFallback skills={scopedRecords} relations={displayedRelations} onSelect={(skillId) => selectSkill(skillId, undefined, "search")} />;
 
   const pageHeader = <header className={styles.localHeader}>
-    <Link href="/lab/visual-v2#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span></Link>
+    <Link href="/#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span></Link>
     <div className={styles.experienceNavigation}><ExperienceSwitcher current="field" /></div>
     <nav className={styles.localAuxNavigation} aria-label="3D 技能星域辅助导航"><Link href="/methodology">方法与数据</Link></nav>
   </header>;
 
   if (global.isLoading || roles.isLoading) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>查技术技能</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasLoading} aria-label="正在读取技能星域"><span /></div></section></section></main>;
-  if (global.error || roles.error || !global.data || !roles.data) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>查技术技能</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasError}><h2>技能星域暂时无法加载</h2><p>分析数据未就绪。你可以稍后重试，稍后再查看分析结果。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div></section><footer className={styles.footer}><Link href="/lab/visual-v2#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer></section></main>;
+  if (global.error || roles.error || !global.data || !roles.data) return <main className={styles.page}>{pageHeader}<section className={styles.pageContent} aria-labelledby="skill-field-title"><div className={styles.pageIntro}><p>查技术技能</p><h1 id="skill-field-title">3D 技能星域</h1><span>在可交互空间中探索学习优先级与技能关系。</span></div><section className={styles.visualizationFrame} aria-label="3D 技能星域可视化窗口"><div className={styles.canvasError}><h2>技能星域暂时无法加载</h2><p>分析数据未就绪。你可以稍后重试，稍后再查看分析结果。</p><button type="button" onClick={() => { void global.mutate(); void roles.mutate(); }}>重试</button></div></section><footer className={styles.footer}><Link href="/#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer></section></main>;
   const globalData = global.data;
 
   return <main className={styles.page}>
@@ -175,7 +175,7 @@ function SkillFieldExperience() {
       </section>
       <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} settled={state.transitionPhase === "SETTLED"} onSelectRelation={(skillId) => selectSkill(skillId, undefined, "relation")} />
       {state.transitionPhase === "SETTLED" && <RelationRail key={state.relationSkill?.skillId ?? "none"} relations={displayedRelations} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.relationSkill?.skillId ?? "", limit })} />}
-      <footer className={styles.footer}><p>{globalData.disclaimer}</p><Link href="/lab/visual-v2#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer>
+      <footer className={styles.footer}><p>{globalData.disclaimer}</p><Link href="/#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer>
     </section>
   </main>;
 }

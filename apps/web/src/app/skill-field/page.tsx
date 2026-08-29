@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_SC } from "next/font/google";
-import { SkillFieldPage } from "@/features/3d-skill-field/skill-field-page";
+import { SkillFieldClientEntry } from "@/features/3d-skill-field/skill-field-client-entry";
 
 const notoSansSC = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 };
 
 export default function SkillFieldRoute() {
-  return <div className={notoSansSC.variable}><SkillFieldPage /></div>;
+  return <div className={notoSansSC.variable}><SkillFieldClientEntry /></div>;
 }

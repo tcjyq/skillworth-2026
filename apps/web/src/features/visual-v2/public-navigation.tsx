@@ -13,7 +13,7 @@ const sections = [
 
 export function PublicNavigation() {
   const pathname = usePathname();
-  const onHomepage = pathname === "/lab/visual-v2";
+  const onHomepage = pathname === "/";
   const [activeSection, setActiveSection] = useState(onHomepage ? "findings" : "methodology");
 
   useEffect(() => {
@@ -34,11 +34,11 @@ export function PublicNavigation() {
     return () => observer.disconnect();
   }, [onHomepage]);
 
-  const homePath = onHomepage ? "#top" : "/lab/visual-v2#top";
+  const homePath = onHomepage ? "#top" : "/#top";
   return <header className={styles.publicHeader} data-motion-nav>
     <Link href={homePath} className={styles.publicBrand} aria-label="SkillWorth 2026 首页">SkillWorth <span>2026</span></Link>
     <nav aria-label="公开产品导航">
-      {sections.map((item) => <Link key={item.id} href={onHomepage ? `#${item.id}` : `/lab/visual-v2#${item.id}`} aria-current={activeSection === item.id ? "location" : undefined}>{item.label}</Link>)}
+      {sections.map((item) => <Link key={item.id} href={onHomepage ? `#${item.id}` : `/#${item.id}`} aria-current={activeSection === item.id ? "location" : undefined}>{item.label}</Link>)}
       <Link href="/methodology" aria-current={activeSection === "methodology" ? "page" : undefined}>方法与数据</Link>
     </nav>
   </header>;

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("首页首屏直接说明用途、结论和样本边界", async ({ page }) => {
-  await page.goto("/lab/visual-v2");
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: "2026，学什么技术最值？" })).toBeVisible();
   await expect(page.getByText("Python · SQL · Git", { exact: true })).toBeVisible();
   await expect(page.locator('section[aria-labelledby="hero-title"]').getByText("998", { exact: true })).toBeVisible();
@@ -67,7 +67,7 @@ test("角色样本不足时展示主排名层、已观察技能和分级证据�
 });
 
 test("统一公共导航不暴露内部版本并可进入方法页返回首页", async ({ page, isMobile }) => {
-  await page.goto("/lab/visual-v2");
+  await page.goto("/");
   const nav = page.getByRole("navigation", { name: "公开产品导航" });
   await expect(nav.getByRole("link", { name: "研究结论" })).toBeVisible();
   await expect(nav.getByRole("link", { name: "方法与数据" })).toBeVisible();
@@ -84,9 +84,9 @@ test("统一公共导航不暴露内部版本并可进入方法页返回首页",
   await expect(page).toHaveURL(/\/methodology$/);
   await expect(page.getByRole("heading", { name: "这个排名是怎么算出来的？" })).toBeVisible();
   await expect(page.getByRole("link", { name: "方法与数据" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("navigation", { name: "面包屑" }).getByRole("link", { name: "首页" })).toHaveAttribute("href", "/lab/visual-v2#top");
+  await expect(page.getByRole("navigation", { name: "面包屑" }).getByRole("link", { name: "首页" })).toHaveAttribute("href", "/#top");
   await page.getByRole("link", { name: "SkillWorth 2026 首页" }).click();
-  await expect(page).toHaveURL(/\/lab\/visual-v2#top$/);
+  await expect(page).toHaveURL(/\/#top$/);
 });
 
 test("方法页默认是学生可读层，技术术语仅在附录出现", async ({ page }) => {
@@ -130,7 +130,7 @@ test("移动端、Reduced Motion、控制台与请求保持可用", async ({ pag
   page.on("console", (message) => { if (["error", "warning"].includes(message.type())) messages.push(message.text()); });
   page.on("requestfailed", (request) => failedRequests.push(request.url()));
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/lab/visual-v2");
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: /2026，学什么/ })).toBeVisible();
   if (isMobile) {
     const nav = page.getByRole("navigation", { name: "公开产品导航" });

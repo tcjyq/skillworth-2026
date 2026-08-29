@@ -35,8 +35,8 @@ async function expectAnalysisHashNavigation(page: Page) {
   await expect(page.locator("#analysis-results")).toBeInViewport({ timeout: realMode ? 10_000 : 5_000 });
 }
 
-test("分析结果与 3D 技能星域通过正常 history 双向切换", async ({ page, isMobile }) => {
-  await page.goto("/lab/visual-v2#analysis-results");
+test("首页分析结果与 3D 技能星域通过正常 history 双向切换", async ({ page, isMobile }) => {
+  await page.goto("/#analysis-results");
 
   const analysisNavigation = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" });
   await expect(analysisNavigation.getByRole("link", { name: "分析结果", exact: true })).toHaveAttribute("aria-current", "page");
@@ -50,7 +50,7 @@ test("分析结果与 3D 技能星域通过正常 history 双向切换", async (
   await expect(fieldNavigation.getByRole("link", { name: "3D 技能星域", exact: true })).toHaveAttribute("aria-current", "page");
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
+  await expect(page).toHaveURL(/\/#analysis-results$/);
   await expectAnalysisHashNavigation(page);
   await page.goForward();
   await expect(page).toHaveURL(/\/skill-field$/);
@@ -59,7 +59,7 @@ test("分析结果与 3D 技能星域通过正常 history 双向切换", async (
   await analysisLink.focus();
   await expect(analysisLink).toBeFocused();
   await analysisLink.press("Enter");
-  await expect(page).toHaveURL(/\/lab\/visual-v2#analysis-results$/);
+  await expect(page).toHaveURL(/\/#analysis-results$/);
   await expectAnalysisHashNavigation(page);
 
   if (isMobile) {

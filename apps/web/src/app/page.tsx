@@ -1,3 +1,1 @@
-import { SkillWorthPage } from "@/features/skillworth-2026/skillworth-page";
-
-export default function Home() { return <SkillWorthPage />; }
+export { VisualV2Route as default } from "@/features/visual-v2/visual-v2-route";
