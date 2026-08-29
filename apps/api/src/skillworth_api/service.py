@@ -89,6 +89,10 @@ class ApiService:
     def cached(self, key: str, loader: Callable[[], T]) -> CacheLookup[T]:
         return self._cache.get_or_load(key, loader)
 
+    @property
+    def data_available(self) -> bool:
+        return self.settings.warehouse_path.is_file()
+
     def market_summary(self, filters: AnalyticsFilters) -> MarketSummaryResponse:
         requested_filters = filters
         filters = self._core_filters(filters)

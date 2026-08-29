@@ -81,3 +81,5 @@ playwright-report/
 test-results/
 *.trace.zip
 *.webm
+apps/web/public/backend-data/
+skillworth_full_history.md

@@ -15,10 +15,11 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 class ApiSettings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    data_mode: Literal["demo", "real"] = "demo"
+    data_mode: Literal["demo", "real", "production_safe"] = "demo"
     warehouse_path: Path = REPOSITORY_ROOT / "data/modes/demo/current/warehouse/skillworth.duckdb"
     graph_edges_path: Path = REPOSITORY_ROOT / "data/modes/demo/current/gold/skill_graph_edges.parquet"
     quality_report_path: Path = REPOSITORY_ROOT / "data/modes/demo/current/silver/silver_jobs.quality.json"
+    production_safe_artifact_path: Path = REPOSITORY_ROOT / "data/production-safe/current"
     cache_ttl_seconds: float = Field(default=60, gt=0, le=3600)
     service_version: str = "phase11_fastapi_v1.1"
     market_scope: str = "demo_dataset"
@@ -40,8 +41,31 @@ class ApiSettings(BaseModel):
             fixture_manifest = REPOSITORY_ROOT / "data/demo/source_manifest.json"
             payload = json.loads(fixture_manifest.read_text(encoding="utf-8"))
             return cls(access_date=_date_from_value(payload.get("imported_at")))
+        if mode == "production_safe":
+            artifact_root = Path(
+                os.getenv(
+                    "SKILLWORTH_PRODUCTION_SAFE_ARTIFACT_DIR",
+                    str(REPOSITORY_ROOT / "data/production-safe/current"),
+                )
+            )
+            metadata_path = artifact_root / "artifact_metadata.json"
+            if not metadata_path.is_file():
+                raise FileNotFoundError("Production-safe aggregate artifact is unavailable")
+            payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+            return cls(
+                data_mode="production_safe",
+                production_safe_artifact_path=artifact_root,
+                market_scope=payload["market_scope"],
+                source_role=payload["source_role"],
+                snapshot=payload["source_snapshot"],
+                access_date=_date_from_value(payload.get("access_date")),
+                job_count=payload["job_count"],
+                company_count=payload["company_count"],
+                source_count=payload["source_count"],
+                disclaimer=payload["disclaimer"],
+            )
         if mode != "real":
-            raise ValueError("SKILLWORTH_DATA_MODE must be demo or real")
+            raise ValueError("SKILLWORTH_DATA_MODE must be demo, real or production_safe")
         manifest_path = Path(
             os.getenv(
                 "SKILLWORTH_REAL_MODE_MANIFEST",

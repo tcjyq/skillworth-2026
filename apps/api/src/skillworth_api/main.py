@@ -38,6 +38,7 @@ from .schemas import (
 )
 from .service import ApiService
 from .settings import ApiSettings
+from .production_safe import ProductionSafeApiService
 
 
 LOGGER = logging.getLogger("skillworth.api")
@@ -62,7 +63,11 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             {"name": "portfolio", "description": "Personal Skill Coverage and learning optimization; not employment probability."},
         ],
     )
-    app.state.service = ApiService(settings)
+    app.state.service = (
+        ProductionSafeApiService(settings)
+        if settings.data_mode == "production_safe"
+        else ApiService(settings)
+    )
 
     @app.middleware("http")
     async def request_observability(request: Request, call_next):
@@ -102,7 +107,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
 
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     def health(service: ApiService = Depends(_service)) -> HealthResponse:
-        return HealthResponse(status="ok", service_version=service.settings.service_version, warehouse_available=service.settings.warehouse_path.is_file())
+        return HealthResponse(status="ok", service_version=service.settings.service_version, warehouse_available=service.data_available)
 
     @app.get("/market/summary", response_model=MarketSummaryResponse, responses=ERROR_RESPONSES, tags=["market"])
     def market_summary(response: Response, filters: MarketQuery = Depends(_market_query), service: ApiService = Depends(_service)) -> MarketSummaryResponse:
@@ -202,7 +207,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     return app
 
 
-def _service(request: Request) -> ApiService:
+def _service(request: Request) -> ApiService | ProductionSafeApiService:
     return request.app.state.service
 
 
@@ -230,7 +235,7 @@ def _market_query(
     )
 
 
-def _cached(response: Response, service: ApiService, name: str, filters: AnalyticsFilters | None, loader):
+def _cached(response: Response, service: ApiService | ProductionSafeApiService, name: str, filters: AnalyticsFilters | None, loader):
     suffix = filters.model_dump_json() if filters is not None else ""
     result = service.cached(f"{name}:{suffix}", loader)
     response.headers["X-Cache"] = "HIT" if result.hit else "MISS"
