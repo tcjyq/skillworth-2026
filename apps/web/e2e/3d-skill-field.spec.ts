@@ -313,7 +313,7 @@ test("3D 数据失败时仍可返回分析结果", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "技能星域暂时无法加载" })).toBeVisible();
   const analysisLink = page.getByRole("navigation", { name: "分析结果与 3D 技能星域" }).getByRole("link", { name: "分析结果", exact: true });
-  await expect(analysisLink).toHaveAttribute("href", "/lab/visual-v2#analysis-results");
+  await expect(analysisLink).toHaveAttribute("href", "/#analysis-results");
   await expect(analysisLink).toBeVisible();
 });
 
