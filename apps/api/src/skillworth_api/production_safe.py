@@ -184,7 +184,7 @@ def audit_production_safe_artifact(root: Path) -> ProductionSafeArtifactAudit:
         file_path = root / str(name)
         if item.get("sha256") != _sha256(file_path):
             findings.append(f"sha256 mismatch: {name}")
-        if item.get("size_bytes") != file_path.stat().st_size:
+        if item.get("size_bytes") != len(_canonical_json_bytes(file_path)):
             findings.append(f"size mismatch: {name}")
         if item.get("row_count") != _row_count(_read_json(file_path)):
             findings.append(f"row count mismatch: {name}")
@@ -439,7 +439,7 @@ def _relation_key(core_skill_id: str, role_id: str | None) -> str:
 
 
 def _file_inventory(path: Path, payload: Any) -> dict[str, Any]:
-    return {"name": path.name, "row_count": _row_count(payload), "size_bytes": path.stat().st_size, "sha256": _sha256(path)}
+    return {"name": path.name, "row_count": _row_count(payload), "size_bytes": len(_canonical_json_bytes(path)), "sha256": _sha256(path)}
 
 
 def _row_count(payload: Any) -> int:
@@ -461,7 +461,11 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return hashlib.sha256(_canonical_json_bytes(path)).hexdigest()
+
+
+def _canonical_json_bytes(path: Path) -> bytes:
+    return path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
 
 
 def _restricted_content_findings(root: Path) -> tuple[str, ...]:

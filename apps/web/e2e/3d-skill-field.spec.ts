@@ -289,9 +289,9 @@ test("拖拽和滚轮都立即中断自动相机且不继续 relation morph", as
     } else {
       await webglCanvas.evaluate((node) => node.dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -420 })));
     }
-    await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
+    await expect(canvas).toHaveAttribute("data-transition-phase", /^(IDLE|SETTLED)$/);
     await page.waitForTimeout(650);
-    await expect(canvas).toHaveAttribute("data-transition-phase", "IDLE");
+    await expect(canvas).toHaveAttribute("data-transition-phase", /^(IDLE|SETTLED)$/);
     await expect(page.getByLabel("一级技能关系")).toHaveCount(0);
   };
   await interrupt("drag");

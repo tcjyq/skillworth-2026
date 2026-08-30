@@ -31,19 +31,7 @@ jobs:
       - name: Build deterministic Demo fixture
         run: python -m app.cli build-demo-dataset --output-root data/modes/demo/current
       - name: Run public-safe test suite
-        run: |
-          set +e
-          python -m pytest 2>&1 | tee pytest-output.log
-          status=${PIPESTATUS[0]}
-          set -e
-          if [ "$status" -ne 0 ]; then
-            summary=$(grep -E '^FAILED |^ERROR |^E +|^=+ .* (failed|errors)' pytest-output.log | tail -n 20)
-            summary=${summary//'%'/'%25'}
-            summary=${summary//$'\r'/'%0D'}
-            summary=${summary//$'\n'/'%0A'}
-            echo "::error title=Python test suite failed::$summary"
-            exit "$status"
-          fi
+        run: python -m pytest
 
   web:
     name: Web checks and Demo E2E
@@ -83,16 +71,4 @@ jobs:
       - name: Install Chromium
         run: PLAYWRIGHT_BROWSERS_PATH=../../.tmp/playwright-browsers npx playwright install --with-deps chromium
       - name: Run deterministic Demo E2E
-        run: |
-          set +e
-          npm run test:e2e 2>&1 | tee demo-e2e-output.log
-          status=${PIPESTATUS[0]}
-          set -e
-          if [ "$status" -ne 0 ]; then
-            summary=$(grep -E '^  [0-9]+\)|^    Error:|^    Expected:|^    Received:|^  [0-9]+ failed' demo-e2e-output.log | tail -n 30)
-            summary=${summary//'%'/'%25'}
-            summary=${summary//$'\r'/'%0D'}
-            summary=${summary//$'\n'/'%0A'}
-            echo "::error title=Demo E2E failed::$summary"
-            exit "$status"
-          fi
+        run: npm run test:e2e
