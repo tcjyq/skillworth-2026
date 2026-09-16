@@ -11,8 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://skillworth.tcjyq.cc"),
   title: { default: "SKILLWORTH 2026｜2026，学什么技术最值？", template: "%s｜SKILLWORTH 2026" },
   description: "从市场价值与学习投入重新看技术技能的性价比。基于当前可观察的中国公开技术岗位样本。",
-  alternates: { canonical: "/" },
-  openGraph: { type: "website", locale: "zh_CN", url: "/", siteName: "SKILLWORTH 2026", title: "SKILLWORTH 2026｜2026，学什么技术最值？", description: "从市场价值与学习投入重新看技术技能的性价比。基于当前可观察的中国公开技术岗位样本。" },
+  openGraph: { type: "website", locale: "zh_CN", siteName: "SKILLWORTH 2026", title: "SKILLWORTH 2026｜2026，学什么技术最值？", description: "从市场价值与学习投入重新看技术技能的性价比。基于当前可观察的中国公开技术岗位样本。" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -7,6 +7,7 @@ interface WorkerEnv {
 }
 
 type Json = Record<string, unknown>;
+const productionOrigin = "https://skillworth.tcjyq.cc";
 const jsonCache = new Map<string, Promise<Json>>();
 
 const worker = {
@@ -22,11 +23,35 @@ const worker = {
     if (requestUrl.pathname.startsWith("/backend-api/")) {
       return handleApi(request, env);
     }
-    return app.fetch(request, env, ctx);
+    return appendSeoMetadata(request, await app.fetch(request, env, ctx));
   },
 };
 
 export default worker;
+
+async function appendSeoMetadata(request: Request, response: Response): Promise<Response> {
+  if (!response.headers.get("content-type")?.includes("text/html")) return response;
+
+  const path = new URL(request.url).pathname;
+  const canonical = path === "/"
+    ? `${productionOrigin}/`
+    : path === "/skill-field" || path === "/skill-field/"
+      ? `${productionOrigin}/skill-field`
+      : null;
+
+  if (!canonical) return response;
+
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  const canonicalTag = `<link rel="canonical" href="${canonical}">`;
+  const ogUrlTag = `<meta property="og:url" content="${canonical}">`;
+  const tags = `${canonicalTag}${ogUrlTag}`;
+  const body = (await response.text())
+    .replace(/<link rel="canonical" href="[^"]*"\/>/g, "")
+    .replace(/<meta property="og:url" content="[^"]*"\/>/g, "")
+    .replace("</head>", `${tags}</head>`);
+  return new Response(body, { status: response.status, statusText: response.statusText, headers });
+}
 
 async function handleApi(request: Request, env: WorkerEnv): Promise<Response> {
   if (request.method !== "GET") {

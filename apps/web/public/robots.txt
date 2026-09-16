@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://skillworth.tcjyq.cc/sitemap.xml
