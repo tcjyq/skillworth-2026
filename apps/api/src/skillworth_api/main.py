@@ -30,6 +30,7 @@ from .schemas import (
     MarketQuery,
     MarketSummaryResponse,
     RelatedSkillsResponse,
+    ReleaseMetadataResponse,
     RoleDetailResponse,
     RolesResponse,
     SourcesResponse,
@@ -108,6 +109,15 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     def health(service: ApiService = Depends(_service)) -> HealthResponse:
         return HealthResponse(status="ok", service_version=service.settings.service_version, warehouse_available=service.data_available)
+
+    @app.get("/release-metadata", response_model=ReleaseMetadataResponse, tags=["system"])
+    def release_metadata(service: ApiService = Depends(_service)) -> ReleaseMetadataResponse:
+        return ReleaseMetadataResponse(
+            classification="PUBLIC_SAFE" if service.settings.data_mode == "production_safe" else "LOCAL_MODE",
+            source_snapshot=service.settings.snapshot,
+            access_date=service.settings.access_date,
+            generated_at=None,
+        )
 
     @app.get("/market/summary", response_model=MarketSummaryResponse, responses=ERROR_RESPONSES, tags=["market"])
     def market_summary(response: Response, filters: MarketQuery = Depends(_market_query), service: ApiService = Depends(_service)) -> MarketSummaryResponse:

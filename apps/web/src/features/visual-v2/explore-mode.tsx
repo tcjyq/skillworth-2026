@@ -6,6 +6,7 @@ import { useApi } from "@/hooks/use-api";
 import type { ChinaSkillWorthRecord, ChinaSkillWorthResponse, RolesResponse } from "@/lib/api/types";
 import { roleLabel } from "./terminology";
 import { VisualLoading } from "./visual-loading";
+import { recencyLabel } from "./market-metadata";
 import styles from "./visual-v2.module.css";
 
 const RECENCY = [
@@ -46,7 +47,7 @@ export function ExploreMode() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const roles = useApi<RolesResponse>("/roles");
   const path = `/market/china-skillworth?eligibility=all&robustness=all&recency_window=${recency}${role ? `&role=${role}` : ""}`;
-  const result = useApi<ChinaSkillWorthResponse>(path);
+  const result = useApi<ChinaSkillWorthResponse>(path, { keepPreviousData: false });
   const records = useMemo(() => result.data?.records ?? [], [result.data?.records]);
   const normalized = query.trim().toLocaleLowerCase("zh-CN");
   const searched = useMemo(() => records.filter((record) => !normalized || `${record.skill} ${record.skill_category} ${record.skill_type}`.toLocaleLowerCase("zh-CN").includes(normalized)), [normalized, records]);
@@ -78,7 +79,7 @@ export function ExploreMode() {
     <div className={styles.exploreModeSwitch} role="group" aria-label="探索方式"><button type="button" aria-pressed={viewMode === "skill"} onClick={() => changeViewMode("skill")}>按技能</button><button type="button" aria-pressed={viewMode === "role"} onClick={() => changeViewMode("role")}>按岗位</button></div>
     <div className={styles.exploreToolbar}>
       <label className={styles.searchField}><MagnifyingGlass size={20} aria-hidden="true" /><span className="sr-only">搜索技能</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索 Python、Java、React、Redis…" /></label>
-      <label className={viewMode === "role" ? styles.activeExploreControl : ""}><span>岗位方向</span><select aria-label="岗位方向" value={role} onChange={(event) => { setRole(event.target.value); setSelectedId(null); }}><option value="">全部岗位</option>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · {item.canonical_job_count} 岗位</option>)}</select></label>
+      <label className={viewMode === "role" ? styles.activeExploreControl : ""}><span>岗位方向</span><select aria-label="岗位方向" value={role} onChange={(event) => { setRole(event.target.value); setSelectedId(null); }}><option value="">全部岗位</option>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · 全部在招 {item.canonical_job_count} 岗位</option>)}</select></label>
       <label><span>技能层</span><select aria-label="技能层" value={layer} onChange={(event) => { setLayer(event.target.value as typeof layer); setSelectedId(null); }}><option value="all">全部技能层</option><option value="ranked">主排名层</option><option value="observed">已观察技能</option></select></label>
       <label><span>观察窗口</span><select aria-label="观察窗口" value={recency} onChange={(event) => { setRecency(event.target.value as (typeof RECENCY)[number]["value"]); setSelectedId(null); }}>{RECENCY.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
     </div>
@@ -91,7 +92,7 @@ export function ExploreMode() {
         <span><b>{records.length}</b> 项可搜索技能</span>
         <span><b>{allRanked.length}</b> 项进入主排名层</span>
         <span><b>{allObserved.length}</b> 项仅观察</span>
-        <span><b>{success.job_count}</b> 个岗位样本</span>
+        <span><b>{success.job_count}</b> 个岗位样本 · {recencyLabel(success.recency_window)}</span>
         {normalized && <span><b>{searched.length}</b> 项匹配搜索</span>}
       </div>
 

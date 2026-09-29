@@ -72,3 +72,5 @@ jobs:
         run: PLAYWRIGHT_BROWSERS_PATH=../../.tmp/playwright-browsers npx playwright install --with-deps chromium
       - name: Run deterministic Demo E2E
         run: npm run test:e2e
+      - name: Verify production-safe Vinext Worker
+        run: npm run test:e2e:production-safe

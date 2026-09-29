@@ -120,12 +120,20 @@ async function prepareDemo() {
 }
 
 async function main() {
-  await access(python);
-  if (await portIsOpen(apiPort) || await portIsOpen(webPort)) {
+  if ((productionSafeMode ? false : await portIsOpen(apiPort)) || await portIsOpen(webPort)) {
     throw new Error(`E2E ports ${apiPort}/${webPort} are already in use; set SKILLWORTH_E2E_API_PORT and SKILLWORTH_E2E_WEB_PORT to free ports`);
   }
+  if (productionSafeMode) {
+    await requireProductionSafeArtifact();
+    await run(process.execPath, [resolve(webRoot, "scripts/sync-production-safe-artifact.mjs")], { cwd: webRoot, env: process.env }, "Production-safe artifact sync");
+    await run(process.execPath, [resolve(webRoot, "node_modules/vinext/dist/cli.js"), "build"], { cwd: webRoot, env: process.env }, "Vinext production build");
+    const web = start(process.execPath, [resolve(webRoot, "node_modules/wrangler/bin/wrangler.js"), "dev", "--config", "dist/server/wrangler.json", "--ip", "127.0.0.1", "--port", String(webPort)], { cwd: webRoot, env: process.env });
+    await waitFor(`${baseURL}/backend-api/health`, web, "Vinext Worker");
+    const playwright = start(process.execPath, [resolve(webRoot, "node_modules/@playwright/test/cli.js"), "test", "--workers=1", ...(playwrightArgs.length === 0 ? ["e2e/production-safe.spec.ts"] : playwrightArgs)], { cwd: webRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: playwrightBrowsersPath, SKILLWORTH_E2E_MODE: mode } });
+    return await waitForExit(playwright);
+  }
+  await access(python);
   if (realMode) await requireRealManifest();
-  else if (productionSafeMode) await requireProductionSafeArtifact();
   else await prepareDemo();
 
   const api = start(

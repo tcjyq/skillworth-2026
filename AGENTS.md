@@ -4,7 +4,7 @@
 
 - 产品：技值 SkillWorth（开发代号 SkillWorth Live），面向中国技术岗位公开样本的劳动力市场分析与技能学习决策平台。
 - 核心问题：给定目标岗位、已有技能和学习时间预算，下一项最值得学习的技术是什么。
-- 当前阶段：V1 Data / Analysis / Story 已冻结；当前工作重点是发布治理与候选首页决策，不是继续扩展研究范围。
+- 当前阶段：V1 Data / Analysis / Story 已冻结；正式首页已使用 Visual V2，当前重点是事实、质量口径与发布验证。
 - 默认使用 UTF-8、简体中文和 Asia/Shanghai 时区。
 
 ## Current Facts
@@ -13,9 +13,8 @@
 - 当前只有 1 个中国补充市场来源 Freehire；它不是完整中国招聘市场的代表性样本。
 - Salary 与 Trend 均为 `unavailable`；空值表示证据不可用，不是 0。
 - Final 5、公式、技能 taxonomy、角色 taxonomy、去重、学习时长、来源集合和稳健性方法已冻结。
-- Production Homepage Candidate 位于 `/lab/visual-v2`；正式 `/` 尚未替换。Public Surface 已统一，Methodology 已面向学生表达；是否提升候选页仍待人工产品决定。
-- 正式 3D 技能星域位于 `/skill-field`；旧 `/lab/3d-skill-field` 只作兼容入口，二者共享同一页面与场景实现。它只消费现有排名与只读关系证据，不替换 `/lab/visual-v2` 或正式 `/`。
-- 默认 `npm run test:e2e` 使用确定性 Demo 数据；`npm run test:e2e:real` 使用本地、不进入 Git 的 Freehire v6 artifact。
+- 正式 `/` 与 `/lab/visual-v2` 当前共用 Visual V2；Methodology 面向学生表达。正式 3D 技能星域位于 `/skill-field`；旧 `/lab/3d-skill-field` 只作兼容入口，不替换首页。
+- 默认 `npm run test:e2e` 使用确定性 Demo；`npm run test:e2e:production-safe` 验证本地 vinext Worker 与安全聚合；`npm run test:e2e:real` 使用未入 Git 的本地 Freehire v6 artifact。
 - Git 历史从 2026-08-24 reconstructed baseline 开始；此前开发历史未能恢复。
 
 ## Source of Truth
@@ -49,7 +48,7 @@ Raw → Bronze → Silver → Gold Data Layer → DuckDB → Analytics → API �
 - `packages/data-pipeline`：当前实际承载导入/Connector、Bronze → Silver → Gold、标准化、去重、技能抽取和质量校验。
 - `packages/analytics`：承载可测试的指标、统计、图网络和优化；不得读取 HTTP 请求、页面状态或 Raw 数据。
 - `apps/api`：只做 FastAPI 路由、Pydantic schema、参数验证和服务编排；不得复制 analytics formula。
-- `apps/web`：只展示 API / analytics 输出；不得重新计算后端指标或硬编码排名、图表数字和推荐结果。
+- `apps/web`：只展示 API / analytics 输出；不得重新计算后端指标或硬编码排名、图表数字和推荐结果。公开 Worker 消费 `PUBLIC_SAFE` 预计算聚合，禁止写入与原始招聘文本分发。
 - `/market/china-skill-relations` 是面向探索性可视化的只读关系契约；排序、门槛和样本警示必须在 analytics / API 层完成，Web 不得重算。`/skill-field` 必须保持 route-isolated dynamic import，不得让 Three.js / R3F / Drei 进入 `/` 的初始关键包或创建 WebGL context。
 - `backend/app/sql`：DuckDB Warehouse 的核心表、视图和分析 SQL。
 - `packages/connectors`、`packages/contracts`、`packages/ui`、`infra`、`scripts`：当前为空，属于 reserved / planned；不得把预留目录描述为已实现能力。
@@ -100,9 +99,11 @@ npm run typecheck
 npm run test -- --run
 npm run build
 npm run test:e2e
+npm run build:vinext
+npm run test:e2e:production-safe
 ```
 
-`npm run test:e2e` 会从已提交的 `data/demo` 重建隔离、确定性的 Demo fixture，不要求 Real 私有数据。若本地 Freehire v6 manifest 和依赖 artifact 可用，再运行：
+`npm run test:e2e` 会从已提交的 `data/demo` 重建隔离、确定性的 Demo fixture；production-safe E2E 构建并启动本地 vinext Worker，不要求 Real 私有数据。若本地 Freehire v6 manifest 和依赖 artifact 可用，再运行：
 
 ```powershell
 npm run test:e2e:real
@@ -142,7 +143,7 @@ Real E2E 的 frozen assertion 回归必须停止发布治理工作并报告，�
 - Trend evidence unavailable；当前只有单一 snapshot。
 - 完整中国技术招聘市场代表性 unavailable；当前只有一个补充来源。
 - Gold Benchmark / Gold Labels 不完整，尚不能发布 Precision、Recall 或 F1。
-- Visual V2 是否提升到 `/`、最终产品截图、GitHub remote 和 CI workflow 尚未决定或建立。
+- 当前 `/` 已使用 Visual V2；最终线上运行状态与本轮 CI 结果需远端复核。GitHub remote 与 CI workflow 均已存在。
 
 ## Stale When
 

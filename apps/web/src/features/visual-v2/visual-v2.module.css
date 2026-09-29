@@ -289,6 +289,10 @@
 .methodQuestion aside { display: flex; align-self: center; align-items: center; justify-content: space-between; gap: 18px; border-block: 1px solid var(--ink); padding: 32px 0; }
 .methodQuestion aside strong { font-size: clamp(20px, 2.2vw, 32px); }
 .methodQuestion aside span { color: var(--accent-dark); font-size: 30px; }
+.evidenceList { display: grid; align-content: center; gap: 16px; max-width: 760px; }
+.evidenceList h3 { font-size: 18px; font-weight: 700; }
+.evidenceList p, .evidenceList li { color: var(--muted); font-size: 15px; line-height: 1.75; }
+.evidenceList ul { padding-left: 22px; }
 .trustStatement { align-self: center; border-left: 5px solid var(--accent-dark); padding: 22px 28px; background: #e8edcd; color: var(--ink); font-size: 20px; font-weight: 680; line-height: 1.6; }
 .methodLimits { background: var(--night); color: #f4f6f2; }
 .methodLimits article { border: 0; }

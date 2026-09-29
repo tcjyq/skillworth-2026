@@ -14,7 +14,7 @@ test("Demo Public Surface follows rebuilt API metadata", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "2026，学什么技术最值？" })).toBeVisible();
   await expect(page.getByRole("heading", { name: `探索 ${market.skill_count} 项技能` })).toBeVisible();
   await expect(page.getByText("SkillWorth 公开合成演示样本", { exact: false }).first()).toBeVisible();
-  await expect(page.getByText("数据截止 2026-08-08", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("来源访问/导入日 2026-08-08", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("998", { exact: true })).toHaveCount(0);
   await expect(page.getByText("134", { exact: true })).toHaveCount(0);
 

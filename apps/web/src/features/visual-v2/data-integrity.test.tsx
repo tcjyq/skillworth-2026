@@ -143,7 +143,7 @@ describe("Visual V2 data integrity", () => {
 
     render(<CppMoment findings={findings} metadata={response({ job_count: 17, access_date: "2026-09-03" })} />);
 
-    expect(screen.getByText("样本：17 个岗位 · 近 180 天 · 数据截止 2026-09-03")).toBeInTheDocument();
+    expect(screen.getByText("样本：17 个岗位 · 近 180 天 · 来源访问/导入日 2026-09-03")).toBeInTheDocument();
     expect(screen.queryByText(/998 个岗位/)).not.toBeInTheDocument();
   });
 

@@ -215,6 +215,7 @@ export type RoleDetail = { role: Role; skill_demand: SkillDemandResult };
 export type Source = { source_id: string; source_job_count: number; canonical_job_count: number; first_observed_at: string | null; last_observed_at: string | null };
 export type SourcesResponse = { records: Source[] };
 export type DataQuality = { raw_row_count: number; silver_row_count: number; missing_rate: number; missing_rate_by_field: Record<string, number>; salary_parse_rate: number; role_parse_rate: number; city_parse_rate: number; invalid_record_rate: number; skill_extraction_f1?: number | null; dedup_rate?: number | null };
+export type ReleaseMetadata = { classification: "PUBLIC_SAFE" | "LOCAL_MODE"; source_snapshot: string; access_date: string | null; generated_at: string | null };
 
 export type Confidence = {
   confidence_score: number;

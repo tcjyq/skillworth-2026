@@ -45,13 +45,13 @@ function SkillFieldExperience() {
   const global = useApi<ChinaSkillWorthResponse>(GLOBAL_PATH);
   const roles = useApi<RolesResponse>("/roles");
   const rolePath = state.activeRole ? `${GLOBAL_PATH}&role=${state.activeRole.roleId}` : null;
-  const role = useApi<ChinaSkillWorthResponse>(rolePath);
+  const role = useApi<ChinaSkillWorthResponse>(rolePath, { keepPreviousData: false });
   const relationParams = state.activeSkill ? new URLSearchParams({
     core_skill_id: state.activeSkill.skillId,
     recency_window: "180d",
     ...(state.activeRole ? { role_id: state.activeRole.roleId } : {}),
   }) : null;
-  const relations = useApi<SkillRelationsResponse>(relationParams ? `/market/china-skill-relations?${relationParams}` : null);
+  const relations = useApi<SkillRelationsResponse>(relationParams ? `/market/china-skill-relations?${relationParams}` : null, { keepPreviousData: false });
   const [previousRelationResponse, setPreviousRelationResponse] = useState<SkillRelationsResponse | null>(null);
   const [webgl, setWebgl] = useState<boolean | null>(null);
   const [relationExpansion, setRelationExpansion] = useState<{ skillId: string; limit: number } | null>(null);
@@ -59,26 +59,33 @@ function SkillFieldExperience() {
     const frame = window.requestAnimationFrame(() => setWebgl(supportsWebGL()));
     return () => window.cancelAnimationFrame(frame);
   }, []);
-  useEffect(() => {
-    if (webgl !== false || state.transitionPhase !== "HIGHLIGHT") return;
-    dispatch({ type: "advance-transition", token: state.transitionToken, phase: "CONSTELLATION_MORPH" });
-  }, [dispatch, state.transitionPhase, state.transitionToken, webgl]);
 
   const globalRecords = useMemo(() => global.data?.records ?? [], [global.data?.records]);
-  const effectiveState = useMemo(() => state.activeRole && role.data
-    ? { ...state, activeRole: { ...state.activeRole, sampleSize: role.data.job_count } }
+  const effectiveState = useMemo(() => state.activeRole
+    ? { ...state, activeRole: { ...state.activeRole, sampleSize: role.data?.job_count ?? 0 } }
     : state, [role.data, state]);
-  const roleGate = effectiveState.activeRole ? roleEvidence(effectiveState.activeRole.sampleSize) : null;
+  const roleGate = effectiveState.activeRole && role.data ? roleEvidence(effectiveState.activeRole.sampleSize) : null;
   const scopedRecords = useMemo(() => state.activeRole
-    ? roleGate?.canRank ? role.data?.records ?? [] : globalRecords.map((record) => ({ ...record, skillworth_rank: null, demand_rank: null }))
-    : globalRecords, [globalRecords, role.data?.records, roleGate?.canRank, state.activeRole]);
+    ? !role.data ? [] : roleGate?.canRank ? role.data.records : role.data.records.map((record) => ({ ...record, skillworth_rank: null, demand_rank: null }))
+    : globalRecords, [globalRecords, role.data, roleGate?.canRank, state.activeRole]);
   const activeRelationReady = Boolean(relations.data
     && relations.data.core_skill_id === state.activeSkill?.skillId
     && (relations.data.role_id ?? null) === (state.activeRole?.roleId ?? null));
+  useEffect(() => {
+    if (webgl !== false) return;
+    const token = state.transitionToken;
+    if (state.transitionPhase === "HIGHLIGHT" || state.transitionPhase === "CAMERA_FLY") {
+      dispatch({ type: "advance-transition", token, phase: "CONSTELLATION_MORPH" });
+    } else if (state.transitionPhase === "CONSTELLATION_MORPH" && activeRelationReady) {
+      dispatch({ type: "advance-transition", token, phase: "SETTLED" });
+    } else if (state.transitionPhase === "RETURN_MORPH" || state.transitionPhase === "RETURN_CAMERA") {
+      dispatch({ type: "finish-return", token });
+    }
+  }, [dispatch, state.transitionPhase, state.transitionToken, webgl, activeRelationReady]);
   const displayedRelationResponse = state.relationSkill
-    ? relations.data?.core_skill_id === state.relationSkill.skillId
+    ? relations.data?.core_skill_id === state.relationSkill.skillId && (relations.data.role_id ?? null) === (state.activeRole?.roleId ?? null)
       ? relations.data
-      : previousRelationResponse?.core_skill_id === state.relationSkill.skillId
+      : previousRelationResponse?.core_skill_id === state.relationSkill.skillId && (previousRelationResponse.role_id ?? null) === (state.activeRole?.roleId ?? null)
         ? previousRelationResponse
         : null
     : null;
@@ -96,7 +103,7 @@ function SkillFieldExperience() {
     relationOriginMode: state.relationOriginMode,
   }), [displayedRelations, globalRecords, relationPrimaryLimit, scopedRecords, state.activeSkill?.skillId, state.mode, state.relationOriginMode, state.relationSkill?.skillId, state.selectedRelationId]);
   const selectedRecord = (state.activeSkill
-    ? scopedRecords.find((record) => record.skill_id === state.activeSkill?.skillId) ?? globalRecords.find((record) => record.skill_id === state.activeSkill?.skillId)
+    ? scopedRecords.find((record) => record.skill_id === state.activeSkill?.skillId) ?? (!state.activeRole ? globalRecords.find((record) => record.skill_id === state.activeSkill?.skillId) : undefined)
     : null) ?? null;
   const selectedRelation = displayedRelations.find((item) => item.related_skill_id === state.selectedRelationId) ?? null;
   const sceneLimitations = [...new Set([
@@ -112,7 +119,8 @@ function SkillFieldExperience() {
     focusSkill(skillId, label ?? record?.skill ?? skillId, source);
   };
   const selectRole = (roleId: string, label: string, sampleSize: number) => dispatch({ type: "select-role", role: { roleId, label, sampleSize } });
-  const fallback = <WebGLFallback skills={scopedRecords} relations={displayedRelations} onSelect={(skillId) => selectSkill(skillId, undefined, "search")} />;
+  const relationStatus = !state.activeSkill ? "unselected" : relations.error ? "error" : activeRelationReady ? "ready" : "loading";
+  const fallback = <WebGLFallback skills={scopedRecords} relations={displayedRelations} relationStatus={relationStatus} onSelect={(skillId) => selectSkill(skillId, undefined, "search")} />;
 
   const pageHeader = <header className={styles.localHeader}>
     <Link href="/#top" className={styles.localBrand} aria-label="返回 SkillWorth 2026">SkillWorth <span>2026</span></Link>
@@ -139,13 +147,13 @@ function SkillFieldExperience() {
       <div className={styles.scopeRail} aria-label="数据范围"><span>{globalData.job_count} 个岗位 · {globalData.company_count} 家公司 · {globalData.skill_count} 项观测技能 · 近 180 天 · {globalData.source_role === "china_supplementary" ? "中国公开技术岗位补充样本" : globalData.source_role}</span></div>
       <div className={styles.sceneContext}>
         <p>{copy.description}<small>只看远近，不看方向。</small></p>
-        {effectiveState.activeRole && <strong>{effectiveState.activeRole.label} · {effectiveState.activeRole.sampleSize} 个岗位样本</strong>}
+        {effectiveState.activeRole && <strong>{effectiveState.activeRole.label} · {role.error ? "岗位样本暂不可用" : role.data ? `${effectiveState.activeRole.sampleSize} 个岗位样本 · 近 180 天` : "正在读取近 180 天岗位样本"}</strong>}
       </div>
       <ExplorationPath state={effectiveState} onSelect={(skillId, label) => selectSkill(skillId, label, "relation")} />
       <section className={styles.visualizationFrame} data-testid="skill-field-frame" aria-label="3D 技能星域可视化窗口">
         <header className={styles.frameHeader}><span>交互式可视化窗口</span><small>{copy.title}</small></header>
         <div className={styles.scenePane}>
-          {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback}><SkillFieldCanvas
+          {webgl === null ? <div className={styles.canvasLoading}><span /></div> : webgl ? <CanvasBoundary fallback={fallback} onFallback={() => setWebgl(false)}><SkillFieldCanvas
             model={model}
             mode={state.mode}
             activeSkillId={state.activeSkill?.skillId ?? null}
@@ -173,7 +181,7 @@ function SkillFieldExperience() {
           <p className={styles.touchHint} data-testid="skill-field-touch-hint">单指旋转 · 双指缩放</p>
         </div>
       </section>
-      <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} settled={state.transitionPhase === "SETTLED"} onSelectRelation={(skillId) => selectSkill(skillId, undefined, "relation")} />
+      {state.activeRole && role.error ? <aside className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情"><div className={styles.detailEmpty} role="alert"><p>岗位样本暂时无法读取</p><button type="button" onClick={() => void role.mutate()}>重试岗位数据</button></div></aside> : webgl === false && relations.error && state.activeSkill ? <aside className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情"><div className={styles.detailEmpty} role="alert"><p>关系证据暂时无法读取</p><button type="button" onClick={() => void relations.mutate()}>重试关系数据</button></div></aside> : <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} settled={state.transitionPhase === "SETTLED"} onSelectRelation={(skillId) => selectSkill(skillId, undefined, "relation")} />}
       {state.transitionPhase === "SETTLED" && <RelationRail key={state.relationSkill?.skillId ?? "none"} relations={displayedRelations} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.relationSkill?.skillId ?? "", limit })} />}
       <footer className={styles.footer}><p>{globalData.disclaimer}</p><Link href="/#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer>
     </section>

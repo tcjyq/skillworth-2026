@@ -1,6 +1,6 @@
 # SkillWorth V1 Final Data Analysis
 
-> 状态说明：本报告冻结 v6 数据分析与 Final 5。文末 publication gate 记录的是当时的分析交接节点；此后 Production Homepage Candidate 已在 `/lab/visual-v2` 实现，但尚未提升到正式 `/`。本说明不改变任何冻结分析结果。
+> 状态说明：本报告冻结 v6 数据分析与 Final 5。文末 publication gate 记录当时的分析交接节点；截至 2026-09-29，当前代码中 `/` 与 `/lab/visual-v2` 均使用 Visual V2。本说明不改变任何冻结分析结果。
 
 > 分析日期：2026-08-21（Asia/Shanghai）  
 > 固定快照：`freehire_china_tech_2026_08`，采集日期 2026-08-10  

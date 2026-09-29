@@ -8,7 +8,7 @@ const browserChannel = process.env.SKILLWORTH_PLAYWRIGHT_CHANNEL ?? "msedge";
 export default defineConfig({
   testDir: "./e2e",
   testMatch: e2eMode === "demo" ? ["navigation.spec.ts", "demo.spec.ts", "3d-skill-field.spec.ts"] : "**/*.spec.ts",
-  testIgnore: e2eMode === "real" ? ["demo.spec.ts"] : [],
+  testIgnore: e2eMode === "real" ? ["demo.spec.ts", "production-safe.spec.ts"] : [],
   timeout: 30_000,
   use: { baseURL, trace: "retain-on-failure" },
   projects: [

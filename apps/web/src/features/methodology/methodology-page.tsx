@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useApi } from "@/hooks/use-api";
-import type { ChinaSkillWorthResponse } from "@/lib/api/types";
+import type { ChinaSkillWorthResponse, DataQuality, ReleaseMetadata, SkillRelationsResponse } from "@/lib/api/types";
 import { PublicNavigation } from "@/features/visual-v2/public-navigation";
-import { accessDateLabel, availabilityLabel, recencyLabel, sourceRoleLabel } from "@/features/visual-v2/market-metadata";
+import { availabilityLabel, recencyLabel, sourceRoleLabel } from "@/features/visual-v2/market-metadata";
 import styles from "@/features/visual-v2/visual-v2.module.css";
 
 const marketSignals = [
@@ -31,6 +31,11 @@ const technicalDetails = [
 
 export function MethodologyPage() {
   const result = useApi<ChinaSkillWorthResponse>("/market/china-skillworth?eligibility=main&robustness=all&recency_window=180d");
+  const quality = useApi<DataQuality>("/data-quality");
+  const release = useApi<ReleaseMetadata>("/release-metadata");
+  const devops = useApi<ChinaSkillWorthResponse>("/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d&role=devops_engineer");
+  const sparse = useApi<ChinaSkillWorthResponse>("/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d&role=technical_product_manager");
+  const devopsRelations = useApi<SkillRelationsResponse>("/market/china-skill-relations?core_skill_id=devops_kubernetes&recency_window=180d&role_id=devops_engineer");
   const scope = result.data;
   const success = !result.error && scope && scope.job_count > 0 && scope.records.length > 0 ? scope : undefined;
   const empty = !result.error && scope && (scope.job_count === 0 || scope.records.length === 0);
@@ -53,7 +58,33 @@ export function MethodologyPage() {
             <div><dt>技能</dt><dd>{success.skill_count}</dd></div>
             <div><dt>观察窗口</dt><dd>{recencyLabel(success.recency_window)}</dd></div>
           </dl>
-          <p className={styles.methodMeta}>{accessDateLabel(success.access_date)} · 快照 {success.snapshot} · {sourceRoleLabel(success.source_role)} · {success.source_count} 个来源 · {success.market_scope}</p></> : <div className={styles.exploreState} role="status">{result.error ? <><p>当前数据暂时无法读取</p><button type="button" onClick={() => void result.mutate()}>重试</button></> : empty ? "当前筛选条件下没有可展示的技能" : "正在读取当前市场样本……"}</div>}
+          <p className={styles.methodMeta}>来源访问日：{success.access_date ?? "不可用"} · {release.data?.source_snapshot === success.snapshot && release.data.generated_at ? `安全产物生成日：${release.data.generated_at.slice(0, 10)}` : "安全产物生成日：不可用"} · 快照 {success.snapshot} · {sourceRoleLabel(success.source_role)} · {success.source_count} 个来源 · {success.market_scope}</p></> : <div className={styles.exploreState} role="status">{result.error ? <><p>当前数据暂时无法读取</p><button type="button" onClick={() => void result.mutate()}>重试</button></> : empty ? "当前筛选条件下没有可展示的技能" : "正在读取当前市场样本……"}</div>}
+        </article>
+
+        <article className={styles.methodQuestion}>
+          <div><h2>数据怎样变成结果？</h2><p>来源、清洗、去重与观察窗口采用不同分母。生成日期表示产物完成时间，不表示当天新增岗位。</p></div>
+          <div className={styles.evidenceList}>
+            <p>Freehire 是当前唯一中国补充来源。原始导入、Silver 标准化、Gold canonical 去重后，按已冻结的 180 天窗口计算排名；完整真实数据只在本地管线处理，公开站点提供预计算只读聚合。</p>
+            {quality.data ? <ul>
+              <li>质量快照：{quality.data.silver_row_count} 条 Silver；角色明确匹配 {Math.round(quality.data.role_parse_rate * quality.data.silver_row_count)} / {quality.data.silver_row_count}，城市明确匹配 {Math.round(quality.data.city_parse_rate * quality.data.silver_row_count)} / {quality.data.silver_row_count}。分子由安全快照比率和 Silver 分母还原；这是 Silver 字段覆盖，不是 180 天 Gold 岗位比例。</li>
+              <li>无法匹配的岗位方向保留为 other；未知字段不填 0，不把覆盖率当作模型准确率。技能覆盖显示为当前窗口的 {success?.skill_count ?? "不可用"} 项观测技能，岗位级抽取覆盖分子未随安全产物发布。</li>
+            </ul> : <p>字段质量暂不可用；不会用 0 代替缺失值。</p>}
+            <p>来源边界：单一补充样本不代表完整中国市场。薪资与趋势证据暂不可用；正式人工 Gold 评测未完成。</p>
+          </div>
+        </article>
+
+        <article className={styles.methodQuestion}>
+          <div><h2>三个可以复核的问题</h2><p>每个发现只适用于同一快照和 180 天窗口；请连同样本和限制阅读。</p></div>
+          <div className={styles.evidenceList}>
+            {(() => { const cpp = success?.records.find((record) => record.skill_id === "programming_cpp"); return <section><h3>热门就应先学吗？</h3><p>{cpp?.demand_rank != null && cpp.skillworth_rank != null ? `C++ 需求第 ${cpp.demand_rank}、学习性价比第 ${cpp.skillworth_rank}；假设从零学习约 ${cpp.learning_hours_expected} 小时。` : "当前证据暂不可用。"}方法是比较同一窗口的需求排名和含学习时间假设的排名。行动建议：先核对目标岗位与已有基础；不能据此说 C++ 不值得学。</p></section>; })()}
+            {(() => { const relation = devopsRelations.data?.records.find((record) => record.related_skill_id === "devops_terraform"); const kubernetes = devops.data?.records.find((record) => record.skill_id === "devops_kubernetes"); return <section><h3>岗位方向需要什么组合？</h3><p>{relation && kubernetes && devops.data ? `DevOps 方向 ${devops.data.job_count} 个岗位中，Kubernetes 出现于 ${kubernetes.job_count} 个岗位；Kubernetes 与 Terraform 共同出现于 ${relation.cooccurrence_count} 个岗位。` : "当前岗位关系证据暂不可用。"}方法是对 canonical 岗位按技能对去重计数。行动建议：把共现当作技能组合线索，再读岗位要求；共现不代表因果或每个岗位必备。</p></section>; })()}
+            <section><h3>何时不该给排名？</h3><p>{sparse.data ? `技术产品经理方向只有 ${sparse.data.job_count} 个岗位；当前 ${sparse.data.records.filter((record) => record.skillworth_rank != null).length} 项技能进入主排名层。` : "当前稀疏岗位证据暂不可用。"}样本稀疏时保留观察结果，先扩大合法样本再比较，不把空排名写成零需求或职业结论。</p></section>
+          </div>
+        </article>
+
+        <article className={styles.methodQuestion}>
+          <div><h2>名次会随假设变化吗？</h2><p>以下范围来自当前已计算的敏感性字段，保持同一快照与 180 天窗口。</p></div>
+          <div className={styles.evidenceList}>{["programming_python", "database_sql", "programming_cpp"].map((id) => { const item = success?.records.find((record) => record.skill_id === id); return item && item.skillworth_rank != null ? <p key={id}>{item.skill}：基准第 {item.skillworth_rank} 名；{item.sensitivity_rank_min != null && item.sensitivity_rank_max != null ? `预设参数情景中第 ${item.sensitivity_rank_min}–${item.sensitivity_rank_max} 名。` : "敏感性范围暂不可用。"}</p> : null; })}<p>变化的是需求权重、广度和学习成本折算等模型假设；岗位样本不变。学习时间折算参数变化不等于测得个人学习时长，也不是未来预测。</p></div>
         </article>
 
         <article className={styles.methodQuestion}>

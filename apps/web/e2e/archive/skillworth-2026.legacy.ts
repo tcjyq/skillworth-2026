@@ -1,3 +1,5 @@
+// Historical V1 homepage checks. The former / UI was replaced by Visual V2;
+// this file is retained for provenance and is intentionally outside Playwright's *.spec.ts collection.
 import { expect, test } from "@playwright/test";
 
 test("首页默认使用 180 天真实样本且只展示稳健候选", async ({ page }) => {
