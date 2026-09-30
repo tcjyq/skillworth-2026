@@ -21,7 +21,7 @@ export function sourceRoleLabel(sourceRole: string) {
 }
 
 export function accessDateLabel(accessDate: string | null) {
-  return accessDate ? `数据截止 ${accessDate}` : "数据日期暂不可用";
+  return accessDate ? `来源访问/导入日 ${accessDate}` : "来源日期暂不可用";
 }
 
 export function marketScopeLine(metadata: ChinaSkillWorthResponse) {

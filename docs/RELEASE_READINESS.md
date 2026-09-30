@@ -1,101 +1,34 @@
-# SkillWorth 2026 Release Readiness
+# SkillWorth 2026 本地审阅状态
 
-审计日期：2026-08-24（Asia/Shanghai）
+更新：2026-09-29（Asia/Shanghai）。[2026-08-24 的历史就绪记录](archive/RELEASE_READINESS_2026-08-24.md)保留原文供追溯；其中“无 remote／无 CI／候选页尚未提升”的表述不再代表当前仓库。
 
-审计范围：Project Governance & Documentation Sync；不含新数据源、Gold annotation、算法、分析结果或产品 UI 变更。
+## 当前已核对的事实
 
-当前结论：**数据、分析、复现链路、本地 Git 基线与权利边界通过；正式首页仍等待人工视觉批准与 V2 提升决定。**
+- 基线 HEAD：`c484c93456c32aaade5aca6145ee9e167869ef96`；本轮在 `codex/skillworth-optimization-2026` 分支。提交、Draft PR 与远端 CI 状态以 GitHub 记录为准；本轮不 merge 或 deploy。
+- 正式 `/` 和 `/lab/visual-v2` 当前均使用 Visual V2；`/skill-field` 是独立动态加载的探索页。首页已提升的历史审批过程不能仅凭本轮代码还原。
+- `origin` 指向 `https://github.com/tcjyq/skillworth-2026.git`；版本化 CI 位于 `.github/workflows/ci.yml`。本文件只记录本地验证，远端运行结果以对应 Draft PR 的 CI 为准。
+- 冻结快照 `freehire_china_tech_2026_08`：180d 为 998 canonical 岗位／313 公司／134 观测技能；all-active 为 1,140／339／138。唯一中国补充来源为 Freehire，不代表完整市场。
+- 本地 Python 管线、DuckDB、FastAPI 支持完整数据处理与分析；公开 Worker 只读取 `PUBLIC_SAFE` 预计算聚合。公开站点不提供岗位级优化、写入或完整原始招聘文本分发。Salary、Trend 和正式人工 Gold 评测仍不可用。
+- 实际发布构建为 `npm run build:vinext`；`npm run build` 验证 Next 路径，不能代替 Worker 构建。本轮 CI 增加本地 vinext Worker 上的 production-safe E2E。
+- 旧 V1 首页 E2E 已保存在 `apps/web/e2e/archive/skillworth-2026.legacy.ts`，其断言针对当前已不存在的首页 DOM；当前首页由 Visual V2 测试与 production-safe 门禁验证。历史测试未删除，也不计入当前通过数。
 
-## 1. Current Release State
+## 本轮验证记录
 
-| 项目 | 当前事实 |
+以下为本地分支的 2026-09-29 结果；远端 CI 结果须另行查看对应 Draft PR。历史 [2026-08-24 记录](archive/RELEASE_READINESS_2026-08-24.md)中的测试数量不能沿用。
+
+| 检查 | 本地结果 |
 | --- | --- |
-| Product | V1 Data / Analysis / Story frozen |
-| Homepage | Production candidate 位于 `/lab/visual-v2`；正式 `/` 尚未替换 |
-| Snapshot | `freehire_china_tech_2026_08`，Real v6 |
-| Market scope | `china_open_tech_sample` |
-| Source role | `china_supplementary` |
-| Default window | `180d` |
-| 180d | 998 canonical jobs / 313 companies / 134 observed skills |
-| all-active | 1,140 canonical jobs / 339 companies / 138 observed skills |
-| China supplementary market sources | 1（Freehire） |
-| Salary | `unavailable` |
-| Trend | `unavailable` |
-| Representativeness | 不代表完整中国技术招聘市场 |
-
-Final 5、公式、taxonomy、role taxonomy、dedup、learning hours、source set 与 robustness method 均保持冻结。本轮没有修改任何分析结果。
-
-## 2. Release Gates
-
-### Data / Analysis — PASS
-
-- Real v6 已冻结，默认 180d 与 all-active 口径已写入当前文档。
-- Final 5 保持不变，来源范围、分母、Salary/Trend 不可用和代表性限制已披露。
-- 8 个既有 dedup merge groups 已审计：6 个拆分，2 个保守保留合并。
-
-### Product — PENDING
-
-- 等待最终人工视觉批准。
-- 等待决定是否将 `/lab/visual-v2` 提升到正式 `/`。
-- Candidate 不是 final homepage；本轮禁止自动提升。
-
-### Reproducibility — PASS
-
-- `npm run test:e2e`：从版本化 `data/demo` 重建隔离、确定性的 Demo fixture，不要求本地 Real 数据。
-- `npm run test:e2e:real`：验证本地私有 Freehire v6 manifest 与冻结 Real assertions；Real artifact 不进入 Git。
-- Demo 与 Real 命令、数据依赖和测试选择已明确分离。
-
-### Git — PASS
-
-- `main` 已通过 `--ff-only` 集成已验证 hardening commit `327453944823b993399dc9a9f99f63a2d7d2ca1d`。
-- 本地历史从 2026-08-24 reconstructed baseline `265f40c9044a57c2c0a02c3847fa2de9ef037546` 开始。
-- 更早开发 Git 历史未能恢复；不得 amend、rebase 或重写 reconstructed baseline。
-
-### Remote — PENDING
-
-- 当前没有 GitHub remote。
-- 本轮不创建 remote、不 push。
-
-### License / Data Rights — PASS
-
-- 根目录 MIT 仅覆盖 SkillWorth 自主创作的代码与项目文档。
-- Freehire 软件的 MIT 许可不等于招聘内容采用 MIT。
-- 第三方招聘文本、外部数据集、商标和其他第三方内容保留各自权利与使用边界。
-
-### CI — PENDING
-
-- 当前没有版本化 CI workflow。
-- 本地完整验证可作为当前 release evidence，但不应描述为已建立持续集成。
-
-### README Asset — PENDING
-
-- 最终产品截图等待正式首页决定。
-- 本轮不添加截图、部署 badge、release version badge 或 remote link。
-
-### Gold Evaluation — NOT V1 BLOCKER
-
-- Gold Data Layer 是 Bronze / Silver / Gold 管道中的分析就绪数据层。
-- Gold Benchmark / Gold Labels 是人工评测 ground truth；当前正式评测尚未完成。
-- 标注批次、evaluator 与 annotation workspace framework 已存在，但 framework 存在不等于正式评测完成。
-- Gold Evaluation 属于 Future / Independent research，不阻止当前 V1 发布决策。
-- 在人工评测达到既定协议前，禁止声称技能抽取、角色归一或去重的 Precision、Recall、F1。
-
-## 3. Verification Evidence
-
-本轮文档同步后的完整验证以本节为唯一 release gate 统计来源：
-
-| Check | Result |
-| --- | --- |
-| pytest | 239 passed，1 条既有 Starlette/httpx deprecation warning |
+| pytest | 245 passed、0 skipped、1 条 Starlette/httpx 弃用警告；Windows 使用短 D 盘 `--basetemp` 避开系统临时目录权限与长路径问题 |
 | pip check | passed |
-| ESLint | passed |
-| TypeScript | passed |
-| Vitest | 17 passed |
-| Next.js production build | passed |
-| Demo E2E | 30 passed |
-| Real E2E | 61 passed，3 项设备条件 skip，0 failed |
+| ESLint / TypeScript | passed / passed |
+| Vitest | 14 文件、85 passed |
+| Next production build | passed |
+| vinext build + 本地 Worker production-safe E2E | build passed；7 passed、1 skipped（岗位竞态用例仅桌面执行） |
+| Demo E2E | 55 passed、7 skipped；仅 Real v6 才有意义的用例按模式跳过 |
+| Real v6 E2E | 72 passed、6 skipped；冻结样本与关键排名断言通过 |
+| `project-constitution` validator | PASS，157 行 |
 
-标准命令：
+当前检查命令：
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
@@ -105,23 +38,19 @@ npm run lint
 npm run typecheck
 npm run test -- --run
 npm run build
+npm run build:vinext
 npm run test:e2e
-npm run test:e2e:real
+npm run test:e2e:production-safe
 ```
 
-`test:e2e:real` 仅在本地 Freehire v6 manifest 与依赖 artifact 可用时运行。任何 frozen Real Finding assertion 回归都必须停止发布流程。
+`test:e2e` 重建确定性 Demo；`test:e2e:production-safe` 使用已版本化安全产物、本地 vinext 构建和 Wrangler runtime，不调用生产密钥或部署。`test:e2e:real` 仅在未入 Git 的 Real v6 manifest 完整可用时执行；任何冻结断言失败都应停止发布治理。此门禁验证选定公开路径与只读边界，不等于全面安全审计、线上可用性或真实 GPU 设备测试。
 
-## 4. Remaining Release Blockers / Decisions
+本地 vinext 与 Next 会写入同一 `.next/types` 目录；若紧接 vinext 构建单独运行 `npm run typecheck`，可能读到混合生成的路由声明。本轮按 CI 顺序完成 Next build 后重跑 TypeScript 检查，结果通过；不把第一次由构建缓存导致的报错记作源码通过。
 
-### 发布前人工决定
+本地 Windows 上如默认 pytest 临时目录无权限或因项目路径较长触发 `FileNotFoundError`，可使用未占用的短 D 盘目录运行 `-p no:cacheprovider --basetemp D:\<short-unique-dir>`；这不改变测试断言。旧 V1 首页测试归档的原因是路由 DOM 已由 Visual V2 取代，并非将当前失败测试改为 skip。现有 6 个 Real E2E skip 仍按设备／场景条件保留。
 
-1. 最终人工视觉批准。
-2. 决定是否将 V2 candidate 从 `/lab/visual-v2` 提升到 `/`。
-3. 首页决定后选择 README 最终产品截图。
+## 待审阅事项
 
-### 仓库运营待办
-
-1. 建立 GitHub remote。
-2. 建立 CI workflow。
-
-这些待办不会授权本轮自动 promote、截图、创建 remote、push 或 deploy。Gold Evaluation 明确不是 V1 blocker；Salary、Trend 和完整市场代表性仍为产品限制，必须持续披露。
+1. 本轮代码以 Draft PR 供审阅；提交与推送已获授权，merge 与 deploy 未获授权。
+2. 正式人工 Gold Benchmark 未完成，不发布 Precision、Recall 或 F1。
+3. 新来源、Salary、Trend 和真实目标用户任务观察属于独立后续研究，不能填入当前成果。

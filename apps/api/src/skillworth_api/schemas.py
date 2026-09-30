@@ -41,6 +41,13 @@ class ErrorResponse(ApiModel):
     error: ErrorBody
 
 
+class ReleaseMetadataResponse(ApiModel):
+    classification: Literal["LOCAL_MODE", "PUBLIC_SAFE"]
+    source_snapshot: str
+    access_date: date | None
+    generated_at: str | None
+
+
 class HealthResponse(ApiModel):
     status: str
     service_version: str

@@ -305,6 +305,70 @@ test("WebGL 初始化失败时保留 2D 搜索与技能列表", async ({ page })
   await expect(page.getByRole("combobox", { name: "搜索技能或职业" })).toBeVisible();
   await expect(page.getByRole("region", { name: "2D 技能列表" })).toBeVisible();
   if (realMode) await expect(page.getByRole("region", { name: "2D 技能列表" })).toContainText("招聘需求 #3 → 学习性价比 #35");
+  const search = page.getByRole("combobox", { name: "搜索技能或职业" });
+  const coreLabel = realMode ? "Python" : "SQL";
+  await search.fill(coreLabel);
+  await page.getByRole("option", { name: coreLabel, exact: false }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText(coreLabel);
+  await expect(page.getByLabel("技能详情")).not.toContainText("正在聚焦");
+  await page.getByRole("button", { name: "回到全局" }).click();
+  await expect(page.getByLabel("技能详情")).toContainText("选择一个技能");
+});
+
+test("2D 稀疏职业只展示该职业的技能记录", async ({ page }) => {
+  test.skip(!realMode, "需要本地 Real v6 职业样本");
+  const response = await page.request.get("/backend-api/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d&role=technical_product_manager");
+  expect(response.ok()).toBe(true);
+  const roleData = await response.json() as { job_count: number; records: { skill: string }[] };
+  expect(roleData.job_count).toBe(3);
+
+  await page.goto("/skill-field?fallback=1");
+  const search = page.getByRole("combobox", { name: "搜索技能或职业" });
+  await search.fill("技术产品");
+  await page.getByRole("option", { name: /技术产品经理/ }).last().click();
+  await expect(page.getByText("3 个岗位样本", { exact: false }).first()).toBeVisible();
+  const skillButtons = page.getByRole("region", { name: "2D 技能列表" }).getByRole("button");
+  await expect(skillButtons).toHaveCount(Math.min(roleData.records.length, 18));
+  for (const [index, record] of roleData.records.slice(0, 18).entries()) {
+    await expect(skillButtons.nth(index)).toContainText(record.skill);
+    await expect(skillButtons.nth(index)).toContainText("仅观察");
+  }
+});
+
+test("2D 关系请求失败时显示错误与重试入口", async ({ page }) => {
+  let failRelations = true;
+  await page.route("**/backend-api/market/china-skill-relations?*", (route) => failRelations ? route.abort() : route.continue());
+  await page.goto("/lab/3d-skill-field?fallback=1");
+  const coreLabel = realMode ? "Python" : "SQL";
+  await page.getByRole("combobox", { name: "搜索技能或职业" }).fill(coreLabel);
+  await page.getByRole("option", { name: coreLabel, exact: false }).first().click();
+  await expect(page.getByLabel("技能详情")).toContainText("关系证据暂时无法读取");
+  await expect(page.getByRole("button", { name: "重试关系数据" })).toBeVisible();
+  await expect(page.getByLabel("一级技能关系")).toHaveCount(0);
+  failRelations = false;
+  await page.getByRole("button", { name: "重试关系数据" }).click();
+  await expect(page.getByLabel("技能详情")).toContainText(coreLabel);
+  await expect(page.getByLabel("技能详情")).not.toContainText("正在聚焦");
+  await page.getByRole("button", { name: "回到全局" }).click();
+  await expect(page.getByLabel("技能详情")).toContainText("选择一个技能");
+});
+
+test("2D 关系数据就绪前保持加载态，响应后才展示详情", async ({ page }) => {
+  let releaseRelation!: () => void;
+  const relationGate = new Promise<void>((resolve) => { releaseRelation = resolve; });
+  await page.route("**/backend-api/market/china-skill-relations?*", async (route) => {
+    await relationGate;
+    await route.continue();
+  });
+  await page.goto("/lab/3d-skill-field?fallback=1");
+  const coreLabel = realMode ? "Python" : "SQL";
+  await page.getByRole("combobox", { name: "搜索技能或职业" }).fill(coreLabel);
+  await page.getByRole("option", { name: coreLabel, exact: false }).first().click();
+  await expect(page.getByRole("region", { name: "2D 技能列表" })).toContainText("正在读取关系证据");
+  await expect(page.getByLabel("技能详情")).toContainText("正在聚焦");
+  releaseRelation();
+  await expect(page.getByLabel("技能详情")).toContainText(coreLabel);
+  await expect(page.getByLabel("技能详情")).not.toContainText("正在聚焦");
 });
 
 test("3D 数据失败时仍可返回分析结果", async ({ page }) => {

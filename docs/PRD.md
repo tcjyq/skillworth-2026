@@ -65,7 +65,7 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 
 当前公开默认口径为 `market_scope=china_open_tech_sample`、`source_role=china_supplementary`、`recency_window=180d`。界面采用 Cinematic Data Intelligence 视觉语言，但视觉不得替代解释；任意数字、图表点位或推荐文本必须能追溯到 API 与方法论。
 
-候选入口（**Candidate**）为 `/lab/visual-v2`。它已统一 Public Surface 与面向学生的方法表达，但不是当前正式首页、尚未替换 `/`，也不应称为 final homepage。它在 Final 5 之后提供通往 `/skill-field` 的克制入口，并与 3D 技能星域双向切换；是否提升以及提升后的最终产品截图属于人工发布决策。
+正式 `/` 当前与 `/lab/visual-v2` 共用 Visual V2 页面；后者保留为兼容入口。它在 Final 5 之后提供通往 `/skill-field` 的入口，并与 3D 技能星域双向切换。当前代码只能确认路由状态，不能单凭代码推断历史人工审批经过。
 
 ## 6. 约束与工程原则
 
@@ -90,7 +90,7 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 | 状态 | 范围 |
 | --- | --- |
 | **DONE** | Data / Analysis / Story、Final 5、Demo 与 Real 可复现链路、API/Web、Public Surface、Methodology 学生化。 |
-| **DEFERRED** | `/lab/visual-v2` 是否提升到 `/`、最终 README 产品截图、remote 与 CI。 |
+| **REVIEW** | 当前首页、README 截图与实际线上状态由发布审阅核对；remote 与 CI workflow 已存在，本轮新增生产路径门禁待远端运行。 |
 | **FUTURE RESEARCH** | 第二个许可清晰的中国来源、独立时间快照、人民币薪资证据、正式 Gold Benchmark / Gold Labels。 |
 | **NOT V1 BLOCKER** | Salary/Trend 当前不可用、完整市场代表性不可用、Gold Evaluation 未完成；必须如实披露，且不得发布 Precision、Recall 或 F1。 |
 
@@ -108,12 +108,12 @@ SkillWorth 不把招聘信息做成“技能出现次数排行榜”，而是将
 - [x] **Phase 9 — Personal Skill Opportunity Engine**：实现用户技能输入、岗位 Skill Fit、阈值覆盖、候选技能边际增益、crossing jobs、筛选、置信度与集合化计算。
 - [x] **Phase 10 — 学习时间优化器**：实现 Learning Cost 情景、Iterative Greedy、预算约束、每步重算边际收益与测试基准；Beam Search 保持 optional、当前未启用。
 - [x] **Phase 11 — FastAPI 与 Next.js 产品层**：实现稳定 API、Dashboard、数据质量页、Portfolio/Optimizer 流程、Vitest、Playwright 和可访问状态设计。
-- [ ] **Phase 12 — 端到端验证与发布材料（部分完成）**：浏览器回归、Demo/Real E2E 拆分、README/架构/Demo 说明和 release hardening 已完成；最终人工视觉批准、候选首页提升、正式截图、remote 与 CI 延后处理。
+- [ ] **Phase 12 — 端到端验证与发布材料（持续审阅）**：Demo/Real E2E、README、CI 和正式首页已有实现；本轮补充 production-safe Worker 门禁，线上状态与人工审阅结果仍需独立确认。
 
 ## 9. Deferred 与 Future Research
 
-- **DEFERRED / Release decision**：是否把 `/lab/visual-v2` 提升为正式 `/`，以及基于该决定选取最终 README 产品截图。
-- **DEFERRED / Repository operations**：建立 GitHub remote 与 CI workflow。
+- **REVIEW / Release decision**：核对当前 `/`、README 截图与线上内容的一致性。
+- **REVIEW / Repository operations**：在 Draft PR 运行新增 CI 门禁并审阅结果；本轮不合并或部署。
 - **FUTURE RESEARCH**：引入第二个许可清晰、结构独立的中国技术岗位来源。
 - **FUTURE RESEARCH**：积累相互独立的时间快照和可比较人民币薪资证据。
 - **FUTURE / Independent research**：完成正式 Gold Benchmark / Gold Labels 和 held-out evaluation；它不是 V1 blocker，在评测完成前不得声称 Precision、Recall 或 F1。

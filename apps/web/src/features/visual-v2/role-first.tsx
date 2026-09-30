@@ -31,7 +31,7 @@ export function RoleFirst() {
   const [showMore, setShowMore] = useState(false);
   const roles = useApi<RolesResponse>("/roles");
   const global = useApi<ChinaSkillWorthResponse>("/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d");
-  const result = useApi<ChinaSkillWorthResponse>(`/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d&role=${role}`);
+  const result = useApi<ChinaSkillWorthResponse>(`/market/china-skillworth?eligibility=all&robustness=all&recency_window=180d&role=${role}`, { keepPreviousData: false });
   const globalBySkill = useMemo(() => new Map(global.data?.records.map((record) => [record.skill_id, record])), [global.data?.records]);
   const ranked = result.data?.records.filter((record) => record.skillworth_rank != null).slice(0, 4) ?? [];
   const observed = result.data?.records.filter((record) => record.skillworth_rank == null && record.job_count > 0).slice(0, 6) ?? [];
@@ -57,7 +57,7 @@ export function RoleFirst() {
       <button type="button" aria-expanded={showMore} onClick={() => setShowMore((current) => !current)}>更多方向 <CaretDown size={16} weight="bold" /></button>
     </div>
 
-    {showMore && <label className={styles.moreRoleSelect}><span>全部岗位方向</span><select value={role} onChange={(event) => selectRole(event.target.value)}>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · {item.canonical_job_count} 岗位</option>)}</select></label>}
+    {showMore && <label className={styles.moreRoleSelect}><span>全部岗位方向</span><select value={role} onChange={(event) => selectRole(event.target.value)}>{roles.data?.records.map((item) => <option key={item.role_id} value={item.role_id}>{roleLabel(item.role_id)} · 全部在招 {item.canonical_job_count} 岗位</option>)}</select></label>}
 
     <article className={styles.roleResult} aria-live="polite">
       {isLoading && <VisualLoading label="正在读取该方向的当前样本…" variant="panel" />}
@@ -65,7 +65,7 @@ export function RoleFirst() {
       {success && success.records.length === 0 && <p className={styles.roleLoading}>当前岗位方向下没有可展示的技能</p>}
       {success && success.records.length > 0 && <>
         <header className={styles.roleResultHeader}>
-          <div><p>当前方向</p><h3>{roleLabel(role, true)}</h3></div>
+          <div><p>当前方向 · {recencyLabel(success.recency_window)}</p><h3>{roleLabel(role, true)}</h3></div>
           <dl><div><dt>样本</dt><dd>{sampleSize} 个岗位</dd></div><div><dt>证据状态</dt><dd>{evidenceLabel(sampleSize)}</dd></div></dl>
         </header>
 

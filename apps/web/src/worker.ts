@@ -55,11 +55,13 @@ async function appendSeoMetadata(request: Request, response: Response): Promise<
 
 async function handleApi(request: Request, env: WorkerEnv): Promise<Response> {
   if (request.method !== "GET") {
+    await request.body?.pipeTo(new WritableStream());
     return apiError(503, "DATA_UNAVAILABLE", "Job-level operations are unavailable in production-safe mode");
   }
   const url = new URL(request.url);
   const path = url.pathname.slice("/backend-api".length);
   if (path === "/health") return jsonResponse({ status: "ok", service_version: "production_safe_aggregate_v1", warehouse_available: true });
+  if (path === "/release-metadata") return jsonResponse(await artifact(env, request, "artifact_metadata.json"));
   if (path === "/market/china-skillworth") return chinaSkillWorth(url, env);
   if (path === "/market/china-skill-relations") return chinaSkillRelations(url, env);
   if (path === "/roles") return jsonResponse((await artifact(env, request, "role_aggregates.json")).roles);

@@ -184,7 +184,7 @@ Python 数据管道已在 `packages/data-pipeline/src/app` 初始化，支持配
 
 ## 10. Visual V2.1 候选路由
 
-`apps/web/src/app/lab/visual-v2` 是 Production Homepage Candidate，当前仍不替换正式 `/`，也不改变数据契约、指标公式或 Final 5 Findings。Public Surface 已统一，Methodology 已面向学生表达；是否提升为正式首页仍待人工产品决定。候选页复用现有 `useApi`、`deriveFinalFindings` 与 Gold Data Layer / analytics 输出，只在浏览器展示层增加叙事编排。
+`apps/web/src/app/page.tsx` 与 `apps/web/src/app/lab/visual-v2/page.tsx` 当前均导出 `VisualV2Route`；`/` 已是正式首页，Lab 路由保留兼容。页面复用 `useApi`、`deriveFinalFindings` 与 Gold Data Layer / analytics 输出，只在浏览器展示层增加叙事编排；不改变指标公式或 Final 5。
 
 - `gsap` + `ScrollTrigger`：只负责 Hero、C++ 排名落差和角色转换三个重点场景的滚动强调，不再维持全页 pinned 节点舞台。
 - `@gsap/react`：通过 `useGSAP` 将时间线绑定到组件作用域，并在卸载、热更新与媒体条件变化时统一清理。
@@ -194,6 +194,8 @@ Python 数据管道已在 `packages/data-pipeline/src/app` 初始化，支持配
 
 ## 11. 3D Skill Field 正式探索路由
 
-`apps/web/src/app/skill-field` 是正式 3D 技能探索路由，不替换 `/lab/visual-v2` 或正式 `/`。主故事仍从 `/lab/visual-v2` 的 C++ 反例进入 `#analysis-results`，用户再主动进入 3D 技能星域；两页通过统一的语义化导航双向切换，从 3D 返回时落在稳定结果锚点。旧 `/lab/3d-skill-field` 仅保留兼容入口，两个路由共同渲染同一 `SkillFieldPage` 与 Scene implementation。页面动态加载 Three.js / React Three Fiber / Drei，使 3D bundle 不进入其他路由首屏；普通 DOM 负责页面导航、搜索、模式、详情、小样本提示、键盘操作与 WebGL fallback，数据或 WebGL 不可用时仍保留返回分析结果的路径。
+`apps/web/src/app/skill-field` 是正式 3D 技能探索路由，不替换正式 `/`。首页的 C++ 反例进入 `#analysis-results`，用户再主动进入 3D 技能星域；从 3D 返回时落在稳定结果锚点。旧 `/lab/3d-skill-field` 仅保留兼容入口，两个路由共同渲染同一 `SkillFieldPage` 与 Scene implementation。页面动态加载 Three.js / React Three Fiber / Drei，使 3D bundle 不进入其他路由首屏；普通 DOM 负责页面导航、搜索、模式、详情、小样本提示、键盘操作与 WebGL fallback，数据或 WebGL 不可用时仍保留返回分析结果的路径。
 
 统一 Scene Director 管理 `GLOBAL_VALUE`、`GLOBAL_DEMAND`、`ROLE_VALUE`、`RELATION_GLOBAL`、`RELATION_ROLE`，并协调职业/技能上下文、相机目标、标签、详情与可中断过渡。布局模块只消费 API 输出：SkillWorth 半径使用 `skillworth_rank`，需求半径使用 `demand_rank`，职业半径使用相应 role slice rank；节点大小始终由 `job_coverage` 的平方根呈现变换得到。关联星座消费 `/market/china-skill-relations`，前端不计算 Jaccard、PMI 或证据门槛。
+
+公开 Worker 的 `GET /backend-api/release-metadata` 只返回已审查的 `PUBLIC_SAFE` 产物 metadata，供方法页显示来源访问日、生成日与版本；`GET /backend-api/data-quality` 返回既有质量快照。`/backend-data/*` 仍由 Worker 阻断外部读取；除 GET 外的 API 操作保持不可用。本地 FastAPI 的同名只读路由仅返回 manifest 中的来源与访问日，产物生成日为 `null`，不把本地运行误标为公开安全产物。
