@@ -336,13 +336,21 @@ test("2D 稀疏职业只展示该职业的技能记录", async ({ page }) => {
 });
 
 test("2D 关系请求失败时显示错误与重试入口", async ({ page }) => {
-  await page.route("**/backend-api/market/china-skill-relations?*", (route) => route.abort());
+  let failRelations = true;
+  await page.route("**/backend-api/market/china-skill-relations?*", (route) => failRelations ? route.abort() : route.continue());
   await page.goto("/lab/3d-skill-field?fallback=1");
   const coreLabel = realMode ? "Python" : "SQL";
   await page.getByRole("combobox", { name: "搜索技能或职业" }).fill(coreLabel);
   await page.getByRole("option", { name: coreLabel, exact: false }).first().click();
   await expect(page.getByLabel("技能详情")).toContainText("关系证据暂时无法读取");
   await expect(page.getByRole("button", { name: "重试关系数据" })).toBeVisible();
+  await expect(page.getByLabel("一级技能关系")).toHaveCount(0);
+  failRelations = false;
+  await page.getByRole("button", { name: "重试关系数据" }).click();
+  await expect(page.getByLabel("技能详情")).toContainText(coreLabel);
+  await expect(page.getByLabel("技能详情")).not.toContainText("正在聚焦");
+  await page.getByRole("button", { name: "回到全局" }).click();
+  await expect(page.getByLabel("技能详情")).toContainText("选择一个技能");
 });
 
 test("2D 关系数据就绪前保持加载态，响应后才展示详情", async ({ page }) => {

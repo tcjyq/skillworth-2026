@@ -76,12 +76,12 @@ function SkillFieldExperience() {
     const token = state.transitionToken;
     if (state.transitionPhase === "HIGHLIGHT" || state.transitionPhase === "CAMERA_FLY") {
       dispatch({ type: "advance-transition", token, phase: "CONSTELLATION_MORPH" });
-    } else if (state.transitionPhase === "CONSTELLATION_MORPH" && activeRelationReady) {
+    } else if (state.transitionPhase === "CONSTELLATION_MORPH" && (activeRelationReady || relations.error)) {
       dispatch({ type: "advance-transition", token, phase: "SETTLED" });
     } else if (state.transitionPhase === "RETURN_MORPH" || state.transitionPhase === "RETURN_CAMERA") {
       dispatch({ type: "finish-return", token });
     }
-  }, [dispatch, state.transitionPhase, state.transitionToken, webgl, activeRelationReady]);
+  }, [dispatch, state.transitionPhase, state.transitionToken, webgl, activeRelationReady, relations.error]);
   const displayedRelationResponse = state.relationSkill
     ? relations.data?.core_skill_id === state.relationSkill.skillId && (relations.data.role_id ?? null) === (state.activeRole?.roleId ?? null)
       ? relations.data
@@ -182,7 +182,7 @@ function SkillFieldExperience() {
         </div>
       </section>
       {state.activeRole && role.error ? <aside className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情"><div className={styles.detailEmpty} role="alert"><p>岗位样本暂时无法读取</p><button type="button" onClick={() => void role.mutate()}>重试岗位数据</button></div></aside> : webgl === false && relations.error && state.activeSkill ? <aside className={styles.detailPanel} data-testid="skill-field-detail" aria-label="技能详情"><div className={styles.detailEmpty} role="alert"><p>关系证据暂时无法读取</p><button type="button" onClick={() => void relations.mutate()}>重试关系数据</button></div></aside> : <DetailPanel state={effectiveState} record={selectedRecord} relation={selectedRelation} settled={state.transitionPhase === "SETTLED"} onSelectRelation={(skillId) => selectSkill(skillId, undefined, "relation")} />}
-      {state.transitionPhase === "SETTLED" && <RelationRail key={state.relationSkill?.skillId ?? "none"} relations={displayedRelations} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.relationSkill?.skillId ?? "", limit })} />}
+      {state.transitionPhase === "SETTLED" && !relations.error && !role.error && <RelationRail key={state.relationSkill?.skillId ?? "none"} relations={displayedRelations} selectedId={state.selectedRelationId} onSelect={(skillId) => dispatch({ type: "select-relation", skillId })} onLimitChange={(limit) => setRelationExpansion({ skillId: state.relationSkill?.skillId ?? "", limit })} />}
       <footer className={styles.footer}><p>{globalData.disclaimer}</p><Link href="/#analysis-results">返回分析结果</Link><Link href="/methodology">查看计算方法与证据边界</Link></footer>
     </section>
   </main>;
